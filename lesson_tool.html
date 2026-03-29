@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>授業生成ツール（完全無料版）</title>
+
+<style>
+body {font-family:sans-serif;background:#f5f7fa;padding:20px;}
+.box {max-width:900px;margin:auto;background:white;padding:20px;border-radius:10px;}
+h1 {text-align:center;}
+input,textarea {width:100%;margin-top:8px;padding:10px;}
+button {margin-top:15px;padding:12px;width:100%;font-size:16px;}
+.output {white-space:pre-wrap;background:#eee;padding:15px;margin-top:20px;}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+<h1>授業案＆プリント生成ツール</h1>
+
+<input id="grade" placeholder="学年（例：中3）">
+<input id="level" placeholder="レベル（例：英検3級〜準2級）">
+<input id="grammar" placeholder="文法（例：現在完了 / must）">
+<input id="topic" placeholder="トピック（例：国際協力）">
+
+<textarea id="text" rows="6" placeholder="英文を貼り付け"></textarea>
+
+<button onclick="generate()">生成</button>
+<button onclick="copy()">コピー</button>
+<button onclick="download()">Wordで保存</button>
+
+<div id="output" class="output"></div>
+
+</div>
+
+<script>
+function generate(){
+const p = `
+あなたは現場経験のある英語教師であり教材作成の専門家である。
+
+以下をすべて作成せよ。
+
+【学年】${grade.value}
+【レベル】${level.value}
+【文法】${grammar.value}
+【トピック】${topic.value}
+
+【英文】
+${text.value}
+
+【出力】
+(A) 授業案（時間・活動・教師の働きかけ・評価）
+(B) 教科書風英文（120〜150語・重要文は太字）
+(C) 生徒用プリント
+・タイトル
+・ウォームアップ
+・重要表現
+・ペア活動
+・メイン活動（表）
+・まとめ
+
+日本語で作成すること。
+`;
+document.getElementById("output").textContent = p;
+}
+
+function copy(){
+navigator.clipboard.writeText(output.textContent);
+alert("コピーしました");
+}
+
+function download(){
+const content = output.textContent;
+const blob = new Blob([content], {type:"application/msword"});
+const link = document.createElement("a");
+link.href = URL.createObjectURL(blob);
+link.download = "lesson.doc";
+link.click();
+}
+</script>
+
+</body>
+</html>
