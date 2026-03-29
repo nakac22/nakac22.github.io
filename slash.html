@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>スラッシュリーディング教材生成ツール</title>
+
+<style>
+body {font-family:sans-serif;background:#f5f7fa;padding:20px;}
+.box {max-width:900px;margin:auto;background:white;padding:20px;border-radius:10px;}
+h1 {text-align:center;}
+input,textarea {width:100%;margin-top:8px;padding:10px;}
+button {margin-top:15px;padding:12px;width:100%;font-size:16px;}
+.output {white-space:pre-wrap;background:#eee;padding:15px;margin-top:20px;}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+<h1>スラッシュリーディング教材生成ツール</h1>
+
+<input id="grade" placeholder="学年">
+<input id="level" placeholder="英語レベル">
+<input id="grammar" placeholder="文法">
+<input id="topic" placeholder="トピック">
+
+<textarea id="text" rows="6" placeholder="教科書本文を貼り付け"></textarea>
+
+<button onclick="generate()">生成</button>
+<button onclick="copy()">コピー</button>
+
+<div id="output" class="output"></div>
+
+</div>
+
+<script>
+function generate(){
+const p = `
+あなたは現場経験のある英語教師であり、第二言語習得研究および認知言語学に基づく教材設計の専門家である。
+
+【学年】${grade.value}
+【レベル】${level.value}
+【文法】${grammar.value}
+【トピック】${topic.value}
+
+【英文】
+${text.value}
+
+以下を作成せよ：
+
+(A) 授業案（時間・活動・教師の働きかけ・評価）
+
+(B) スラッシュリーディング教材
+・意味のまとまりで区切る
+・1行1スラッシュ
+・英語と語順ベースの日本語訳を表形式で
+
+(C) 対立意見（3つ）
+・本文と異なる視点
+・本文の語彙・文法を再利用
+・各2〜3文＋日本語訳
+
+(D) 生徒用プリント
+・タイトル
+・ウォームアップ
+・重要表現
+・スラッシュリーディング
+・ペア活動
+・メイン活動
+・まとめ
+
+日本語で出力すること。
+`;
+document.getElementById("output").textContent = p;
+}
+
+function copy(){
+navigator.clipboard.writeText(output.textContent);
+alert("コピーしました");
+}
+</script>
+
+</body>
+</html>
