@@ -2,22 +2,53 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>英語活動プロンプト生成ツール</title>
+
 <style>
-body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; }
-textarea, select { width: 100%; margin-bottom: 10px; padding: 8px; }
-button { padding: 10px; font-size: 16px; cursor: pointer; }
-.output { margin-top: 20px; padding: 15px; border: 1px solid #ccc; white-space: pre-wrap; }
-.copy { margin-top: 10px; }
-h1 { text-align: center; }
+body {
+  font-family: sans-serif;
+  padding: 15px;
+  max-width: 800px;
+  margin: auto;
+}
+
+textarea, select {
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 10px;
+  font-size: 16px;
+}
+
+button {
+  width: 100%;
+  padding: 15px;
+  font-size: 18px;
+  margin-top: 5px;
+  cursor: pointer;
+}
+
+.output {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  white-space: pre-wrap;
+  background: #f9f9f9;
+}
+
+.notice {
+  font-size: 14px;
+  color: #666;
+  margin-top: 5px;
+}
 </style>
 </head>
 
 <body>
 
-<h1>英語活動プロンプト生成ツール</h1>
+<h2>英語活動プロンプト生成ツール</h2>
 
-<label>言語材料（1行ずつ）</label>
+<label>言語材料</label>
 <textarea id="expressions">Do you like ~?
 Why do you ~?</textarea>
 
@@ -36,10 +67,12 @@ Why do you ~?</textarea>
 <option value="task">タスク型</option>
 </select>
 
-<button onclick="generate()">プロンプト生成</button>
+<button onclick="generate()">① プロンプト生成</button>
+<button onclick="copyText()">② コピー（タップ）</button>
+
+<div class="notice">※コピーできない場合は、下の文章を長押ししてコピーしてください</div>
 
 <div class="output" id="output"></div>
-<button class="copy" onclick="copyText()">コピー</button>
 
 <script>
 function generate() {
@@ -48,6 +81,7 @@ function generate() {
   const style = document.getElementById("style").value;
 
   let styleInstruction = "";
+
   if (style === "game") {
     styleInstruction = "ゲーム性があり、生徒が夢中になる活動にしてください。";
   } else if (style === "discussion") {
@@ -94,8 +128,37 @@ ${level}
 
 function copyText() {
   const text = document.getElementById("output").innerText;
-  navigator.clipboard.writeText(text);
-  alert("コピーしました！");
+
+  if (!text) {
+    alert("先にプロンプトを生成してください");
+    return;
+  }
+
+  // ① モダン対応
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert("コピーしました！");
+    }).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+// ② 古いスマホ対応（フォールバック）
+function fallbackCopy(text) {
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  try {
+    document.execCommand("copy");
+    alert("コピーしました！（別方式）");
+  } catch {
+    alert("コピーできませんでした。長押しでコピーしてください。");
+  }
+
+  document.body.removeChild(textarea);
 }
 </script>
 
