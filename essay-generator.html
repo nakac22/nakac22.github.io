@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英語教材生成ツール（エッセイ＋問題）</title>
+
+<style>
+body { font-family: sans-serif; padding: 15px; max-width: 800px; margin: auto; }
+textarea, select, input { width: 100%; margin-bottom: 12px; padding: 10px; font-size: 16px; }
+button { width: 100%; padding: 15px; font-size: 18px; margin-top: 5px; }
+.output { margin-top: 20px; padding: 15px; border: 1px solid #ccc; white-space: pre-wrap; background: #f9f9f9; }
+.notice { font-size: 14px; color: #666; }
+</style>
+</head>
+
+<body>
+
+<h2>英語教材生成ツール（エッセイ＋問題）</h2>
+
+<label>トピック（例：春、AI、学校生活）</label>
+<input id="topic" value="spring">
+
+<label>言語材料（文法・表現）</label>
+<textarea id="expressions">be going to
+want to</textarea>
+
+<label>レベル</label>
+<select id="level">
+<option>小学生</option>
+<option selected>中学生</option>
+<option>高校生</option>
+</select>
+
+<button onclick="generate()">① プロンプト生成</button>
+<button onclick="copyText()">② コピー</button>
+
+<div class="notice">※コピーできない場合は長押ししてください</div>
+
+<div class="output" id="output"></div>
+
+<script>
+function generate() {
+  const topic = document.getElementById("topic").value;
+  const expressions = document.getElementById("expressions").value;
+  const level = document.getElementById("level").value;
+
+  const prompt = `
+あなたは英語教師であり教材作成の専門家です。
+
+以下の条件に基づき、中学生〜高校生向けの英語教材を作成してください。
+
+【トピック】
+${topic}
+
+【言語材料】
+${expressions}
+
+【レベル】
+${level}
+
+【作成内容】
+
+① エッセイ（150〜250語）
+・必ず日本語訳をつけること
+
+② 重要表現の整理
+・意味
+・使い方
+・日本語訳
+
+③ 例文（各表現につき5つ前後）
+・表形式（Markdown形式）で出力すること
+・列は「英語」「日本語訳」
+
+④ 練習問題
+・空欄補充
+・並び替え
+
+⑤ 日常会話への応用
+・短い会話形式
+
+【条件】
+・トピックに関連した自然な内容にする
+・言語材料を複数回使用する
+・難しすぎず、実際の授業で使えるレベルにする
+・見やすく整理する
+`;
+
+  document.getElementById("output").innerText = prompt;
+}
+
+function copyText() {
+  const text = document.getElementById("output").innerText;
+
+  if (!text) {
+    alert("先に生成してください");
+    return;
+  }
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert("コピーしました！");
+    }).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  try {
+    document.execCommand("copy");
+    alert("コピーしました！");
+  } catch {
+    alert("コピーできません。長押ししてください。");
+  }
+
+  document.body.removeChild(textarea);
+}
+</script>
+
+</body>
+</html>
