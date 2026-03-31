@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>英語活動プロンプト生成ツール</title>
+<style>
+body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+textarea, select { width: 100%; margin-bottom: 10px; padding: 8px; }
+button { padding: 10px; font-size: 16px; cursor: pointer; }
+.output { margin-top: 20px; padding: 15px; border: 1px solid #ccc; white-space: pre-wrap; }
+.copy { margin-top: 10px; }
+h1 { text-align: center; }
+</style>
+</head>
+
+<body>
+
+<h1>英語活動プロンプト生成ツール</h1>
+
+<label>言語材料（1行ずつ）</label>
+<textarea id="expressions">Do you like ~?
+Why do you ~?</textarea>
+
+<label>レベル</label>
+<select id="level">
+<option>小学生</option>
+<option selected>中学生</option>
+<option>高校生</option>
+</select>
+
+<label>活動タイプ</label>
+<select id="style">
+<option value="auto">自動（おすすめ）</option>
+<option value="game">ゲーム性重視</option>
+<option value="discussion">対話重視</option>
+<option value="task">タスク型</option>
+</select>
+
+<button onclick="generate()">プロンプト生成</button>
+
+<div class="output" id="output"></div>
+<button class="copy" onclick="copyText()">コピー</button>
+
+<script>
+function generate() {
+  const expressions = document.getElementById("expressions").value;
+  const level = document.getElementById("level").value;
+  const style = document.getElementById("style").value;
+
+  let styleInstruction = "";
+  if (style === "game") {
+    styleInstruction = "ゲーム性があり、生徒が夢中になる活動にしてください。";
+  } else if (style === "discussion") {
+    styleInstruction = "対話ややりとりが深まる活動にしてください。";
+  } else if (style === "task") {
+    styleInstruction = "目的達成型のタスク活動にしてください。";
+  } else {
+    styleInstruction = "最も適切な活動タイプを判断してください。";
+  }
+
+  const prompt = `
+あなたは現場経験のある英語教師であり、教材設計の専門家です。
+
+以下の言語材料に最も適した、楽しく、反復が自然に起こる言語活動を設計してください。
+
+【重要条件】
+・言語材料の性質に応じて活動タイプを決定すること
+・トピックも適切に設定すること
+・活動の流れやルールは毎回最適化すること
+・生徒が同じ表現を何度も使いたくなる設計にすること
+・タブレットやAIを活用する活動にすること
+・単なる練習ではなく「やりたくなる」目的やゲーム性を持たせること
+
+【活動の条件】
+${styleInstruction}
+
+【入力】
+言語材料：
+${expressions}
+
+レベル：
+${level}
+
+【出力形式】
+①活動名（魅力的に）
+②活動の概要
+③活動の流れ（具体的）
+④ゲーム性・ルール
+⑤この言語材料に適している理由
+`;
+
+  document.getElementById("output").innerText = prompt;
+}
+
+function copyText() {
+  const text = document.getElementById("output").innerText;
+  navigator.clipboard.writeText(text);
+  alert("コピーしました！");
+}
+</script>
+
+</body>
+</html>
