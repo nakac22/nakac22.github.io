@@ -3,20 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>英文分析＋言語活動生成ツール（実用版）</title>
+<title>英文分析＋言語トピック生成ツール（コーパス強化版）</title>
 
 <style>
 body { font-family: sans-serif; padding: 15px; max-width: 900px; margin: auto; }
 textarea, select { width: 100%; margin-bottom: 12px; padding: 10px; font-size: 16px; }
 button { width: 100%; padding: 15px; font-size: 18px; margin-top: 5px; }
 .output { margin-top: 20px; padding: 15px; border: 1px solid #ccc; white-space: pre-wrap; background: #f9f9f9; }
-.notice { font-size: 14px; color: #666; }
 </style>
 </head>
 
 <body>
 
-<h2>英文分析＋言語活動生成ツール（実用版）</h2>
+<h2>英文分析＋言語トピック生成ツール（コーパス強化版）</h2>
 
 <label>英文</label>
 <textarea id="text">I like music. I often listen to it at night.</textarea>
@@ -36,8 +35,6 @@ button { width: 100%; padding: 15px; font-size: 18px; margin-top: 5px; }
 <button onclick="generate()">① プロンプト生成</button>
 <button onclick="copyText()">② コピー</button>
 
-<div class="notice">※コピーできない場合は長押ししてください</div>
-
 <div class="output" id="output"></div>
 
 <script>
@@ -46,9 +43,9 @@ function generate() {
   const age = document.getElementById("age").value;
 
   const prompt = `
-あなたは英語教師であり、言語学・SLAの専門家です。
+あなたは英語教師であり、言語学（語彙論・語用論・コーパス言語学）およびSLAの専門家です。
 
-以下の英文を教材化してください。
+以下の英文をもとに、実用的かつ言語学的に価値の高い教材を作成してください。
 
 【英文】
 ${text}
@@ -56,58 +53,55 @@ ${text}
 【学習者の世代】
 ${age}
 
-【絶対条件】
-・日本語と英語のみ使用
-・情報を削りすぎない
-・構造は統一する
-
 ----------------------------------------
 
-■① 文ごとの整理（表形式）
+■① 文ごとの整理（表）
 
 | No | 原文 | 構造 | 語彙ポイント | 文法ポイント |
 |----|------|------|--------------|--------------|
 
-※ルール：
-・構造：SVOなど明示
-・語彙：重要語＋簡潔な意味
-・文法：なぜその形かを簡潔に
-
 ----------------------------------------
 
-■② 各文の詳細展開（ここがメイン）
-
-以下を「文ごと」に必ず出力：
+■② 言語トピック展開（文ごと）
 
 【①】
-● 関連トピック（具体的に説明）
-→ ${age}の学習者が興味を持つ内容を2〜3文で
 
-● 実在コンテンツ例
-→ 作品名＋簡単な説明（1〜2文）
-→ 例：映画・ドラマ・アニメ・洋楽など
+● 言語トピック（語彙・表現の拡張）
+・比喩・慣用・コロケーションなどを説明
 
-● 例文（2つ）
-→ 実際に使える自然な英文＋日本語訳
+● 実在例（必須）
+例文：
+"xxxxx"
+
+出典：
+作品名（媒体）＋年
+
+※実在のみ
+
+● コーパス・使用実態（最重要）
+・日常会話での典型例（2つ）
+・よく使われるコロケーション（2〜3）
+・フォーマル／カジュアル差
+・英語試験での典型出題パターン（例：語彙問題・並び替えなど）
+
+● 追加例文（2つ）
+・自然な英文＋日本語訳
 
 ● プチ言語活動（2つ）
-→ すぐできる活動
-→ 各1行で具体的に
+・即興でできる
+・発話が増える設計
 
 ----------------------------------------
 
-■③ 出力ルール
+■③ ルール
 
-・文ごとに①②③…と分ける
-・表→詳細の順に出す
-・説明は具体的に（省略しない）
-・ただし冗長にはしない
+・日本語と英語のみ
+・韓国語など禁止
+・表は簡潔、下は具体的
+・コーパスは「典型例」として提示
+・不確かな情報は出さない
 
 ----------------------------------------
-
-【ハルシネーション防止】
-・実在する作品のみ
-・不明な場合は出さない
 `;
 
   document.getElementById("output").innerText = prompt;
@@ -115,35 +109,8 @@ ${age}
 
 function copyText() {
   const text = document.getElementById("output").innerText;
-
-  if (!text) {
-    alert("先に生成してください");
-    return;
-  }
-
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => {
-      alert("コピーしました！");
-    }).catch(() => fallbackCopy(text));
-  } else {
-    fallbackCopy(text);
-  }
-}
-
-function fallbackCopy(text) {
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  document.body.appendChild(textarea);
-  textarea.select();
-
-  try {
-    document.execCommand("copy");
-    alert("コピーしました！");
-  } catch {
-    alert("コピーできません。長押ししてください。");
-  }
-
-  document.body.removeChild(textarea);
+  navigator.clipboard.writeText(text);
+  alert("コピーしました！");
 }
 </script>
 
