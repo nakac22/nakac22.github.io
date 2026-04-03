@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英文分析＋活動生成ツール</title>
+
+<style>
+body { font-family: sans-serif; padding: 15px; max-width: 900px; margin: auto; }
+textarea, select { width: 100%; margin-bottom: 12px; padding: 10px; font-size: 16px; }
+button { width: 100%; padding: 15px; font-size: 18px; margin-top: 5px; }
+.output { margin-top: 20px; padding: 15px; border: 1px solid #ccc; white-space: pre-wrap; background: #f9f9f9; }
+.notice { font-size: 14px; color: #666; }
+</style>
+</head>
+
+<body>
+
+<h2>英文分析＋言語活動生成ツール</h2>
+
+<label>英文（複数文OK）</label>
+<textarea id="text">I like music. I often listen to it at night.</textarea>
+
+<label>学習者の世代</label>
+<select id="age">
+<option>10代前半</option>
+<option>10代後半</option>
+<option selected>20代前半</option>
+<option>20代後半</option>
+<option>30代</option>
+<option>40代</option>
+<option>50代</option>
+<option>60代以上</option>
+</select>
+
+<button onclick="generate()">① プロンプト生成</button>
+<button onclick="copyText()">② コピー</button>
+
+<div class="notice">※コピーできない場合は長押ししてください</div>
+
+<div class="output" id="output"></div>
+
+<script>
+function generate() {
+  const text = document.getElementById("text").value;
+  const age = document.getElementById("age").value;
+
+  const prompt = `
+あなたは英語教師であり、言語学・第二言語習得研究に基づく教材設計の専門家です。
+
+以下の英文を分析し、教育的価値の高い教材を作成してください。
+
+【英文】
+${text}
+
+【学習者の世代】
+${age}
+
+【最重要条件】
+・英文をピリオドごとに①②③…と分割すること
+・各文ごとに以下をすべて生成すること
+・説明はわかりやすく、しかし本質的に正確にすること
+
+【ハルシネーション防止（厳守）】
+・アニメ・漫画・映画・ドラマ・音楽の例は「実在する作品のみ」
+・不確かな場合は絶対に出さない
+・作品名は一般的に広く知られているものに限定する
+
+【各文ごとに出力する内容】
+
+① 原文（番号付き）
+
+② 語彙説明
+・重要語の意味
+・ニュアンス
+・使用場面
+
+③ 文法説明
+・構造（主語・動詞など）
+・重要ポイント
+・学習者がつまずきやすい点
+
+④ 関連トピック
+・学習者の世代（${age}）が興味を持つ内容
+・英文と意味的に関連していること
+
+⑤ 実例（実在コンテンツから）
+・映画・アニメ・ドラマ・洋楽など
+・具体的な作品名を必ず明示
+・短い引用または要約
+
+⑥ プチ言語活動（2種類）
+・即興でできる
+・発話が自然に増える設計
+・ゲーム性または目的を持たせる
+
+【全体条件】
+・教育現場でそのまま使えるレベルにする
+・説明→理解→使用の流れを意識する
+`;
+
+  document.getElementById("output").innerText = prompt;
+}
+
+function copyText() {
+  const text = document.getElementById("output").innerText;
+
+  if (!text) {
+    alert("先に生成してください");
+    return;
+  }
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert("コピーしました！");
+    }).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  try {
+    document.execCommand("copy");
+    alert("コピーしました！");
+  } catch {
+    alert("コピーできません。長押ししてください。");
+  }
+
+  document.body.removeChild(textarea);
+}
+</script>
+
+</body>
+</html>
