@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson Designer for English Teachers</title>
+<style>
+body{font-family:sans-serif;max-width:1100px;margin:auto;padding:20px;background:#f5f5f5}
+section{background:white;padding:15px;margin:12px 0;border-radius:8px}
+textarea,input{width:100%;padding:8px;margin-top:5px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+button{padding:12px 18px;font-size:16px;margin-right:10px}
+#output{height:350px}
+label{display:block;margin:4px 0}
+</style>
+</head>
+<body>
+<h1>英語授業設計支援システム</h1>
+
+<section>
+<h2>基本情報</h2>
+<input id="grade" placeholder="学年">
+<input id="level" placeholder="英語レベル">
+<input id="grammar" placeholder="文法項目">
+<input id="topic" placeholder="トピック">
+<textarea id="text" rows="8" placeholder="教科書本文"></textarea>
+</section>
+
+<section class="grid">
+<div>
+<h3>授業スタイル</h3>
+<label><input type="radio" name="style" value="教科書中心" checked>教科書中心</label>
+<label><input type="radio" name="style" value="言語活動中心">言語活動中心</label>
+<label><input type="radio" name="style" value="ミックス">ミックス</label>
+
+<h3>授業時間</h3>
+<label><input type="radio" name="time" value="40分">40分</label>
+<label><input type="radio" name="time" value="50分" checked>50分</label>
+<label><input type="radio" name="time" value="90分">90分</label>
+
+<h3>活動時間</h3>
+<label><input type="radio" name="acttime" value="短時間">短時間</label>
+<label><input type="radio" name="acttime" value="中時間">中時間</label>
+<label><input type="radio" name="acttime" value="長時間">長時間</label>
+<label><input type="radio" name="acttime" value="AIに任せる" checked>AIに任せる</label>
+</div>
+
+<div>
+<h3>活動の位置づけ</h3>
+<label><input type="radio" name="position" value="メイン活動" checked>メイン活動</label>
+<label><input type="radio" name="position" value="補助活動">補助活動</label>
+<label><input type="radio" name="position" value="振り返り活動">振り返り活動</label>
+</div>
+</section>
+
+<section>
+<h3>出力内容</h3>
+<label><input type="checkbox" class="out" checked>授業案</label>
+<label><input type="checkbox" class="out" checked>生徒用プリント</label>
+<label><input type="checkbox" class="out">評価規準</label>
+<label><input type="checkbox" class="out">スラッシュリーディング</label>
+<label><input type="checkbox" class="out">内容理解問題</label>
+<label><input type="checkbox" class="out">言語活動</label>
+<label><input type="checkbox" class="out">対立意見</label>
+<label><input type="checkbox" class="out">教師向けメモ</label>
+</section>
+
+<section>
+<h3>活動目的（複数選択）</h3>
+<label><input type="checkbox" class="purpose">流暢さ</label>
+<label><input type="checkbox" class="purpose">正確さ</label>
+<label><input type="checkbox" class="purpose">内容理解</label>
+<label><input type="checkbox" class="purpose">表現の再利用</label>
+<label><input type="checkbox" class="purpose">批判的思考</label>
+<label><input type="checkbox" class="purpose">異文化理解</label>
+</section>
+
+<section>
+<h3>活動の性格（複数選択）</h3>
+<label><input type="checkbox" class="nature">知的好奇心型</label>
+<label><input type="checkbox" class="nature">楽しさ重視型</label>
+<label><input type="checkbox" class="nature">実社会シミュレーション型</label>
+<label><input type="checkbox" class="nature">妄想・創造型</label>
+<label><input type="checkbox" class="nature">批判的思考型</label>
+<label><input type="checkbox" class="nature">感情移入型</label>
+<label><input type="checkbox" class="nature">問題解決型</label>
+<label><input type="checkbox" class="nature">異文化理解型</label>
+</section>
+
+<section>
+<h3>活動規模（複数選択）</h3>
+<label><input type="checkbox" class="scale">個人</label>
+<label><input type="checkbox" class="scale">ペア</label>
+<label><input type="checkbox" class="scale">グループ</label>
+<label><input type="checkbox" class="scale">クラス全体</label>
+
+<h3>SLA理論（複数選択）</h3>
+<label><input type="checkbox" class="sla">PPP</label>
+<label><input type="checkbox" class="sla">TBLT</label>
+<label><input type="checkbox" class="sla">Focus on Form</label>
+<label><input type="checkbox" class="sla">Input Hypothesis</label>
+<label><input type="checkbox" class="sla">Output Hypothesis</label>
+</section>
+
+<section>
+<h3>AIへの自由指示</h3>
+<textarea id="free" rows="5"></textarea>
+</section>
+
+<section>
+<button onclick="generatePrompt()">プロンプト生成</button>
+<button onclick="copyPrompt()">コピー</button>
+<textarea id="output"></textarea>
+</section>
+
+<script>
+function vals(cls){
+ return [...document.querySelectorAll('.'+cls+':checked')].map(x=>x.parentNode.textContent.trim()).join(', ');
+}
+function radio(name){
+ return document.querySelector('input[name="'+name+'"]:checked').value;
+}
+function generatePrompt(){
+const prompt=`# 英語授業設計依頼
+
+学年: ${grade.value}
+英語レベル: ${level.value}
+文法項目: ${grammar.value}
+トピック: ${topic.value}
+
+授業スタイル: ${radio('style')}
+授業時間: ${radio('time')}
+活動時間: ${radio('acttime')}
+活動の位置づけ: ${radio('position')}
+
+出力内容:
+${vals('out')}
+
+活動目的:
+${vals('purpose')}
+
+活動の性格:
+${vals('nature')}
+
+活動規模:
+${vals('scale')}
+
+SLA理論:
+${vals('sla')}
+
+教科書本文:
+${text.value}
+
+AIへの自由指示:
+${free.value}
+
+以下の条件を満たして作成すること。
+
+- 学習指導要領に準拠すること
+- 選択された授業スタイルに応じて時間配分を最適化すること
+- 言語活動中心なら活動時間を十分確保すること
+- ミックス型なら本文理解と活動のバランスを取ること
+- 活動目的と活動の性格を反映すること
+- 選択された出力内容を作成すること
+- 評価規準を作成する場合は3観点（知識・技能、思考・判断・表現、主体的に学習に取り組む態度）で示すこと
+- スラッシュリーディングは英語と語順に沿った日本語訳の表形式で示すこと
+- 言語活動は生徒の知的好奇心と実際の授業運営の両立を図ること
+
+Markdown形式で出力すること。`;
+document.getElementById('output').value=prompt;
+}
+function copyPrompt(){
+navigator.clipboard.writeText(document.getElementById('output').value);
+alert('コピーしました');
+}
+</script>
+</body>
+</html>
