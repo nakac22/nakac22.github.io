@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Exam Designer Pro</title>
+
+<style>
+
+body{
+    font-family: Arial, sans-serif;
+    max-width:1200px;
+    margin:auto;
+    padding:20px;
+    background:#f5f5f5;
+}
+
+h1{
+    text-align:center;
+}
+
+.section{
+    background:white;
+    padding:15px;
+    margin-bottom:15px;
+    border-radius:10px;
+    box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:15px;
+}
+
+label{
+    display:block;
+    margin-bottom:5px;
+}
+
+textarea{
+    width:100%;
+    min-height:250px;
+}
+
+button{
+    padding:10px 20px;
+    margin-right:10px;
+    cursor:pointer;
+}
+
+select,
+input{
+    width:100%;
+    padding:8px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Exam Designer Pro</h1>
+
+<div class="section">
+
+<h2>① 学習カテゴリ</h2>
+
+<select id="category" onchange="updateLevels()">
+
+<option>中学校英語</option>
+<option>高校入試</option>
+<option>共通テスト</option>
+<option>英検</option>
+<option>TOEIC</option>
+<option>TOEFL iBT</option>
+<option>IELTS</option>
+<option>TEAP</option>
+
+</select>
+
+</div>
+
+<div class="section">
+
+<h2>② レベル・級・目標得点</h2>
+
+<select id="level"></select>
+
+</div>
+
+<div class="section grid">
+
+<div>
+
+<h2>③ 問題タイプ</h2>
+
+<label><input type="checkbox" class="type"> 語彙</label>
+<label><input type="checkbox" class="type"> 文法</label>
+<label><input type="checkbox" class="type"> Reading</label>
+<label><input type="checkbox" class="type"> Listening</label>
+<label><input type="checkbox" class="type"> Speaking</label>
+<label><input type="checkbox" class="type"> Writing</label>
+
+</div>
+
+<div>
+
+<h2>④ トピック</h2>
+
+<label><input type="checkbox" class="topic"> 学校</label>
+<label><input type="checkbox" class="topic"> 家族</label>
+<label><input type="checkbox" class="topic"> 健康</label>
+<label><input type="checkbox" class="topic"> スポーツ</label>
+<label><input type="checkbox" class="topic"> AI</label>
+<label><input type="checkbox" class="topic"> 環境</label>
+<label><input type="checkbox" class="topic"> 異文化理解</label>
+<label><input type="checkbox" class="topic"> 国際協力</label>
+<label><input type="checkbox" class="topic"> 教育</label>
+<label><input type="checkbox" class="topic"> 旅行</label>
+<label><input type="checkbox" class="topic"> ビジネス</label>
+<label><input type="checkbox" class="topic"> お任せ</label>
+
+</div>
+
+<div>
+
+<h2>⑤ 学習者タイプ</h2>
+
+<label><input type="checkbox" class="learner"> 英語が苦手</label>
+<label><input type="checkbox" class="learner"> 英語が得意</label>
+
+<label><input type="checkbox" class="learner"> 語彙不足</label>
+
+<label><input type="checkbox" class="learner"> 文法が苦手</label>
+
+<label><input type="checkbox" class="learner"> 長文読解が苦手</label>
+<label><input type="checkbox" class="learner"> 要約が苦手</label>
+<label><input type="checkbox" class="learner"> 推論問題が苦手</label>
+
+<label><input type="checkbox" class="learner"> 音のつながりが苦手</label>
+<label><input type="checkbox" class="learner"> 内容把握が苦手</label>
+
+<label><input type="checkbox" class="learner"> 英語を話すのが怖い</label>
+<label><input type="checkbox" class="learner"> 面接が苦手</label>
+<label><input type="checkbox" class="learner"> 即興応答が苦手</label>
+
+<label><input type="checkbox" class="learner"> 英作文が苦手</label>
+<label><input type="checkbox" class="learner"> 構成が苦手</label>
+
+<label><input type="checkbox" class="learner"> 難問挑戦型</label>
+
+</div>
+
+</div>
+
+<div class="section grid">
+
+<div>
+
+<h2>⑥ 学習目的</h2>
+
+<label><input type="checkbox" class="goal"> 得点アップ</label>
+<label><input type="checkbox" class="goal"> 苦手克服</label>
+<label><input type="checkbox" class="goal"> 語彙強化</label>
+<label><input type="checkbox" class="goal"> 面接練習</label>
+<label><input type="checkbox" class="goal"> 本番シミュレーション</label>
+<label><input type="checkbox" class="goal"> 時間配分練習</label>
+
+</div>
+
+<div>
+
+<h2>⑦ 学習時間</h2>
+
+<select id="studytime">
+
+<option>10分</option>
+<option>30分</option>
+<option>60分</option>
+<option>AIに任せる</option>
+
+</select>
+
+</div>
+
+<div>
+
+<h2>⑧ 出力内容</h2>
+
+<label><input type="checkbox" class="output"> 問題</label>
+<label><input type="checkbox" class="output"> 解答</label>
+<label><input type="checkbox" class="output"> 解説</label>
+<label><input type="checkbox" class="output"> 類題</label>
+<label><input type="checkbox" class="output"> 頻出語彙</label>
+<label><input type="checkbox" class="output"> 学習アドバイス</label>
+
+<label><input type="checkbox" class="output"> 一文回答</label>
+<label><input type="checkbox" class="output"> 初級模範解答</label>
+<label><input type="checkbox" class="output"> 中級模範解答</label>
+<label><input type="checkbox" class="output"> 高得点模範解答</label>
+
+<label><input type="checkbox" class="output"> フォローアップ質問</label>
+<label><input type="checkbox" class="output"> 面接官質問</label>
+
+<label><input type="checkbox" class="output"> テンプレート</label>
+<label><input type="checkbox" class="output"> 採点基準</label>
+<label><input type="checkbox" class="output"> 自己添削チェックリスト</label>
+
+<label><input type="checkbox" class="output"> 読み上げ用スクリプト</label>
+
+</div>
+
+</div><div class="section">
+
+<h2>⑨ AIへの自由指示</h2>
+
+<textarea id="freeInstruction"
+placeholder="例：野球好き、教員志望、海外経験なし、英検まで1か月、中学生向け"></textarea>
+
+</div>
+
+<div class="section">
+
+<button onclick="generatePrompt()">
+プロンプト生成
+</button>
+
+<button onclick="copyPrompt()">
+コピー
+</button>
+
+</div>
+
+<div class="section">
+
+<h2>生成されたプロンプト</h2>
+
+<textarea id="result"></textarea>
+
+</div>
+
+<script>
+
+const levels = {
+
+"中学校英語":[
+"中1",
+"中2",
+"中3"
+],
+
+"高校入試":[
+"基礎",
+"標準",
+"発展",
+"難関校"
+],
+
+"共通テスト":[
+"基礎",
+"本番レベル"
+],
+
+"英検":[
+"5級",
+"4級",
+"3級",
+"準2級",
+"2級",
+"準1級",
+"1級"
+],
+
+"TOEIC":[
+"300",
+"500",
+"600",
+"730",
+"860",
+"900+"
+],
+
+"TOEFL iBT":[
+"40",
+"60",
+"80",
+"100",
+"110+"
+],
+
+"IELTS":[
+"4.0",
+"5.5",
+"6.5",
+"7.5"
+],
+
+"TEAP":[
+"200",
+"250",
+"300",
+"350+"
+]
+
+};
+
+function updateLevels(){
+
+const category =
+document.getElementById("category").value;
+
+const levelSelect =
+document.getElementById("level");
+
+levelSelect.innerHTML = "";
+
+levels[category].forEach(level => {
+
+const option =
+document.createElement("option");
+
+option.value = level;
+option.textContent = level;
+
+levelSelect.appendChild(option);
+
+});
+
+}
+
+updateLevels();
+
+function getCheckedValues(className){
+
+return [...document.querySelectorAll("." + className + ":checked")]
+.map(item => item.parentElement.textContent.trim())
+.join(", ");
+
+}
+
+function generatePrompt(){
+
+const category =
+document.getElementById("category").value;
+
+const level =
+document.getElementById("level").value;
+
+const types =
+getCheckedValues("type");
+
+const topics =
+getCheckedValues("topic");
+
+const learners =
+getCheckedValues("learner");
+
+const goals =
+getCheckedValues("goal");
+
+const outputs =
+getCheckedValues("output");
+
+const studytime =
+document.getElementById("studytime").value;
+
+const freeInstruction =
+document.getElementById("freeInstruction").value;
+
+let prompt = `
+あなたは英語試験対策教材作成の専門家です。
+
+【学習カテゴリ】
+${category}
+
+【レベル】
+${level}
+
+【問題タイプ】
+${types}
+
+【トピック】
+${topics}
+
+【学習者タイプ】
+${learners}
+
+【学習目的】
+${goals}
+
+【学習時間】
+${studytime}
+
+【出力内容】
+${outputs}
+
+【自由指示】
+${freeInstruction}
+
+--------------------
+
+【最重要】
+
+学習者タイプを最優先で反映すること。
+
+`;
+
+if(learners.includes("語彙不足")){
+
+prompt += `
+・語彙推測問題を増やす
+・頻出語彙リストを追加する
+`;
+
+}
+
+if(learners.includes("文法が苦手")){
+
+prompt += `
+・文法問題を段階的に出す
+・解説を丁寧にする
+`;
+
+}
+
+if(learners.includes("長文読解が苦手")){
+
+prompt += `
+・段落ごとの設問を入れる
+・内容理解問題を増やす
+`;
+
+}
+
+if(learners.includes("要約が苦手")){
+
+prompt += `
+・要約活動を含める
+・要約例を提示する
+`;
+
+}
+
+if(learners.includes("推論問題が苦手")){
+
+prompt += `
+・推論問題を段階的にする
+`;
+
+}
+
+if(learners.includes("音のつながりが苦手")){
+
+prompt += `
+・音声変化の解説を加える
+`;
+
+}
+
+if(learners.includes("内容把握が苦手")){
+
+prompt += `
+・基本内容理解問題を重視する
+`;
+
+}
+
+if(learners.includes("英語を話すのが怖い")){
+
+prompt += `
+・一文回答から始める
+・短い模範解答を示す
+`;
+
+}
+
+if(learners.includes("面接が苦手")){
+
+prompt += `
+・フォローアップ質問を増やす
+・面接官質問例を加える
+`;
+
+}
+
+if(learners.includes("即興応答が苦手")){
+
+prompt += `
+・準備時間ありの活動を入れる
+`;
+
+}
+
+if(learners.includes("英作文が苦手")){
+
+prompt += `
+・テンプレートを示す
+・日本語ヒントを付ける
+`;
+
+}
+
+if(learners.includes("構成が苦手")){
+
+prompt += `
+・段落構成を明示する
+`;
+
+}
+
+if(learners.includes("難問挑戦型")){
+
+prompt += `
+・発展問題を含める
+・推論問題を増やす
+`;
+
+}
+
+prompt += `
+
+--------------------
+
+Speakingを含む場合
+
+・一文回答
+・初級模範解答
+・中級模範解答
+・高得点模範解答
+
+を出力すること。
+
+--------------------
+
+Writingを含む場合
+
+・採点基準
+・模範解答
+・自己添削チェックリスト
+
+を出力すること。
+
+--------------------
+
+Listeningを含む場合
+
+・読み上げ用スクリプト
+
+を出力すること。
+
+--------------------
+
+Markdown形式で出力すること。
+`;
+
+document.getElementById("result").value =
+prompt;
+
+}
+
+function copyPrompt(){
+
+const textarea =
+document.getElementById("result");
+
+textarea.select();
+
+document.execCommand("copy");
+
+alert("コピーしました");
+
+}
+
+</script>
+
+</body>
+</html>
