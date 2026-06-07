@@ -1,0 +1,591 @@
+{\rtf1\ansi\ansicpg932\cocoartf2869
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\froman\fcharset0 Times-Roman;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f0\fs24 \cf0 \expnd0\expndtw0\kerning0
+<!DOCTYPE html>\
+<html lang="ja">\
+<head>\
+<meta charset="UTF-8">\
+<meta name="viewport" content="width=device-width, initial-scale=1.0">\
+\
+<title>Exam Designer Pro</title>\
+\
+<style>\
+\
+body\{\
+    font-family: Arial, sans-serif;\
+    max-width:1200px;\
+    margin:auto;\
+    padding:20px;\
+    background:#f5f5f5;\
+\}\
+\
+h1\{\
+    text-align:center;\
+\}\
+\
+.section\{\
+    background:white;\
+    padding:15px;\
+    margin-bottom:15px;\
+    border-radius:10px;\
+    box-shadow:0 2px 5px rgba(0,0,0,0.1);\
+\}\
+\
+.grid\{\
+    display:grid;\
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));\
+    gap:15px;\
+\}\
+\
+label\{\
+    display:block;\
+    margin-bottom:5px;\
+\}\
+\
+textarea\{\
+    width:100%;\
+    min-height:250px;\
+\}\
+\
+button\{\
+    padding:10px 20px;\
+    margin-right:10px;\
+    cursor:pointer;\
+\}\
+\
+select,\
+input\{\
+    width:100%;\
+    padding:8px;\
+\}\
+\
+</style>\
+</head>\
+\
+<body>\
+\
+<h1>Exam Designer Pro</h1>\
+\
+<div class="section">\
+\
+<h2>\uc0\u9312  \u23398 \u32722 \u12459 \u12486 \u12468 \u12522 </h2>\
+\
+<select id="category" onchange="updateLevels()">\
+\
+<option>\uc0\u20013 \u23398 \u26657 \u33521 \u35486 </option>\
+<option>\uc0\u39640 \u26657 \u20837 \u35430 </option>\
+<option>\uc0\u20849 \u36890 \u12486 \u12473 \u12488 </option>\
+<option>\uc0\u33521 \u26908 </option>\
+<option>TOEIC</option>\
+<option>TOEFL iBT</option>\
+<option>IELTS</option>\
+<option>TEAP</option>\
+\
+</select>\
+\
+</div>\
+\
+<div class="section">\
+\
+<h2>\uc0\u9313  \u12524 \u12505 \u12523 \u12539 \u32026 \u12539 \u30446 \u27161 \u24471 \u28857 </h2>\
+\
+<select id="level"></select>\
+\
+</div>\
+\
+<div class="section grid">\
+\
+<div>\
+\
+<h2>\uc0\u9314  \u21839 \u38988 \u12479 \u12452 \u12503 </h2>\
+\
+<label><input type="checkbox" class="type"> \uc0\u35486 \u24409 </label>\
+<label><input type="checkbox" class="type"> \uc0\u25991 \u27861 </label>\
+<label><input type="checkbox" class="type"> Reading</label>\
+<label><input type="checkbox" class="type"> Listening</label>\
+<label><input type="checkbox" class="type"> Speaking</label>\
+<label><input type="checkbox" class="type"> Writing</label>\
+\
+</div>\
+\
+<div>\
+\
+<h2>\uc0\u9315  \u12488 \u12500 \u12483 \u12463 </h2>\
+\
+<label><input type="checkbox" class="topic"> \uc0\u23398 \u26657 </label>\
+<label><input type="checkbox" class="topic"> \uc0\u23478 \u26063 </label>\
+<label><input type="checkbox" class="topic"> \uc0\u20581 \u24247 </label>\
+<label><input type="checkbox" class="topic"> \uc0\u12473 \u12509 \u12540 \u12484 </label>\
+<label><input type="checkbox" class="topic"> AI</label>\
+<label><input type="checkbox" class="topic"> \uc0\u29872 \u22659 </label>\
+<label><input type="checkbox" class="topic"> \uc0\u30064 \u25991 \u21270 \u29702 \u35299 </label>\
+<label><input type="checkbox" class="topic"> \uc0\u22269 \u38555 \u21332 \u21147 </label>\
+<label><input type="checkbox" class="topic"> \uc0\u25945 \u32946 </label>\
+<label><input type="checkbox" class="topic"> \uc0\u26053 \u34892 </label>\
+<label><input type="checkbox" class="topic"> \uc0\u12499 \u12472 \u12493 \u12473 </label>\
+<label><input type="checkbox" class="topic"> \uc0\u12362 \u20219 \u12379 </label>\
+\
+</div>\
+\
+<div>\
+\
+<h2>\uc0\u9316  \u23398 \u32722 \u32773 \u12479 \u12452 \u12503 </h2>\
+\
+<label><input type="checkbox" class="learner"> \uc0\u33521 \u35486 \u12364 \u33510 \u25163 </label>\
+<label><input type="checkbox" class="learner"> \uc0\u33521 \u35486 \u12364 \u24471 \u24847 </label>\
+\
+<label><input type="checkbox" class="learner"> \uc0\u35486 \u24409 \u19981 \u36275 </label>\
+\
+<label><input type="checkbox" class="learner"> \uc0\u25991 \u27861 \u12364 \u33510 \u25163 </label>\
+\
+<label><input type="checkbox" class="learner"> \uc0\u38263 \u25991 \u35501 \u35299 \u12364 \u33510 \u25163 </label>\
+<label><input type="checkbox" class="learner"> \uc0\u35201 \u32004 \u12364 \u33510 \u25163 </label>\
+<label><input type="checkbox" class="learner"> \uc0\u25512 \u35542 \u21839 \u38988 \u12364 \u33510 \u25163 </label>\
+\
+<label><input type="checkbox" class="learner"> \uc0\u38899 \u12398 \u12388 \u12394 \u12364 \u12426 \u12364 \u33510 \u25163 </label>\
+<label><input type="checkbox" class="learner"> \uc0\u20869 \u23481 \u25226 \u25569 \u12364 \u33510 \u25163 </label>\
+\
+<label><input type="checkbox" class="learner"> \uc0\u33521 \u35486 \u12434 \u35441 \u12377 \u12398 \u12364 \u24598 \u12356 </label>\
+<label><input type="checkbox" class="learner"> \uc0\u38754 \u25509 \u12364 \u33510 \u25163 </label>\
+<label><input type="checkbox" class="learner"> \uc0\u21363 \u33288 \u24540 \u31572 \u12364 \u33510 \u25163 </label>\
+\
+<label><input type="checkbox" class="learner"> \uc0\u33521 \u20316 \u25991 \u12364 \u33510 \u25163 </label>\
+<label><input type="checkbox" class="learner"> \uc0\u27083 \u25104 \u12364 \u33510 \u25163 </label>\
+\
+<label><input type="checkbox" class="learner"> \uc0\u38627 \u21839 \u25361 \u25126 \u22411 </label>\
+\
+</div>\
+\
+</div>\
+\
+<div class="section grid">\
+\
+<div>\
+\
+<h2>\uc0\u9317  \u23398 \u32722 \u30446 \u30340 </h2>\
+\
+<label><input type="checkbox" class="goal"> \uc0\u24471 \u28857 \u12450 \u12483 \u12503 </label>\
+<label><input type="checkbox" class="goal"> \uc0\u33510 \u25163 \u20811 \u26381 </label>\
+<label><input type="checkbox" class="goal"> \uc0\u35486 \u24409 \u24375 \u21270 </label>\
+<label><input type="checkbox" class="goal"> \uc0\u38754 \u25509 \u32244 \u32722 </label>\
+<label><input type="checkbox" class="goal"> \uc0\u26412 \u30058 \u12471 \u12511 \u12517 \u12524 \u12540 \u12471 \u12519 \u12531 </label>\
+<label><input type="checkbox" class="goal"> \uc0\u26178 \u38291 \u37197 \u20998 \u32244 \u32722 </label>\
+\
+</div>\
+\
+<div>\
+\
+<h2>\uc0\u9318  \u23398 \u32722 \u26178 \u38291 </h2>\
+\
+<select id="studytime">\
+\
+<option>10\uc0\u20998 </option>\
+<option>30\uc0\u20998 </option>\
+<option>60\uc0\u20998 </option>\
+<option>AI\uc0\u12395 \u20219 \u12379 \u12427 </option>\
+\
+</select>\
+\
+</div>\
+\
+<div>\
+\
+<h2>\uc0\u9319  \u20986 \u21147 \u20869 \u23481 </h2>\
+\
+<label><input type="checkbox" class="output"> \uc0\u21839 \u38988 </label>\
+<label><input type="checkbox" class="output"> \uc0\u35299 \u31572 </label>\
+<label><input type="checkbox" class="output"> \uc0\u35299 \u35500 </label>\
+<label><input type="checkbox" class="output"> \uc0\u39006 \u38988 </label>\
+<label><input type="checkbox" class="output"> \uc0\u38971 \u20986 \u35486 \u24409 </label>\
+<label><input type="checkbox" class="output"> \uc0\u23398 \u32722 \u12450 \u12489 \u12496 \u12452 \u12473 </label>\
+\
+<label><input type="checkbox" class="output"> \uc0\u19968 \u25991 \u22238 \u31572 </label>\
+<label><input type="checkbox" class="output"> \uc0\u21021 \u32026 \u27169 \u31684 \u35299 \u31572 </label>\
+<label><input type="checkbox" class="output"> \uc0\u20013 \u32026 \u27169 \u31684 \u35299 \u31572 </label>\
+<label><input type="checkbox" class="output"> \uc0\u39640 \u24471 \u28857 \u27169 \u31684 \u35299 \u31572 </label>\
+\
+<label><input type="checkbox" class="output"> \uc0\u12501 \u12457 \u12525 \u12540 \u12450 \u12483 \u12503 \u36074 \u21839 </label>\
+<label><input type="checkbox" class="output"> \uc0\u38754 \u25509 \u23448 \u36074 \u21839 </label>\
+\
+<label><input type="checkbox" class="output"> \uc0\u12486 \u12531 \u12503 \u12524 \u12540 \u12488 </label>\
+<label><input type="checkbox" class="output"> \uc0\u25505 \u28857 \u22522 \u28310 </label>\
+<label><input type="checkbox" class="output"> \uc0\u33258 \u24049 \u28155 \u21066 \u12481 \u12455 \u12483 \u12463 \u12522 \u12473 \u12488 </label>\
+\
+<label><input type="checkbox" class="output"> \uc0\u35501 \u12415 \u19978 \u12370 \u29992 \u12473 \u12463 \u12522 \u12503 \u12488 </label>\
+\
+</div>\
+\
+</div>\
+<div class="section">\
+\
+<h2>\uc0\u9320  AI\u12408 \u12398 \u33258 \u30001 \u25351 \u31034 </h2>\
+\
+<textarea id="freeInstruction"\
+placeholder="\uc0\u20363 \u65306 \u37326 \u29699 \u22909 \u12365 \u12289 \u25945 \u21729 \u24535 \u26395 \u12289 \u28023 \u22806 \u32076 \u39443 \u12394 \u12375 \u12289 \u33521 \u26908 \u12414 \u12391 1\u12363 \u26376 \u12289 \u20013 \u23398 \u29983 \u21521 \u12369 "></textarea>\
+\
+</div>\
+\
+<div class="section">\
+\
+<button onclick="generatePrompt()">\
+\uc0\u12503 \u12525 \u12531 \u12503 \u12488 \u29983 \u25104 \
+</button>\
+\
+<button onclick="copyPrompt()">\
+\uc0\u12467 \u12500 \u12540 \
+</button>\
+\
+</div>\
+\
+<div class="section">\
+\
+<h2>\uc0\u29983 \u25104 \u12373 \u12428 \u12383 \u12503 \u12525 \u12531 \u12503 \u12488 </h2>\
+\
+<textarea id="result"></textarea>\
+\
+</div>\
+\
+<script>\
+\
+const levels = \{\
+\
+"\uc0\u20013 \u23398 \u26657 \u33521 \u35486 ":[\
+"\uc0\u20013 1",\
+"\uc0\u20013 2",\
+"\uc0\u20013 3"\
+],\
+\
+"\uc0\u39640 \u26657 \u20837 \u35430 ":[\
+"\uc0\u22522 \u30990 ",\
+"\uc0\u27161 \u28310 ",\
+"\uc0\u30330 \u23637 ",\
+"\uc0\u38627 \u38306 \u26657 "\
+],\
+\
+"\uc0\u20849 \u36890 \u12486 \u12473 \u12488 ":[\
+"\uc0\u22522 \u30990 ",\
+"\uc0\u26412 \u30058 \u12524 \u12505 \u12523 "\
+],\
+\
+"\uc0\u33521 \u26908 ":[\
+"5\uc0\u32026 ",\
+"4\uc0\u32026 ",\
+"3\uc0\u32026 ",\
+"\uc0\u28310 2\u32026 ",\
+"2\uc0\u32026 ",\
+"\uc0\u28310 1\u32026 ",\
+"1\uc0\u32026 "\
+],\
+\
+"TOEIC":[\
+"300",\
+"500",\
+"600",\
+"730",\
+"860",\
+"900+"\
+],\
+\
+"TOEFL iBT":[\
+"40",\
+"60",\
+"80",\
+"100",\
+"110+"\
+],\
+\
+"IELTS":[\
+"4.0",\
+"5.5",\
+"6.5",\
+"7.5"\
+],\
+\
+"TEAP":[\
+"200",\
+"250",\
+"300",\
+"350+"\
+]\
+\
+\};\
+\
+function updateLevels()\{\
+\
+const category =\
+document.getElementById("category").value;\
+\
+const levelSelect =\
+document.getElementById("level");\
+\
+levelSelect.innerHTML = "";\
+\
+levels[category].forEach(level => \{\
+\
+const option =\
+document.createElement("option");\
+\
+option.value = level;\
+option.textContent = level;\
+\
+levelSelect.appendChild(option);\
+\
+\});\
+\
+\}\
+\
+updateLevels();\
+\
+function getCheckedValues(className)\{\
+\
+return [...document.querySelectorAll("." + className + ":checked")]\
+.map(item => item.parentElement.textContent.trim())\
+.join(", ");\
+\
+\}\
+\
+function generatePrompt()\{\
+\
+const category =\
+document.getElementById("category").value;\
+\
+const level =\
+document.getElementById("level").value;\
+\
+const types =\
+getCheckedValues("type");\
+\
+const topics =\
+getCheckedValues("topic");\
+\
+const learners =\
+getCheckedValues("learner");\
+\
+const goals =\
+getCheckedValues("goal");\
+\
+const outputs =\
+getCheckedValues("output");\
+\
+const studytime =\
+document.getElementById("studytime").value;\
+\
+const freeInstruction =\
+document.getElementById("freeInstruction").value;\
+\
+let prompt = `\
+\uc0\u12354 \u12394 \u12383 \u12399 \u33521 \u35486 \u35430 \u39443 \u23550 \u31574 \u25945 \u26448 \u20316 \u25104 \u12398 \u23554 \u38272 \u23478 \u12391 \u12377 \u12290 \
+\
+\uc0\u12304 \u23398 \u32722 \u12459 \u12486 \u12468 \u12522 \u12305 \
+$\{category\}\
+\
+\uc0\u12304 \u12524 \u12505 \u12523 \u12305 \
+$\{level\}\
+\
+\uc0\u12304 \u21839 \u38988 \u12479 \u12452 \u12503 \u12305 \
+$\{types\}\
+\
+\uc0\u12304 \u12488 \u12500 \u12483 \u12463 \u12305 \
+$\{topics\}\
+\
+\uc0\u12304 \u23398 \u32722 \u32773 \u12479 \u12452 \u12503 \u12305 \
+$\{learners\}\
+\
+\uc0\u12304 \u23398 \u32722 \u30446 \u30340 \u12305 \
+$\{goals\}\
+\
+\uc0\u12304 \u23398 \u32722 \u26178 \u38291 \u12305 \
+$\{studytime\}\
+\
+\uc0\u12304 \u20986 \u21147 \u20869 \u23481 \u12305 \
+$\{outputs\}\
+\
+\uc0\u12304 \u33258 \u30001 \u25351 \u31034 \u12305 \
+$\{freeInstruction\}\
+\
+--------------------\
+\
+\uc0\u12304 \u26368 \u37325 \u35201 \u12305 \
+\
+\uc0\u23398 \u32722 \u32773 \u12479 \u12452 \u12503 \u12434 \u26368 \u20778 \u20808 \u12391 \u21453 \u26144 \u12377 \u12427 \u12371 \u12392 \u12290 \
+\
+`;\
+\
+if(learners.includes("\uc0\u35486 \u24409 \u19981 \u36275 "))\{\
+\
+prompt += `\
+\uc0\u12539 \u35486 \u24409 \u25512 \u28204 \u21839 \u38988 \u12434 \u22679 \u12420 \u12377 \
+\uc0\u12539 \u38971 \u20986 \u35486 \u24409 \u12522 \u12473 \u12488 \u12434 \u36861 \u21152 \u12377 \u12427 \
+`;\
+\
+\}\
+\
+if(learners.includes("\uc0\u25991 \u27861 \u12364 \u33510 \u25163 "))\{\
+\
+prompt += `\
+\uc0\u12539 \u25991 \u27861 \u21839 \u38988 \u12434 \u27573 \u38542 \u30340 \u12395 \u20986 \u12377 \
+\uc0\u12539 \u35299 \u35500 \u12434 \u19969 \u23527 \u12395 \u12377 \u12427 \
+`;\
+\
+\}\
+\
+if(learners.includes("\uc0\u38263 \u25991 \u35501 \u35299 \u12364 \u33510 \u25163 "))\{\
+\
+prompt += `\
+\uc0\u12539 \u27573 \u33853 \u12372 \u12392 \u12398 \u35373 \u21839 \u12434 \u20837 \u12428 \u12427 \
+\uc0\u12539 \u20869 \u23481 \u29702 \u35299 \u21839 \u38988 \u12434 \u22679 \u12420 \u12377 \
+`;\
+\
+\}\
+\
+if(learners.includes("\uc0\u35201 \u32004 \u12364 \u33510 \u25163 "))\{\
+\
+prompt += `\
+\uc0\u12539 \u35201 \u32004 \u27963 \u21205 \u12434 \u21547 \u12417 \u12427 \
+\uc0\u12539 \u35201 \u32004 \u20363 \u12434 \u25552 \u31034 \u12377 \u12427 \
+`;\
+\
+\}\
+\
+if(learners.includes("\uc0\u25512 \u35542 \u21839 \u38988 \u12364 \u33510 \u25163 "))\{\
+\
+prompt += `\
+\uc0\u12539 \u25512 \u35542 \u21839 \u38988 \u12434 \u27573 \u38542 \u30340 \u12395 \u12377 \u12427 \
+`;\
+\
+\}\
+\
+if(learners.includes("\uc0\u38899 \u12398 \u12388 \u12394 \u12364 \u12426 \u12364 \u33510 \u25163 "))\{\
+\
+prompt += `\
+\uc0\u12539 \u38899 \u22768 \u22793 \u21270 \u12398 \u35299 \u35500 \u12434 \u21152 \u12360 \u12427 \
+`;\
+\
+\}\
+\
+if(learners.includes("\uc0\u20869 \u23481 \u25226 \u25569 \u12364 \u33510 \u25163 "))\{\
+\
+prompt += `\
+\uc0\u12539 \u22522 \u26412 \u20869 \u23481 \u29702 \u35299 \u21839 \u38988 \u12434 \u37325 \u35222 \u12377 \u12427 \
+`;\
+\
+\}\
+\
+if(learners.includes("\uc0\u33521 \u35486 \u12434 \u35441 \u12377 \u12398 \u12364 \u24598 \u12356 "))\{\
+\
+prompt += `\
+\uc0\u12539 \u19968 \u25991 \u22238 \u31572 \u12363 \u12425 \u22987 \u12417 \u12427 \
+\uc0\u12539 \u30701 \u12356 \u27169 \u31684 \u35299 \u31572 \u12434 \u31034 \u12377 \
+`;\
+\
+\}\
+\
+if(learners.includes("\uc0\u38754 \u25509 \u12364 \u33510 \u25163 "))\{\
+\
+prompt += `\
+\uc0\u12539 \u12501 \u12457 \u12525 \u12540 \u12450 \u12483 \u12503 \u36074 \u21839 \u12434 \u22679 \u12420 \u12377 \
+\uc0\u12539 \u38754 \u25509 \u23448 \u36074 \u21839 \u20363 \u12434 \u21152 \u12360 \u12427 \
+`;\
+\
+\}\
+\
+if(learners.includes("\uc0\u21363 \u33288 \u24540 \u31572 \u12364 \u33510 \u25163 "))\{\
+\
+prompt += `\
+\uc0\u12539 \u28310 \u20633 \u26178 \u38291 \u12354 \u12426 \u12398 \u27963 \u21205 \u12434 \u20837 \u12428 \u12427 \
+`;\
+\
+\}\
+\
+if(learners.includes("\uc0\u33521 \u20316 \u25991 \u12364 \u33510 \u25163 "))\{\
+\
+prompt += `\
+\uc0\u12539 \u12486 \u12531 \u12503 \u12524 \u12540 \u12488 \u12434 \u31034 \u12377 \
+\uc0\u12539 \u26085 \u26412 \u35486 \u12498 \u12531 \u12488 \u12434 \u20184 \u12369 \u12427 \
+`;\
+\
+\}\
+\
+if(learners.includes("\uc0\u27083 \u25104 \u12364 \u33510 \u25163 "))\{\
+\
+prompt += `\
+\uc0\u12539 \u27573 \u33853 \u27083 \u25104 \u12434 \u26126 \u31034 \u12377 \u12427 \
+`;\
+\
+\}\
+\
+if(learners.includes("\uc0\u38627 \u21839 \u25361 \u25126 \u22411 "))\{\
+\
+prompt += `\
+\uc0\u12539 \u30330 \u23637 \u21839 \u38988 \u12434 \u21547 \u12417 \u12427 \
+\uc0\u12539 \u25512 \u35542 \u21839 \u38988 \u12434 \u22679 \u12420 \u12377 \
+`;\
+\
+\}\
+\
+prompt += `\
+\
+--------------------\
+\
+Speaking\uc0\u12434 \u21547 \u12416 \u22580 \u21512 \
+\
+\uc0\u12539 \u19968 \u25991 \u22238 \u31572 \
+\uc0\u12539 \u21021 \u32026 \u27169 \u31684 \u35299 \u31572 \
+\uc0\u12539 \u20013 \u32026 \u27169 \u31684 \u35299 \u31572 \
+\uc0\u12539 \u39640 \u24471 \u28857 \u27169 \u31684 \u35299 \u31572 \
+\
+\uc0\u12434 \u20986 \u21147 \u12377 \u12427 \u12371 \u12392 \u12290 \
+\
+--------------------\
+\
+Writing\uc0\u12434 \u21547 \u12416 \u22580 \u21512 \
+\
+\uc0\u12539 \u25505 \u28857 \u22522 \u28310 \
+\uc0\u12539 \u27169 \u31684 \u35299 \u31572 \
+\uc0\u12539 \u33258 \u24049 \u28155 \u21066 \u12481 \u12455 \u12483 \u12463 \u12522 \u12473 \u12488 \
+\
+\uc0\u12434 \u20986 \u21147 \u12377 \u12427 \u12371 \u12392 \u12290 \
+\
+--------------------\
+\
+Listening\uc0\u12434 \u21547 \u12416 \u22580 \u21512 \
+\
+\uc0\u12539 \u35501 \u12415 \u19978 \u12370 \u29992 \u12473 \u12463 \u12522 \u12503 \u12488 \
+\
+\uc0\u12434 \u20986 \u21147 \u12377 \u12427 \u12371 \u12392 \u12290 \
+\
+--------------------\
+\
+Markdown\uc0\u24418 \u24335 \u12391 \u20986 \u21147 \u12377 \u12427 \u12371 \u12392 \u12290 \
+`;\
+\
+document.getElementById("result").value =\
+prompt;\
+\
+\}\
+\
+function copyPrompt()\{\
+\
+const textarea =\
+document.getElementById("result");\
+\
+textarea.select();\
+\
+document.execCommand("copy");\
+\
+alert("\uc0\u12467 \u12500 \u12540 \u12375 \u12414 \u12375 \u12383 ");\
+\
+\}\
+\
+</script>\
+\
+</body>\
+</html>\
+\
+}
