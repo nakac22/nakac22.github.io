@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speaking Trainer - 中学校英語・英検・面接・英語プレゼン対応</title>
+    <style>
+        :root {
+            --primary: #2b6cb0;
+            --primary-light: #ebf8ff;
+            --secondary: #319795;
+            --accent: #dd6b20;
+            --neutral-dark: #2d3748;
+            --neutral-light: #f7fafc;
+            --border: #e2e8f0;
+            --radius: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #edf2f7;
+            color: var(--neutral-dark);
+            line-height: 1.6;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 20px;
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #718096;
+            font-weight: bold;
+        }
+
+        .screen {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--neutral-dark);
+            font-size: 15px;
+        }
+
+        select, input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 16px;
+            background-color: var(--neutral-light);
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        select:focus, input[type="text"]:focus {
+            border-color: var(--primary);
+        }
+
+        .grid-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
+        }
+
+        .chip-checkbox {
+            position: relative;
+        }
+
+        .chip-checkbox input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .chip-label {
+            display: block;
+            padding: 10px;
+            background-color: var(--neutral-light);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            text-align: center;
+            font-size: 14px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+        }
+
+        .chip-checkbox input:checked + .chip-label {
+            background-color: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: var(--radius);
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            transition: background 0.2s;
+            margin-top: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn:active {
+            background-color: #2b6cb0;
+            transform: translateY(1px);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+        }
+
+        .btn-accent {
+            background-color: var(--accent);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: #4a5568;
+            border: 1px solid #cbd5e0;
+            box-shadow: none;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            background-color: var(--border);
+            height: 8px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--secondary);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .status-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--neutral-light);
+            padding: 10px 15px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .timer {
+            color: var(--accent);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .question-box {
+            background: var(--primary-light);
+            border-left: 5px solid var(--primary);
+            padding: 20px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .question-text {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--neutral-dark);
+            flex: 1;
+        }
+
+        .audio-btn {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-left: 10px;
+            flex-shrink: 0;
+            font-size: 18px;
+        }
+
+        .workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .response-area {
+            width: 100%;
+            flex: 1;
+            min-height: 120px;
+            padding: 12px;
+            border: 2px dashed #cbd5e0;
+            border-radius: var(--radius);
+            font-size: 16px;
+            resize: none;
+            outline: none;
+            background-color: #fff;
+        }
+
+        .response-area:focus {
+            border-color: var(--primary);
+        }
+
+        .support-panel {
+            background: #fffaf0;
+            border: 1px solid #feebc8;
+            padding: 15px;
+            border-radius: var(--radius);
+        }
+
+        .support-title {
+            font-size: 14px;
+            color: #dd6b20;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .support-content {
+            font-size: 15px;
+            display: none;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        .report-section {
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 15px;
+        }
+
+        .report-section h3 {
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            color: var(--primary);
+            font-size: 16px;
+        }
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .report-card {
+            background: var(--neutral-light);
+            padding: 10px;
+            border-radius: var(--radius);
+            text-align: center;
+        }
+
+        .report-card .val {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--secondary);
+            margin-top: 5px;
+        }
+
+        ul.report-list {
+            padding-left: 20px;
+        }
+
+        ul.report-list li {
+            margin-bottom: 5px;
+        }
+
+        .recording-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: bold;
+            color: var(--accent);
+            height: 24px;
+        }
+
+        .pulse {
+            width: 10px;
+            height: 10px;
+            background-color: var(--accent);
+            border-radius: 50%;
+            animation: pulse-animation 1s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.5; }
+        }
+
+        @media (max-width: 600px) {
+            .grid-options {
+                grid-template-columns: 1fr 1fr;
+            }
+            .control-grid {
+                grid-template-columns: 1fr;
+            }
+            .full-width {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Speaking Trainer</h1>
+        <div class="subtitle">中学校英語・英検・面接・英語プレゼン対応</div>
+    </header>
+
+    <!-- SETUP SCREEN -->
+    <div id="setup-screen" class="screen active">
+        <div class="form-group">
+            <label for="purpose">利用目的</label>
+            <select id="purpose">
+                <option value="junior">中学校英語</option>
+                <option value="exam">高校入試</option>
+                <option value="eiken">英検</option>
+                <option value="toeic">TOEIC Speaking</option>
+                <option value="toefl">TOEFL iBT</option>
+                <option value="ielts">IELTS</option>
+                <option value="teacher">教員採用試験</option>
+                <option value="presentation">英語プレゼン</option>
+                <option value="ai">AIお任せ</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="level">レベル</label>
+            <select id="level">
+                <!-- Dynamic Content -->
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>トピック（複数選択可）</label>
+            <div id="topic-grid" class="grid-options">
+                <!-- Dynamic Content -->
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>学習者タイプ（複数選択可）</label>
+            <div class="grid-options">
+                <div class="chip-checkbox"><input type="checkbox" id="learner-visual" value="視覚重視" checked><label class="chip-label" for="learner-visual">イラスト・文字派</label></div>
+                <div class="chip-checkbox"><input type="checkbox" id="learner-auditory" value="聴覚重視"><label class="chip-label" for="learner-auditory">耳から覚える派</label></div>
+                <div class="chip-checkbox"><input type="checkbox" id="learner-slow" value="じっくり思考"><label class="chip-label" for="learner-slow">じっくりマイペース</label></div>
+                <div class="chip-checkbox"><input type="checkbox" id="learner-quick" value="即答訓練"><label class="chip-label" for="learner-quick">ポンポン即答訓練</label></div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="mode">モード</label>
+            <select id="mode">
+                <option value="practice">練習モード（ヒント・模範解答あり）</option>
+                <option value="exam">本番モード（タイマー厳格・ヒントなし）</option>
+                <option value="feedback">フィードバック重視モード（詳細評価用）</option>
+            </select>
+        </div>
+
+        <button class="btn" onclick="startTrainer()">トレーニングを開始する</button>
+    </div>
+
+    <!-- TRAINER SCREEN -->
+    <div id="trainer-screen" class="screen">
+        <div class="progress-bar-container">
+            <div id="progress" class="progress-bar"></div>
+        </div>
+
+        <div class="status-panel">
+            <div id="question-number">Question 1 / 5</div>
+            <div id="timer-status" class="timer">準備時間: --</div>
+        </div>
+
+        <div class="question-box">
+            <div id="question-text" class="question-text">Loading question...</div>
+            <button class="audio-btn" onclick="repeatQuestion()">🔊</button>
+        </div>
+
+        <div class="recording-status" id="rec-indicator" style="visibility: hidden;">
+            <div class="pulse"></div> <span id="rec-text">音声認識中...</span>
+        </div>
+
+        <div class="workspace">
+            <textarea id="response-input" class="response-area" placeholder="ここにあなたの回答を入力するか、音声入力ボタンを押して話してください。"></textarea>
+
+            <div id="help-panel" class="support-panel" style="display: none;">
+                <div class="support-title">💡 日本語ヒント</div>
+                <div id="help-hint" class="support-content"></div>
+                <div class="support-title" style="margin-top:10px;">✨ 模範解答</div>
+                <div id="help-model" class="support-content"></div>
+            </div>
+
+            <div class="control-grid">
+                <button id="btn-stt" class="btn btn-secondary" onclick="toggleSpeech()">🎤 音声入力 開始</button>
+                <button id="btn-help" class="btn btn-outline" onclick="triggerHelpMe()">Help Me</button>
+                <button id="btn-next" class="btn btn-accent full-width" onclick="nextQuestion()">次の質問へ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EVALUATION SCREEN -->
+    <div id="evaluation-screen" class="screen">
+        <h2 style="text-align: center; color: var(--secondary); margin-bottom: 20px;">総合評価レポート</h2>
+
+        <div class="report-section">
+            <h3>基本スタッツ</h3>
+            <div class="report-grid">
+                <div class="report-card"><div>発話総語数</div><div id="rep-words" class="val">0語</div></div>
+                <div class="report-card"><div>完了回答数</div><div id="rep-count" class="val">0 / 5</div></div>
+                <div class="report-card"><div>総練習時間</div><div id="rep-time" class="val">0秒</div></div>
+            </div>
+        </div>
+
+        <div class="report-section">
+            <h3>表現分析</h3>
+            <div class="report-grid">
+                <div class="report-card"><div>理由表現 (because等)</div><div id="rep-reason" class="val">0回</div></div>
+                <div class="report-card"><div>具体例表現 (for example等)</div><div id="rep-example" class="val">0回</div></div>
+            </div>
+        </div>
+
+        <div class="report-section">
+            <h3>パフォーマンスフィードバック</h3>
+            <div style="margin-bottom: 10px;"><strong>👍 あなたの強み:</strong></div>
+            <ul id="rep-strengths" class="report-list" style="margin-bottom: 15px;"></ul>
+            <div style="margin-bottom: 10px;"><strong>🔧 改善点:</strong></div>
+            <ul id="rep-weaknesses" class="report-list" style="margin-bottom: 15px;"></ul>
+            <div style="margin-bottom: 10px;"><strong>🎯 次回重点項目:</strong></div>
+            <ul id="rep-targets" class="report-list"></ul>
+        </div>
+
+        <button class="btn" onclick="resetTrainer()">TOPへ戻って再挑戦</button>
+    </div>
+</div>
+
+<script>
+    // --- DATA REPOSITORY ---
+    const levelsData = {
+        junior: ["中学1年レベル", "中学2年レベル", "中学3年レベル"],
+        exam: ["公立高校入試レベル", "難関私立高校入試レベル"],
+        eiken: ["英検3級", "英検準2級", "英検2級", "英検準1級"],
+        toeic: ["初級 (Level 1-3)", "中級 (Level 4-6)", "上級 (Level 7-8)"],
+        toefl: ["Score 0-12", "Score 13-19", "Score 20-24", "Score 25-30"],
+        ielts: ["Band 4.5-5.5", "Band 6.0-6.5", "Band 7.0+"],
+        teacher: ["小学校英語教員免許用", "中高英語教員免許用"],
+        presentation: ["学部生・研究の基礎", "大学院生・国際学会対策"],
+        ai: ["パーソナライズ自動生成"]
+    };
+
+    const topicsData = {
+        junior: ["日常の自己紹介", "学校生活・部活動", "週末の予定", "好きな食べ物・趣味"],
+        exam: ["将来の夢", "環境問題への取り組み", "スマートフォンの利用", "地域のボランティア"],
+        eiken: ["週末のアクティビティ", "テクノロジーの発展", "環境に優しい生活", "キャリアと仕事"],
+        toeic: ["オフィスでの一コマ", "カスタマーサービス", "出張と旅行", "マーケティング・売上"],
+        toefl: ["大学のキャンパスライフ", "アカデミック（生物・歴史）", "社会的な意思決定", "教育制度"],
+        ielts: ["住んでいる街・故郷", "伝統文化と芸術", "科学技術の影響", "グローバライゼーション"],
+        teacher: ["クラス運営と英語指導", "生徒のモチベーション喚起", "ICT機器の教育利用", "不登校・生徒指導"],
+        presentation: ["研究目的", "研究方法", "研究結果", "研究の意義", "限界", "今後の課題", "質疑応答", "厳しめ質問"],
+        ai: ["AI厳選日常トピック", "AI厳選ビジネス＆アカデミック"]
+    };
+
+    const bank = {
+        junior: [
+            { q: "What is your favorite subject, and why do you like it?", h: "何が一番好きな教科ですか？なぜそれが好きですか？", m: "My favorite subject is English because I like talking with people." },
+            { q: "What do you usually do on weekends?", h: "週末はたいてい何をしていますか？", m: "I usually play baseball with my friends on Saturdays." },
+            { q: "Tell me about your school lunch.", h: "学校の給食について教えてください。", m: "Our school lunch is delicious. I like curry day the best." },
+            { q: "Do you prefer reading books or playing video games?", h: "本を読むのとゲームをするのはどちらが好きですか？", m: "I prefer playing video games because it is very exciting." },
+            { q: "Where do you want to go during your next vacation?", h: "次の休みにどこへ行きたいですか？", m: "I want to go to Tokyo because I want to visit Tokyo Disneyland." }
+        ],
+        exam: [
+            { q: "Some people say that students should do volunteer work. What do you think?", h: "学生はボランティア活動をすべきだという人がいます。どう思いますか？", m: "I agree with this idea because students can learn many practical things outside school." },
+            { q: "What is the most important thing you learned in junior high school?", h: "中学校で学んだ最も重要なことは何ですか？", m: "The most important thing is team work. I learned it through my club activities." },
+            { q: "Do you think smartphones are necessary for junior high school students?", h: "中学生にスマートフォンは必要だと思います。どう思いますか？", m: "Yes, because they can look up words easily and contact parents in emergencies." },
+            { q: "Which do you like better, cooking for yourself or eating out?", h: "自炊するのと外食するのとどちらが好きですか？", m: "I like cooking for myself better because it is healthier and cheaper." },
+            { q: "What kind of job do you want to try in the future?", h: "将来、どのような仕事に挑戦してみたいですか？", m: "I want to be a teacher because I love interacting with children and helping them grow." }
+        ],
+        eiken: [
+            { q: "Today, many people buy food online. Do you think this trend will increase?", h: "今日、多くの人がオンラインで食品を購入します。この傾向は強まると思いますか？", m: "Yes, I think so. It saves a lot of time, especially for busy workers and elderly people." },
+            { q: "Some companies allow employees to wear casual clothes. Do you think this is good?", h: "私服勤務を認める企業があります。これは良いことだと思いますか？", m: "Yes. Employees can work more comfortably, which leads to better creative ideas." },
+            { q: "Do you think environmental problems can be solved by individuals?", h: "環境問題は個人によって解決できると思いますか？", m: "Yes, if everyone reduces plastic waste and saves electricity daily, it makes a big difference." },
+            { q: "Is it a good idea for Japanese universities to accept more foreign students?", h: "日本の大学が外国人留学生をもっと受け入れるのは良い考えでしょうか？", m: "Definitely. It promotes intercultural understanding and helps Japanese students expand their views." },
+            { q: "Should history classes focus more on modern history rather than ancient history?", h: "歴史の授業は古代史よりも近現代史に焦点を当てるべきでしょうか？", m: "I think so. Modern history is directly connected to current social conflicts and economic issues." }
+        ],
+        toeic: [
+            { q: "Could you describe your workspace or office layout?", h: "あなたの仕事スペースやオフィスのレイアウトについて説明していただけますか？", m: "My office has an open layout with hot-desking, which encourages cross-team communication." },
+            { q: "How do you handle unexpected complaints from a client?", h: "クライアントからの予期せぬクレームにはどのように対応しますか？", m: "First, I listen carefully to show empathy. Then, I propose a practical solution immediately." },
+            { q: "What are the advantages of holding business meetings online?", h: "オンラインでビジネス会議を行うメリットは何ですか？", m: "It eliminates travel time, reduces corporate costs, and allows easy screen-sharing." },
+            { q: "How do you maintain a good work-life balance during peak seasons?", h: "繁忙期にどのようにしてワークライフバランスを維持しますか？", m: "I prioritize tasks strictly, delegate when possible, and ensure I disconnect from emails at night." },
+            { q: "Do you think rewards or bonuses are the best way to motivate team members?", h: "報酬やボーナスがチームのモチベーションを高める最善の方法だと思いますか？", m: "They help, but clear career progression and positive recognition are often more powerful." }
+        ],
+        toefl: [
+            { q: "Some universities require students to choose a major immediately. Others allow them to wait. Which do you prefer?", h: "大学が入学直後に専攻を選ばせるのと、待つのを許容するのとどちらが良いですか？", m: "I prefer waiting because it allows students to explore various academic disciplines before committing." },
+            { q: "Do you agree or disagree with the statement: 'Art and music funding should be cut to support science education'?", h: "「科学教育支援のため芸術・音楽の予算を削減すべき」という意見に賛成ですか反対ですか？", m: "I strongly disagree. Art and music cultivate critical thinking, creativity, and emotional health." },
+            { q: "Explain how extreme weather events affect local agricultural economics.", h: "極端な気象イベントが地域の農業経済にどのように影響するか説明してください。", m: "Extreme weather destroys crops, which triggers immediate supply shortages and drives up inflation." },
+            { q: "Is it better for children to grow up in rural areas or large modern cities?", h: "子供は田舎と大都市のどちらで育つのが良いと思いますか？", m: "Rural areas offer deep encounters with nature, while cities provide robust educational resources." },
+            { q: "State your opinion on whether university professors should focus more on research or teaching.", h: "大学教授は研究と教授活動のどちらに注力すべきか、意見を述べてください。", m: "Professors must balance both, as cutting-edge research directly enriches the quality of lectures." }
+        ],
+        ielts: [
+            { q: "Let's talk about your hometown. What do you like most about it?", h: "あなたの故郷について話しましょう。一番好きなところは何ですか？", m: "What I adore most is the seamless integration of historic architecture and green spaces." },
+            { q: "How has technology changed the way people socialize in your country?", h: "あなたの国では、テクノロジーによって人々の社交の形はどう変わりましたか？", m: "It has bridged geographical distances, yet ironically, lessened face-to-face depth." },
+            { q: "Do you think international tourism does more harm than good to historical sites?", h: "国際観光は歴史的遺跡にとって、利益よりも害の方が多いと思いますか？", m: "It generates revenue for preservation, but accelerated wear and tear remains a critical threat." },
+            { q: "Why do some people prefer to live in old buildings rather than modern apartments?", h: "なぜ一部の人は現代的なアパートよりも古い建物に住むことを好むのでしょうか？", m: "Old buildings often possess unique character, structural durability, and historical charm." },
+            { q: "To what extent should governments regulate industrial carbon emissions?", h: "政府は企業の炭素排出量をどの程度規制すべきでしょうか？", m: "Governments should implement strict statutory limits alongside carbon credits to drive compliance." }
+        ],
+        teacher: [
+            { q: "Why do you want to become an English teacher in this prefecture?", h: "なぜこの都道府県の英語教員になりたいのですか？", m: "I want to cultivate global mindsets in local children and foster communication skills." },
+            { q: "How would you engage a student who has lost motivation to learn English?", h: "英語学習へのモチベーションを失った生徒にどのようにアプローチしますか？", m: "I would introduce gamified tasks and connection to their hobbies like pop music or video games." },
+            { q: "What is your stance on using Japanese in an English communicative classroom?", h: "コミュニケーション主体の英語授業において日本語を使用することについてどう考えますか？", m: "Japanese should be used strategically for complex instructions to maximize active practice time." },
+            { q: "How do you plan to incorporate cross-cultural understanding into daily lessons?", h: "日々のレッスンに異文化理解をどのように組み込む計画ですか？", m: "I will use current global news topics and compare international cultural habits with Japanese ones." },
+            { q: "Describe your approach to handling parent concerns about university entrance examinations.", h: "大学入試に関する保護者の不安に対してどのようなアプローチを取りますか？", m: "I will provide clear, data-driven overviews of holistic assessment formats and structural support." }
+        ],
+        presentation: [
+            { q: "Could you clearly state the primary purpose of your current research project?", h: "[研究目的] あなたの現在の研究プロジェクトの主な目的を明確に述べてください。", m: "The primary purpose of this study is to clarify the real-world impact of construction grammar on L2 acquisition." },
+            { q: "What specific research methodologies did you employ to gather and analyze your data?", h: "[研究方法] データ収集と分析のために、具体的にどのような研究手法を採用しましたか？", m: "We utilized a mixed-methods approach, combining longitudinal corpus analysis with learner surveys." },
+            { q: "What are the key research findings or outcomes obtained from your latest analysis?", h: "[研究結果] 最新の分析から得られた、主要な研究結果や成果は何ですか？", m: "The results indicate that usage-based instruction significantly enhances phraseological fluency." },
+            { q: "What is the theoretical or practical significance of your research to the field?", h: "[研究の意義] あなたの研究の、この分野における理論的または実践的な意義は何ですか？", m: "This research bridges the gap between formal cognitive linguistics and classroom pedagogy." },
+            { q: "What are the major limitations of your study that need to be acknowledged?", h: "[限界] 認めるべき、あなたの研究の主な限界・制限事項は何ですか？", m: "The sample size was limited to university intermediate learners, which narrows generalizability." },
+            { q: "What concrete steps or direction do you propose for future tasks or updates?", h: "[今後の課題] 今後の課題やアップデートとして、どのような具体的ステップや方向性を提案しますか？", m: "Future studies should explore long-term retention rates through delayed post-testing designs." },
+            { q: "Let's open the floor for general questions. How do you respond to common critique?", h: "[質疑応答] 一般的な質問を受け付けます。よくある批評にどのように対応しますか？", m: "That is an excellent point. We controlled for that variable by implementing strict baseline checks." },
+            { q: "Your dataset seems somewhat narrow. How can you confidently justify these broader claims?", h: "[厳しめ質問] データセットがやや狭いようです。どのようにしてその広範な主張を自信を持って正当化できますか？", m: "While the cohort is small, the high density of tokens per participant ensures robust statistical power." }
+        ],
+        ai: [
+            { q: "Technology is rapidly reshaping contemporary society. In your perspective, what is the most profound challenge?", h: "テクノロジーは現代社会を急速に変貌させています。最も深刻な課題は何ですか？", m: "The most profound challenge is ensuring data privacy while maintaining open technological innovation." },
+            { q: "How can individuals effectively discern credible facts from misinformation?", h: "個人が誤情報から信頼できる事実を効果的に見分けるにはどうすればよいでしょうか？", m: "Individuals must practice source verification and cross-reference claims against authoritative academic data." },
+            { q: "Why is lifelong learning becoming an absolute necessity in modern careers?", h: "なぜ現代のキャリアにおいて生涯学習が絶対的な必要条件になっているのでしょうか？", m: "Because automation constantly renders static skills obsolete, demanding continuous adaptability." },
+            { q: "What role should community organizations play in fostering environmental responsibility?", h: "環境への責任を育む上で、地域組織はどのような役割を果たすべきでしょうか？", m: "They should initiate grassroots campaigns and practical recycling programs that involve families directly." },
+            { q: "How do cultural traditions maintain relevance in an increasingly globalized economic ecosystem?", h: "加速するグローバル経済のエコシステムにおいて、文化的伝統はどのように関連性を維持していますか？", m: "Traditions survive by evolving dynamically, merging legacy values with contemporary digital mediums." }
+        ]
+    };
+
+    // --- APP STATE ---
+    let currentQuestions = [];
+    let currentIdx = 0;
+    let prepTimer = null;
+    let respTimer = null;
+    let secondsLeft = 0;
+    let totalTrainingTime = 0;
+    let trainingTimeTimer = null;
+
+    let collectedResponses = [];
+    let isRecording = false;
+    let recognition = null;
+
+    // --- INITIALIZATION ---
+    window.addEventListener('DOMContentLoaded', () => {
+        // Event Setup
+        document.getElementById('purpose').addEventListener('change', updateTopics);
+        
+        // Initial setup run
+        updateTopics();
+        initSpeechRecognition();
+        
+        // Pre-load voices for TTS stability
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.getVoices();
+            if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                window.speechSynthesis.onvoiceschanged = window.speechSynthesis.getVoices;
+            }
+        }
+    });
+
+    function updateTopics() {
+        const purpose = document.getElementById('purpose').value;
+        
+        // Update Levels
+        const levelSelect = document.getElementById('level');
+        levelSelect.innerHTML = '';
+        if (levelsData[purpose]) {
+            levelsData[purpose].forEach(lvl => {
+                let opt = document.createElement('option');
+                opt.value = lvl;
+                opt.textContent = lvl;
+                levelSelect.appendChild(opt);
+            });
+        }
+
+        // Update Topics
+        const topicGrid = document.getElementById('topic-grid');
+        topicGrid.innerHTML = '';
+        if (topicsData[purpose]) {
+            topicsData[purpose].forEach((top, index) => {
+                let container = document.createElement('div');
+                container.className = 'chip-checkbox';
+                
+                let input = document.createElement('input');
+                input.type = 'checkbox';
+                input.id = `topic-${index}`;
+                input.value = top;
+                if(index === 0) input.checked = true; 
+                
+                let label = document.createElement('label');
+                label.className = 'chip-label';
+                label.htmlFor = `topic-${index}`;
+                label.textContent = top;
+                
+                container.appendChild(input);
+                container.appendChild(label);
+                topicGrid.appendChild(container);
+            });
+        }
+    }
+
+    function initSpeechRecognition() {
+        window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (window.SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = (event) => {
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    }
+                }
+                if(finalTranscript) {
+                    const txtArea = document.getElementById('response-input');
+                    txtArea.value = (txtArea.value + " " + finalTranscript).trim();
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error", event.error);
+                stopRecordingState();
+            };
+
+            recognition.onend = () => {
+                stopRecordingState();
+            };
+        } else {
+            const sttBtn = document.getElementById('btn-stt');
+            if (sttBtn) {
+                sttBtn.disabled = true;
+                sttBtn.textContent = "🎤 音声入力非対応環境";
+            }
+        }
+    }
+
+    // --- NAVIGATION / ENGINE ---
+    function startTrainer() {
+        const purpose = document.getElementById('purpose').value;
+        const mode = document.getElementById('mode').value;
+
+        let baseQuestions = bank[purpose] || bank['ai'];
+        currentQuestions = [...baseQuestions].sort(() => 0.5 - Math.random()).slice(0, 5);
+        currentIdx = 0;
+        collectedResponses = [];
+        totalTrainingTime = 0;
+
+        if(mode === 'exam') {
+            document.getElementById('btn-help').style.display = 'none';
+        } else {
+            document.getElementById('btn-help').style.display = 'block';
+        }
+
+        document.getElementById('setup-screen').classList.remove('active');
+        document.getElementById('trainer-screen').classList.add('active');
+
+        trainingTimeTimer = setInterval(() => { totalTrainingTime++; }, 1000);
+
+        showQuestion();
+    }
+
+    function showQuestion() {
+        document.getElementById('response-input').value = '';
+        document.getElementById('help-panel').style.display = 'none';
+        document.getElementById('help-hint').style.display = 'none';
+        document.getElementById('help-model').style.display = 'none';
+        stopRecordingState();
+
+        document.getElementById('question-number').textContent = `Question ${currentIdx + 1} / 5`;
+        document.getElementById('progress').style.width = `${((currentIdx) / 5) * 100}%`;
+
+        const qItem = currentQuestions[currentIdx];
+        document.getElementById('question-text').textContent = qItem.q;
+        document.getElementById('help-hint').textContent = qItem.h;
+        document.getElementById('help-model').textContent = qItem.m;
+
+        speakText(qItem.q);
+
+        const mode = document.getElementById('mode').value;
+        clearInterval(prepTimer);
+        clearInterval(respTimer);
+
+        if(mode === 'exam') {
+            startPrepTimer(15, () => {
+                startRespTimer(45, () => {
+                    nextQuestion();
+                });
+            });
+        } else if(mode === 'practice') {
+            startPrepTimer(30, () => {
+                startRespTimer(60, null);
+            });
+        } else { 
+            startPrepTimer(20, () => {
+                startRespTimer(90, null);
+            });
+        }
+    }
+
+    // --- TIMERS ---
+    function startPrepTimer(sec, callback) {
+        secondsLeft = sec;
+        const statusEl = document.getElementById('timer-status');
+        statusEl.classList.remove('text-accent');
+        statusEl.textContent = `準備時間: ${secondsLeft}秒`;
+        
+        prepTimer = setInterval(() => {
+            secondsLeft--;
+            if(secondsLeft <= 0) {
+                clearInterval(prepTimer);
+                if(callback) callback();
+            } else {
+                statusEl.textContent = `準備時間: ${secondsLeft}秒`;
+            }
+        }, 1000);
+    }
+
+    function startRespTimer(sec, callback) {
+        secondsLeft = sec;
+        const statusEl = document.getElementById('timer-status');
+        statusEl.classList.add('text-accent');
+        statusEl.textContent = `解答時間: ${secondsLeft}秒`;
+        
+        if(recognition && document.getElementById('mode').value !== 'exam') {
+            startSpeech();
+        }
+
+        respTimer = setInterval(() => {
+            secondsLeft--;
+            if(secondsLeft <= 0) {
+                clearInterval(respTimer);
+                if(callback) callback();
+            } else {
+                statusEl.textContent = `解答時間: ${secondsLeft}秒`;
+            }
+        }, 1000);
+    }
+
+    // --- AUDIO / TTS SYSTEM ---
+    function speakText(text) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); 
+            let utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            
+            let voices = window.speechSynthesis.getVoices();
+            let preferredVoices = ["Samantha", "Daniel", "Alex", "Karen"];
+            let foundVoice = null;
+
+            for(let pref of preferredVoices) {
+                foundVoice = voices.find(v => v.name.includes(pref) && (v.lang.startsWith('en') || v.lang.startsWith('en-')));
+                if(foundVoice) break;
+            }
+
+            if(foundVoice) {
+                utterance.voice = foundVoice;
+            }
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    function repeatQuestion() {
+        const qItem = currentQuestions[currentIdx];
+        if(qItem) speakText(qItem.q);
+    }
+
+    // --- STT SYSTEM ---
+    function toggleSpeech() {
+        if(isRecording) {
+            stopSpeech();
+        } else {
+            startSpeech();
+        }
+    }
+
+    function startSpeech() {
+        if(!recognition || isRecording) return;
+        try {
+            recognition.start();
+            isRecording = true;
+            const btn = document.getElementById('btn-stt');
+            btn.textContent = "⏹ 音声入力 停止";
+            btn.style.backgroundColor = '#dd6b20';
+            document.getElementById('rec-indicator').style.visibility = 'visible';
+        } catch(e) {
+            console.error(e);
+        }
+    }
+
+    function stopSpeech() {
+        if(!recognition || !isRecording) return;
+        recognition.stop();
+        stopRecordingState();
+    }
+
+    function stopRecordingState() {
+        isRecording = false;
+        const btn = document.getElementById('btn-stt');
+        if(btn) {
+            btn.textContent = "🎤 音声入力 開始";
+            btn.style.backgroundColor = '';
+        }
+        const indicator = document.getElementById('rec-indicator');
+        if(indicator) indicator.style.visibility = 'hidden';
+    }
+
+    // --- HELP ME ---
+    function triggerHelpMe() {
+        document.getElementById('help-panel').style.display = 'block';
+        document.getElementById('help-hint').style.display = 'block';
+        document.getElementById('help-model').style.display = 'block';
+    }
+
+    // --- CONTROLLER ACTION ---
+    function nextQuestion() {
+        clearInterval(prepTimer);
+        clearInterval(respTimer);
+        stopSpeech();
+
+        const ans = document.getElementById('response-input').value;
+        collectedResponses.push(ans || "");
+
+        if(currentIdx < 4) {
+            currentIdx++;
+            showQuestion();
+        } else {
+            finishTraining();
+        }
+    }
+
+    // --- EVALUATION / METRICS LAYER ---
+    function finishTraining() {
+        clearInterval(trainingTimeTimer);
+        document.getElementById('trainer-screen').classList.remove('active');
+        document.getElementById('evaluation-screen').classList.add('active');
+
+        let totalWords = 0;
+        let answeredCount = 0;
+        let becauseCount = 0;
+        let exampleCount = 0;
+
+        collectedResponses.forEach(resp => {
+            let clean = resp.trim();
+            if(clean.length > 0) {
+                answeredCount++;
+                let words = clean.split(/\s+/);
+                totalWords += words.length;
+
+                let textLower = clean.toLowerCase();
+                let becauseMatches = textLower.match(/because/g);
+                let soMatches = textLower.match(/\bso\b/g);
+                let exampleMatches = textLower.match(/for example|such as|like/g);
+
+                if(becauseMatches) becauseCount += becauseMatches.length;
+                if(soMatches) becauseCount += soMatches.length;
+                if(exampleMatches) exampleCount += exampleMatches.length;
+            }
+        });
+
+        document.getElementById('rep-words').textContent = `${totalWords}語`;
+        document.getElementById('rep-count').textContent = `${answeredCount} / 5`;
+        document.getElementById('rep-time').textContent = `${totalTrainingTime}秒`;
+        document.getElementById('rep-reason').textContent = `${becauseCount}回`;
+        document.getElementById('rep-example').textContent = `${exampleCount}回`;
+
+        const strengths = document.getElementById('rep-strengths');
+        const weaknesses = document.getElementById('rep-weaknesses');
+        const targets = document.getElementById('rep-targets');
+
+        strengths.innerHTML = '';
+        weaknesses.innerHTML = '';
+        targets.innerHTML = '';
+
+        if(answeredCount >= 4) {
+            strengths.innerHTML += "<li><strong>積極的な発話姿勢:</strong> 多くの質問に対してパスをせず、最後まで答えきることができました。素晴らしい挑戦です。</li>";
+        } else {
+            strengths.innerHTML += "<li><strong>丁寧なリスニング:</strong> 質問を最後までしっかりと聴くスタンスがキープできています。</li>";
+        }
+
+        if(totalWords > 40) {
+            strengths.innerHTML += "<li><strong>豊富な情報量:</strong> 1問あたり平均して十分な語数の英語をアウトプットできており、表現意欲が非常に高いです。</li>";
+        }
+
+        if(becauseCount > 0 || exampleCount > 0) {
+            strengths.innerHTML += "<li><strong>論理的な展開力:</strong> 理由や具体例のフレーズを能動的に使って、相手に伝わりやすい構成を作ろうとしています。</li>";
+        }
+
+        if(totalWords < 25) {
+            weaknesses.innerHTML += "<li><strong>発話のボリューム不足:</strong> 単語または一文のみで終了しているケースが見られます。</li>";
+            targets.innerHTML += "<li><strong>「2文以上」で答える習慣づけ:</strong> 最初の1文で結論を述べたあと、 because や Also を使って必ずもう1文追加する癖をつけましょう。</li>";
+        }
+        
+        if(becauseCount === 0) {
+            weaknesses.innerHTML += "<li><strong>論理的根拠の明示:</strong> 主張を裏付ける「理由の提示」が不足しているエリアがあります。</li>";
+            targets.innerHTML += "<li><strong>理由追加フレーズの自動化:</strong> 自分の意見の後、間髪入れずに 'Because...' または 'The reason is...' と声に出す訓練が効果的です。</li>";
+        }
+
+        if(exampleCount === 0) {
+            weaknesses.innerHTML += "<li><strong>具体性の向上空間:</strong> 抽象的な表現にとどまっているため、聞き手へのクリアなイメージ喚起が可能です。</li>";
+            targets.innerHTML += "<li><strong>エピソード・具体例の導入:</strong> 理由のあとに 'For example, I...' と自身の体験を1つ付け加える構造をテンプレ化しましょう。</li>";
+        }
+
+        if(strengths.children.length === 0) strengths.innerHTML = "<li>次回のセッションで強みを見つけていきましょう！まずは声を出したことが第一歩です。</li>";
+        if(weaknesses.children.length === 0) weaknesses.innerHTML = "<li>素晴らしいパフォーマンスです！明確な弱点はありません。表現のバリエーションをさらに広げていきましょう。</li>";
+        if(targets.children.length === 0) targets.innerHTML = "<li>現在の流暢さを維持しながら、さらに様々なトピック（社会、テクノロジーなど）にチャレンジしてください。</li>";
+    }
+
+    function resetTrainer() {
+        document.getElementById('evaluation-screen').classList.remove('active');
+        document.getElementById('setup-screen').classList.add('active');
+    }
+</script>
+
+</body>
+</html>
