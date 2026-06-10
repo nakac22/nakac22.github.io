@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英語面接練習場</title>
+    <style>
+        :root {
+            --slate-900: #0f172a;
+            --slate-100: #f1f5f9;
+            --teal-600: #0d9488;
+            --indigo-600: #4f46e5;
+            --border: #cbd5e1;
+            --radius: 8px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background-color: #e2e8f0; color: #334155; padding: 15px; }
+        .container { max-width: 800px; margin: 0 auto; background: #ffffff; border-radius: var(--radius); padding: 25px; min-height: 85vh; display: flex; flex-direction: column; }
+        header { text-align: center; border-bottom: 3px solid var(--slate-900); padding-bottom: 12px; margin-bottom: 20px; }
+        h1 { color: var(--slate-900); font-size: 20px; font-family: monospace; }
+        .screen { display: none; }
+        .btn { background-color: var(--slate-900); color: white; border: none; padding: 14px 28px; font-size: 16px; font-weight: bold; border-radius: var(--radius); cursor: pointer; text-align: center; width: 100%; margin-top: 10px; }
+        .btn-secondary { background-color: var(--teal-600); }
+        .btn-accent { background-color: #d97706; }
+        .btn-outline { background-color: transparent; color: #475569; border: 2px solid #cbd5e1; }
+        select { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius); font-size: 15px; margin-bottom: 20px; }
+        
+        .topic-item { padding: 15px; background: #ffffff; border: 2px solid var(--border); border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 10px; transition: background 0.2s; }
+        .topic-item.selected { background: #e0e7ff !important; border-color: var(--indigo-600) !important; color: #4338ca !important; }
+        
+        .q-alert-box { background: #f0f9ff; border-left: 5px solid #0284c7; padding: 15px; border-radius: var(--radius); margin-bottom: 15px; font-size: 16px; font-weight: bold; line-height: 1.4; }
+        .input-area { width: 100%; height: 130px; padding: 12px; border: 2px dashed #94a3b8; border-radius: var(--radius); font-size: 15px; margin-bottom: 15px; resize: none; }
+        .help-drawer { background: #fffbeb; border: 1px solid #fef3c7; padding: 15px; border-radius: var(--radius); margin-bottom: 15px; font-size: 14px; }
+        .analytics-block { border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; background: #f8fafc; margin-bottom: 20px; }
+        .stat-num { font-size: 24px; font-weight: bold; color: var(--indigo-600); }
+        .feedback-list { padding-left: 20px; margin-top: 10px; font-size: 14px; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>英語面接練習場</h1>
+    </header>
+
+    <!-- 1. 設定画面 -->
+    <div id="scr-setup" class="screen" style="display: block;">
+        <label style="display:block; font-weight:bold; margin-bottom:8px;">1. 発達レベルの選択（概念把握・構造拡張の階層性）</label>
+        <select id="cfg-level">
+            <option value="lv1">Level 1 : 幼児・初期初級期 (単語・定型表現による直接表明)</option>
+            <option value="lv2">Level 2 : 初級定着期 (単一のエージェントと動作の記述：S+V+Oの固定)</option>
+            <option value="lv3">Level 3 : 初中級移行期 (副詞節の付加・因果関係や時間軸による肉付け)</option>
+            <option value="lv4">Level 4 : 中級基礎期 (複文構造の安定・主観から客観への部分的一般化)</option>
+            <option value="lv5" selected>Level 5 : 中級流暢期 (社会的事象の抽象化・複数パラグラフのディスコース化)</option>
+        </select>
+
+        <label style="display:block; font-weight:bold; margin-bottom:8px;">2. 練習モード</label>
+        <select id="cfg-mode">
+            <option value="mod_p">プラクティス（ヒント・模範解答を表示）</option>
+            <option value="mod_e">リアル検証（ヒント非表示）</option>
+        </select>
+
+        <button id="btn-goto-topic" class="btn btn-secondary">トピック選択へ進む ➔</button>
+    </div>
+
+    <!-- 2. トピック選択画面 -->
+    <div id="scr-topic" class="screen">
+        <p style="font-weight:bold; margin-bottom:15px;">3. 深化させるテーマを選択してください（厳密固定3問構成）：</p>
+        
+        <div id="ui-topic-list">
+            <div id="item-color" class="topic-item selected" data-theme="theme_color">
+                Color（色彩）— 事実描写から社会的影響へ
+            </div>
+            <div id="item-food" class="topic-item" data-theme="theme_food">
+                Food（食）— 嗜好品から食糧供給・環境論へ
+            </div>
+            <div id="item-clothing" class="topic-item" data-theme="theme_clothing">
+                Clothing（衣服）— 物理的描写から社会規範・記号論へ
+            </div>
+            <div id="item-travel" class="topic-item" data-theme="theme_travel">
+                Travel（移動・旅）— 個人の移動からグローバリゼーションへ
+            </div>
+        </div>
+
+        <button id="btn-boot-trainer" class="btn btn-secondary">セッションを開始する ➔</button>
+        <button id="btn-back-to-setup" class="btn btn-outline" style="margin-top:10px;">⏰ 条件を選び直す</button>
+    </div>
+
+    <!-- 3. 実行画面 -->
+    <div id="scr-trainer" class="screen">
+        <h3 id="ui-phase-info" style="margin-bottom:10px; color:var(--indigo-600);">Question 1 / 3</h3>
+        <div class="q-alert-box">
+            <div id="ui-prompt">Loading...</div>
+        </div>
+        
+        <button id="btn-audio-repeat" class="btn btn-outline" style="margin-bottom:15px; width:auto; padding:6px 12px; font-size:13px;">🔊 質問文を再朗読</button>
+
+        <textarea id="ui-response" class="input-area" placeholder="ここに英語を入力するか、音声入力を起動して話してください。"></textarea>
+
+        <div id="ui-help-drawer" class="help-drawer" style="display: none;">
+            <p style="font-weight:bold; color:#b45309;">💡 この段階での着眼点:</p>
+            <p id="ui-help-hint" style="margin-bottom:10px;"></p>
+            <p style="font-weight:bold; color:var(--teal-600);">✨ 模範解答例:</p>
+            <p id="ui-help-model" style="font-style: italic;"></p>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <button id="btn-mic" class="btn btn-outline">🎤 音声入力 開始/停止</button>
+            <button id="btn-hint" class="btn btn-outline">解説・ヒント表示</button>
+        </div>
+        <button id="btn-commit-phase" class="btn btn-accent">解答を確定して次へ ➔</button>
+    </div>
+
+    <!-- 4. 診断画面 -->
+    <div id="scr-report" class="screen">
+        <h2 style="text-align: center; margin-bottom: 20px;">言語発達精密診断レポート</h2>
+        
+        <div class="analytics-block">
+            <p style="font-weight:bold; margin-bottom:10px;">📊 ユーザー発話テキストからの実測データ</p>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; text-align:center;">
+                <div style="background:white; padding:10px; border-radius:6px;">
+                    <div>実際の総語数</div>
+                    <div id="rep-words" class="stat-num">0語</div>
+                </div>
+                <div style="background:white; padding:10px; border-radius:6px;">
+                    <div>検出された接続詞・関係詞</div>
+                    <div id="rep-signals" class="stat-num">0回</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="analytics-block">
+            <p style="font-weight:bold; color:var(--teal-600);">🎯 発話実態に基づく客観総評</p>
+            <ul id="rep-positives" class="feedback-list"></ul>
+        </div>
+
+        <button id="btn-exit-report" class="btn">もう一度最初から解く</button>
+    </div>
+</div>
+
+<script>
+    // データマトリクス
+    const masterMatrix = {
+        theme_color: {
+            lv1: [
+                { q: "What color do you like?", h: "好きな色を単語、または I like blue. のような最小限の構成で表明します。", m: "I like blue." },
+                { q: "Do you like yellow?", h: "Yes/Noの意思表示に、必要に応じて一言添えます。", m: "Yes, I do. It is a happy color." },
+                { q: "Look at your shirt. What color is it?", h: "目に見える具体物を It is... でシンプルに指定します。", m: "It is white." }
+            ],
+            lv2: [
+                { q: "Why do many people buy black or white cars?", h: "特定のエージェント（人々）の一般的な行動の理由を、単純な因果（because S V）で結びます。", m: "Many people buy white cars because they can sell them at a high price later." },
+                { q: "Describe the colors of your room.", h: "物理的空間の状態について、複数のS+V+Oを用いて具体的に描写します。", m: "My room has white walls, and I have a dark brown desk. I also have a blue chair." },
+                { q: "When do you want to wear bright red clothes?", h: "特定の状況や感情（When...）と、その時の行動をストレートに結びつけます。", m: "I want to wear red clothes when I play an important tennis match." }
+            ],
+            lv3: [
+                { q: "How do fast-food restaurants use colors like red and yellow to influence customers?", h: "色が顧客に与える心理的影響を、when節やbecause節を用いて時間軸・因果軸で肉付けします。", m: "They use red and yellow because these colors make people feel hungry when they look at the restaurant sign." },
+                { q: "If you change the color of your study desk to light green, how will it change your concentration?", h: "If条件節による「仮定的な事態」を設定し、その結果引き起こされる変化を予測します。", m: "If I change the desk color to green, I can study for a longer time because green reduces my eye strain." },
+                { q: "Some school uniforms have very dark colors. What are the advantages of this?", h: "普遍的な社会習慣の利点を、複数の理由を並列しながら記述します。", m: "Dark uniforms do not show dirt easily when students play outside. Also, they make all students look neat and disciplined." }
+            ],
+            lv4: [
+                { q: "Explain how large corporations use specific brand colors to build customer loyalty over time.", h: "主観を離れ、企業活動という客観的事象を、重文・複文（so that, which）を駆使して一般化します。", m: "Corporations consistently use a specific color so that consumers can identify the brand instantly, which establishes long-term emotional trust." },
+                { q: "In product design, how does the contrast between background color and text color affect user accessibility?", h: "アクセシビリティという客観的な概念間の関係性を、関係代名詞や論理的接続詞を用いて論述します。", m: "High color contrast significantly improves readability for elderly users, which means that inclusive design must prioritize logical color layouts." },
+                { q: "Why do safety warning signs universally adopt a combination of yellow and black?", h: "普遍的な認知科学的・社会的な必然性を、因果および対比の構造を用いて客観的に論証します。", m: "Yellow and black are utilized because this combination creates the highest visual contrast in nature, allowing the human brain to detect danger immediately even from a distance." }
+            ],
+            lv5: [
+                { q: "To what extent should a city government regulate the colors of commercial buildings to preserve historical landscapes?", h: "「景観保護」と「企業の自由」の相克について、譲歩（While）を用いてパラグラフを展開します。", m: "While strict architectural regulations effectively preserve the aesthetic integrity of historical districts, excessive government intervention can suppress corporate marketing freedom. Therefore, a balanced framework must be established to permit modern designs as long as they comply with chromatic saturation limits." },
+                { q: "How does the digital shift from physical print to high-saturation LED screens alter human psychological responses to visual advertising?", h: "メディアの変容が認知に与える影響について、抽象概念名詞を主語に据えて複数文でパラグラフを構築します。", m: "The transition to emissive LED screens enhances chromatic intensity, which inevitably triggers a higher degree of immediate impulse engagement among consumers. However, this prolonged exposure to high-saturation visual stimuli also results in severe cognitive fatigue, forcing advertisers to reconsider the sustainability of aggressive visual campaigns." },
+                { q: "Discuss the socio-cultural factors that cause a specific color to represent different concepts across different countries.", h: "色彩が持つ「文化的随伴性」について、歴史的・記号論的視点から複数の論理階層を用いてまとめます。", m: "The psychological symbolism of color is fundamentally contingent upon historical trajectories and religious traditions. For instance, while white signifies purity in Western cultures, it traditionally denotes mourning in several Asian societies, illustrating that semantic interpretation is not biologically determined but socially constructed." }
+            ]
+        },
+        theme_food: {
+            lv1: [
+                { q: "What food do you like?", h: "好きな食べ物を名詞単体、または I like pizza. で答えます。", m: "I like pizza." },
+                { q: "Do you like sweet food or spicy food?", h: "味覚の好みの二者択一にシンプルに応答します。", m: "I like sweet food. I love chocolate." },
+                { q: "What did you eat for breakfast today?", h: "今日の朝食の内容を I ate... で表明します。", m: "I ate toast and eggs." }
+            ],
+            lv2: [
+                { q: "Why do you like your favorite restaurant?", h: "店が好きな理由を because を使って素朴に説明します。", m: "I like the restaurant because the hamburgers are very cheap and delicious." },
+                { q: "Who usually cooks dinner in your house, and what do they make?", h: "家庭内のエージェントの日常の行動パターンを and で繋いで描写します。", m: "My mother usually cooks dinner, and she often makes miso soup and fried chicken." },
+                { q: "What food do you want to eat when you feel very tired?", h: "身体的な状況（when節）と、その時の欲求をストレートに結びつけます。", m: "I want to eat sweet ice cream when I feel very tired after school." }
+            ],
+            lv3: [
+                { q: "What are the advantages and disadvantages of eating at fast-food restaurants?", h: "ファストフードの功罪について、利点と欠点を simple な対比の接続詞で肉付けします。", m: "Fast food is great because it saves time when you are busy. However, it contains too much fat, so it is bad for your health." },
+                { q: "If your country stops importing food from overseas, what will happen to your daily life?", h: "輸入停止という「仮定の事態」に対し、生活への直接的な影響を予測・描写します。", m: "If imports stop, we cannot buy bananas or coffee anymore. Prices of domestic vegetables will also become very high." },
+                { q: "Why are organic vegetables becoming more popular among health-conscious people?", h: "特定の購買行動の背景にある理由を、健康面での因果関係を明示して記述します。", m: "They are popular because organic farms do not use chemical pesticides. People believe these vegetables are safer for their children." }
+            ],
+            lv4: [
+                { q: "Explain how the global expansion of fast-food chains impacts the traditional culinary cultures of local communities.", h: "食のグローバル化という客観的事象が地域文化に与える構造的影響を、複文構造で一般化します。", m: "The rapid expansion of global chains standardizes eating habits, which gradually diminishes the diversity of local culinary traditions that have developed over centuries." },
+                { q: "In urban planning, what are the potential benefits of establishing community vegetable gardens in vacant lots?", h: "都市農業のメリットを、社会・環境的な価値と結びつけて論理的に構成します。", m: "Community gardens not only convert vacant land into productive green spaces, but they also foster social interaction among residents, reducing urban isolation." },
+                { q: "Why are many food manufacturers now investing heavily in the development of plant-based meat alternatives?", h: "企業の投資行動の背景にあるマクロ経済・環境的必然性を、客観的なトーンで論証します。", m: "Manufacturers are expanding alternative proteins because livestock farming requires unsustainable volumes of water and land, which accelerates global climate change." }
+            ],
+            lv5: [
+                { q: "To what extent should governments intervene in consumer diets by imposing taxes on high-sugar foods to curb obesity?", h: "「国民の健康増進」と「消費者の選択の自由」のジレンマに対し、譲歩構文を用いて多角的に論述します。", m: "While imposing a sugar tax can effectively generate public revenue and disincentivize unhealthy consumption patterns, it disproportionately burdens low-income demographics. Therefore, fiscal penalties should be paired with subsidies for fresh produce to ensure equitable access to nutritious alternatives." },
+                { q: "How does the hyper-efficiency of modern industrialized agriculture threaten long-term biodiversity and ecological stability?", h: "近代農業の効率性と生態系破壊の因果を、抽象概念を動的に噛み合わせてパラグラフ化します。", m: "Industrialized monoculture maximizes short-term crop yields, yet it simultaneously eradicates diverse native habitats and exhausts soil nutrients. This reliance on uniform genetic crops creates a highly fragile food system that is vulnerable to unprecedented pest outbreaks and climate fluctuations." },
+                { q: "Evaluate the ethical implications of severe food waste in developed countries juxtaposed with chronic food insecurity in the Global South.", h: "先進国のフードロスと途上国の飢餓という構造的非対称性を、学術的・規範的なディスコースで総括します。", m: "The coexistence of systemic food wastage and structural starvation highlights a profound flaw in global logistical distribution and market-driven priorities. Addressing this moral failure requires converting surplus commercial supply into international humanitarian assets rather than treating food exclusively as a profit-generating commodity." }
+            ]
+        },
+        theme_clothing: {
+            lv1: [
+                { q: "What clothes do you like to wear?", h: "好きな服や色を、最小限の定型表現で表明します。", m: "I like black jackets." },
+                { q: "Do you wear a coat when it is cold?", h: "気候に応じた衣服の調整行為をシンプルに述べます。", m: "Yes, I do. I wear a heavy coat." },
+                { q: "What color is your favorite shoes?", h: "手持ちの物理的な具体物の色彩を直接指定します。", m: "They are white sneakers." }
+            ],
+            lv2: [
+                { q: "Why do you choose your clothes in the morning?", h: "朝の衣服選択の直接的な動機を because で簡潔に説明します。", m: "I choose my clothes because they are comfortable and easy to move in." },
+                { q: "Describe what you usually wear when you visit a luxury department store.", h: "特定の状況における自分の身なりを、複数のS+V+Oの並列で具体的に描写します。", m: "I usually wear an elegant shirt, and I put on clean leather shoes. I often carry a nice bag." },
+                { q: "Who buys your clothes, and where do you get them?", h: "事実関係を and で繋いでストレートに出力します。", m: "I usually buy my own clothes, and I often find them at brand shops in Tokyo." }
+            ],
+            lv3: [
+                { q: "What are the advantages and disadvantages of students wearing uniform at school?", h: "制服着用の是非という身近な社会習慣の功罪を、対比の接続詞で肉付けします。", m: "Uniforms are good because students do not need to choose clothes every morning. However, they cannot express their personality through fashion." },
+                { q: "If your favorite fashion brand stops making casual clothes, what will you wear instead?", h: "仮定の事態に対し、代替となる行動の予測を論理的に記述します。", m: "If they stop making casual clothes, I will probably look for another French brand that offers minimal designs." },
+                { q: "Why are high-end fashion items becoming popular investments among younger generations?", h: "若者の購買・投資行動の背景を、耐久性や二次流通市場の因果関係と結びつけて説明します。", m: "They are popular because high-end items keep their value for a long time. People can sell them easily on internet apps when they need money." }
+            ],
+            lv4: [
+                { q: "Explain how formal dress codes in corporate environments function to maintain professional boundaries.", h: "ドレスコードという社会的規範の機能を、主観を排した複文で客観的に一般化します。", m: "Formal dress codes suppress individual variance in appearance, which effectively creates a standardized baseline that reinforces collective authority and psychological discipline." },
+                { q: "In modern society, how does consumer choice in fashion reflect an individual's socio-economic status?", h: "衣服選択と社会的ステータスの相関関係を、抽象概念名詞と関係代名詞を用いて論理的に構成します。", m: "The consumption of luxury luxury brands operates as a visual signifier, allowing individuals to project an imagined socio-economic identity that commands immediate recognition in urban spaces." },
+                { q: "Why are major apparel manufacturers rapidly transitioning toward sustainable fabrics despite higher production costs?", h: "企業の環境投資の必然性を、マクロな消費者意識の変容およびブランドリスクの観点から論証します。", m: "Manufacturers adopt sustainable materials because modern consumers increasingly boycott ethically irresponsible brands, which forces corporations to prioritize ecological metrics to sustain corporate value." }
+            ],
+            lv5: [
+                { q: "To what extent should workplace dress codes adapt to personal gender expressions versus historical corporate traditions?", h: "個人の表現の自由と組織の歴史的伝統の相克について、譲歩と対比を用いてパラグラフを展開します。", m: "While adhering to traditional dress codes preserves organizational uniformity and institutional brand legacy, enforcing rigid rules can marginalized diverse gender identities and suppress individual psychological safety. Therefore, contemporary enterprises must construct flexible guidelines that honor inclusivity as long as a basic threshold of professional decorum is maintained." },
+                { q: "How does the globalization of fast fashion alter local artisan textile traditions and regional cultural identities?", h: "ファストファッションが地域文化に与える破壊的影響を、抽象名詞を噛み合わせてディスコース化します。", m: "The hyper-acceleration of fast fashion standardizes aesthetic consumption globally, which inevitably disrupts localized textile ecosystems that rely on generational craftsmanship. This capitalist displacement not only devalues regional manual traditions but also flattens the semiotic diversity of ethnic dress into a commodified, transient trend." },
+                { q: "Discuss the semiotic evolution of 'subversive luxury', where high-end fashion brands intentionally commodify counter-culture styles.", h: "カウンターカルチャーの商業化という記号論的変容について、複数の論理階層を用いて学術的にまとめます。", m: "The conceptual trajectory of modern luxury relies on the appropriation of subcultural signifiers, converting symbols of systemic rebellion into high-priced capital assets. This paradoxical commodification illustrates that avant-garde fashion does not subvert institutional structures, but rather rejuvenates them by generating new forms of exclusivity contingent upon ironic consumer literacy." }
+            ]
+        },
+        theme_travel: {
+            lv1: [
+                { q: "Where do you want to go on vacation?", h: "行きたい場所を地名、または I want to go to Paris. のように直接表明します。", m: "I want to go to Paris." },
+                { q: "Do you like taking pictures when you travel?", h: "旅先での特定の行動の有無を、最小限の構成でストレートに答えます。", m: "Yes, I do. I take many pictures." },
+                { q: "How do you go to your school or work?", h: "日常的な物理移動の手段をシンプルに指定します。", m: "I go by train." }
+            ],
+            lv2: [
+                { q: "Why do you prefer traveling by train instead of flying?", h: "移動手段の選択理由を because を用いて具体的に描写します。", m: "I prefer trains because I can see beautiful views from the window and I do not like airports." },
+                { q: "Describe a beautiful place you visited in the past.", h: "過去に訪れた物理的空間の状態を、過去形を用いた複数のS+V+Oで記述します。", m: "I visited Kyoto last year. I saw many old temples, and the autumn leaves were beautiful." },
+                { q: "What do you always bring with you when you stay at a hotel?", h: "特定の状況と、その時の所持・準備行為を直接的に結びつけます。", m: "I always bring my own smartphone charger and a comfortable T-shirt when I stay at a hotel." }
+            ],
+            lv3: [
+                { q: "What are the advantages and disadvantages of solo travel compared to group tours?", h: "一人旅と団体ツアーの利害得失を、並列・対比の接続詞で肉付けします。", m: "Solo travel is great because you can decide everything by yourself. On the other hand, it can be dangerous when you get lost in a foreign country." },
+                { q: "If all international flights are suspended for a year, how will it change your view of the world?", h: "国際線停止という仮定の事態に対し、自身の認知や心理に及ぶ影響を予測・記述します。", m: "If flights are suspended, I will think that the world is much larger and farther away. I will try to appreciate domestic places more." },
+                { q: "Why is sustainable tourism becoming an important concept for famous historical cities?", h: "持続可能な観光が求められる背景にある因果を明示して記述します。", m: "It is important because too many tourists destroy the peaceful life of local residents and damage ancient buildings that are impossible to rebuild." }
+            ],
+            lv4: [
+                { q: "Explain how the rise of digital nomadism reshapes the economic landscape of developing host communities.", h: "デジタルノマドの台頭というマクロな移動事象がもたらす経済構造の変化を、複文で客観的に一般化します。", m: "The influx of remote workers injects foreign capital into local economies, which simultaneously accelerates gentrification and inflates the cost of living for native populations." },
+                { q: "In cross-cultural psychology, how does prolonged exposure to a foreign environment facilitate cognitive flexibility?", h: "異文化接触が認知に与える影響のメカニズムを、関係詞や論理的因果を用いて論述します。", m: "Sustained immersion in an alien cultural framework forces the brain to reconcile conflicting behavioral scripts, which substantially enhances creative problem-solving capacities over time." },
+                { q: "Why are national governments universally investing in high-speed rail infrastructure despite astronomical initial budgets?", h: "国家規模の移動インフラ投資の背景にあるマクロ経済・環境的必然性を、客観的トーンで論証します。", m: "Governments prioritize high-speed rail because centralized electric transit dramatically curtails carbon emissions while fostering regional economic integration between mega-cities and isolated provinces." }
+            ],
+            lv5: [
+                { q: "To what extent does the commercialization of cultural heritage for international tourism dilute authentic regional traditions?", h: "伝統の商業化と文化の保存のジレンマに対し、譲歩構文を用いて多角的に論述します。", m: "While the commodification of indigenous rituals generates critical financial capital necessary for architectural preservation, it simultaneously transforms sacred ancestral heritage into choreographed spectacles designed for foreign consumption. Therefore, local authorities must establish participatory governance models that allow communities to regulate the boundaries of cultural exposure." },
+                { q: "How has the conceptual nature of 'the boundary' shifted in the post-digital era, where physical travel coexist with hyper-real virtual exploration?", h: "物理的移動とバーチャルリアリティの共存がもたらす概念変容を、抽象概念を動的に噛み合わせてパラグラフ化します。", m: "The ubiquity of high-fidelity spatial computing has decoupled geographical dislocation from experiential exploration, rendering the traditional border increasingly porous. However, this virtual democratization of travel fails to replicate the visceral unpredictability of embodied physical presence, thereby elevating true somatic displacement into an elite luxury commodity." },
+                { q: "Evaluate the socio-political implications of passport power disparities, where global mobility is fundamentally stratified by national origin.", h: "国籍による移動権の不平等という構造的非対称性を、学術的・規範的なディスコースで総括します。", m: "The asymmetrical distribution of global mobility privileges exposes a profound contradiction within the rhetoric of borderless globalization. This systemic stratification effectively institutionalizes a geopolitical caste system, where freedom of movement is not recognized as an inherent human right, but rather functioned as an accident of national birth regulated by structural surveillance." }
+            ]
+        }
+    };
+
+    // グローバル状態管理
+    let selectedThemeKey = 'theme_color';
+    let currentLevelKey = 'lv5'; 
+    let activeQuestions = [];
+    let qIdx = 0;
+    let answersLog = [];
+    let micActive = false;
+    let rec = null;
+
+    // DOMロード後の安全制御
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const scrSetup = document.getElementById('scr-setup');
+        const scrTopic = document.getElementById('scr-topic');
+        const scrTrainer = document.getElementById('scr-trainer');
+        const scrReport = document.getElementById('scr-report');
+
+        const btnGotoTopic = document.getElementById('btn-goto-topic');
+        const btnBootTrainer = document.getElementById('btn-boot-trainer');
+        const btnBackToSetup = document.getElementById('btn-back-to-setup');
+        const btnAudioRepeat = document.getElementById('btn-audio-repeat');
+        const btnHint = document.getElementById('btn-hint');
+        const btnMic = document.getElementById('btn-mic');
+        const btnCommitPhase = document.getElementById('btn-commit-phase');
+        const btnExitReport = document.getElementById('btn-exit-report');
+
+        const cfgLevel = document.getElementById('cfg-level');
+        const cfgMode = document.getElementById('cfg-mode');
+        
+        const uiPrompt = document.getElementById('ui-prompt');
+        const uiPhaseInfo = document.getElementById('ui-phase-info');
+        const uiResponse = document.getElementById('ui-response');
+        const uiHelpDrawer = document.getElementById('ui-help-drawer');
+        const uiHelpHint = document.getElementById('ui-help-hint');
+        const uiHelpModel = document.getElementById('ui-help-model');
+
+        function changeScreen(targetId) {
+            scrSetup.style.display = 'none';
+            scrTopic.style.display = 'none';
+            scrTrainer.style.display = 'none';
+            scrReport.style.display = 'none';
+            document.getElementById(targetId).style.display = 'block';
+        }
+
+        const topicItems = document.querySelectorAll('.topic-item');
+        topicItems.forEach(item => {
+            item.addEventListener('click', function() {
+                topicItems.forEach(i => i.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedThemeKey = this.getAttribute('data-theme');
+            });
+        });
+
+        btnGotoTopic.addEventListener('click', function() {
+            currentLevelKey = cfgLevel.value;
+            changeScreen('scr-topic');
+        });
+
+        btnBackToSetup.addEventListener('click', function() {
+            changeScreen('scr-setup');
+        });
+
+        btnBootTrainer.addEventListener('click', function() {
+            activeQuestions = masterMatrix[selectedThemeKey][currentLevelKey];
+            qIdx = 0;
+            answersLog = [];
+            changeScreen('scr-trainer');
+            loadQuestion();
+        });
+
+        btnAudioRepeat.addEventListener('click', function() {
+            if (activeQuestions[qIdx]) {
+                speakText(activeQuestions[qIdx].q);
+            }
+        });
+
+        btnHint.addEventListener('click', function() {
+            uiHelpDrawer.style.display = 'block';
+        });
+
+        btnCommitPhase.addEventListener('click', function() {
+            if (micActive && rec) {
+                try { rec.stop(); } catch(e){}
+                micActive = false;
+                btnMic.style.background = "";
+                btnMic.textContent = "🎤 音声入力 開始/停止";
+            }
+
+            const rawInput = uiResponse.value;
+            const cleanedInput = rawInput.replace(/\s+/g, ' ').trim();
+            answersLog.push(cleanedInput);
+
+            if (qIdx < 2) {
+                qIdx++;
+                loadQuestion();
+            } else {
+                renderFinalReport();
+            }
+        });
+
+        btnExitReport.addEventListener('click', function() {
+            changeScreen('scr-setup');
+        });
+
+        function loadQuestion() {
+            uiResponse.value = '';
+            uiHelpDrawer.style.display = 'none';
+            uiPhaseInfo.textContent = `Question ${qIdx + 1} / 3`;
+
+            const data = activeQuestions[qIdx];
+            uiPrompt.textContent = data.q;
+            uiHelpHint.textContent = data.h;
+            uiHelpModel.textContent = data.m;
+
+            speakText(data.q);
+
+            if (cfgMode.value === 'mod_e') {
+                btnHint.style.display = 'none';
+            } else {
+                btnHint.style.display = 'block';
+            }
+        }
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                try {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'en-US';
+                    window.speechSynthesis.speak(utterance);
+                } catch (e) {
+                    console.log("Speech synthesis failed smoothly.");
+                }
+            }
+        }
+
+        function initSpeechRecognition() {
+            try {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) return null;
+                
+                const r = new SpeechRecognition();
+                r.continuous = true;
+                r.lang = 'en-US';
+                r.onresult = function(event) {
+                    let textBuffer = '';
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        if (event.results[i].isFinal) {
+                            textBuffer += event.results[i][0].transcript;
+                        }
+                    }
+                    if (textBuffer) {
+                        uiResponse.value += textBuffer + ' ';
+                    }
+                };
+                return r;
+            } catch (e) {
+                console.log("Speech recognition not supported.");
+                return null;
+            }
+        }
+
+        rec = initSpeechRecognition();
+
+        btnMic.addEventListener('click', function() {
+            if (!rec) {
+                alert("お使いの環境（ブラウザ）では音声認識がサポートされていないか、制限されています。キーボードから直接入力してください。");
+                return;
+            }
+            if (micActive) {
+                rec.stop();
+                micActive = false;
+                btnMic.style.background = "";
+                btnMic.textContent = "🎤 音声入力 開始/停止";
+            } else {
+                try {
+                    rec.start();
+                    micActive = true;
+                    btnMic.style.background = "#fed7d7";
+                    btnMic.textContent = "⏹ 音声入力 停止";
+                } catch (err) {
+                    console.log(err);
+                }
+            }
+        });
+
+        function renderFinalReport() {
+            changeScreen('scr-report');
+
+            let totalWords = 0;
+            let matchedSignals = [];
+            let hasContent = false;
+
+            const connectionMarkers = [
+                'because', 'when', 'if', 'although', 'while', 'however', 
+                'therefore', 'which', 'that', 'so that', 'but', 'and'
+            ];
+
+            answersLog.forEach((userText) => {
+                if (userText && userText.length > 0) {
+                    hasContent = true;
+                    const words = userText.split(/\s+/);
+                    totalWords += words.filter(w => w.length > 0).length;
+
+                    connectionMarkers.forEach((marker) => {
+                        const regex = new RegExp('\\b' + marker + '\\b', 'gi');
+                        const match = userText.match(regex);
+                        if (match) {
+                            for(let i=0; i<match.length; i++) {
+                                matchedSignals.push(marker);
+                            }
+                        }
+                    });
+                }
+            });
+
+            const repWords = document.getElementById('rep-words');
+            const repSignals = document.getElementById('rep-signals');
+            const repPositives = document.getElementById('rep-positives');
+
+            repWords.textContent = `${totalWords}語`;
+            repSignals.textContent = `${matchedSignals.length}回`;
+            repPositives.innerHTML = "";
+
+            if (!hasContent || totalWords === 0) {
+                repPositives.innerHTML = `
+                    <li style="color:#dc2626; font-weight:bold;">⚠️ 【判定不能】発話テキストが検出されませんでした。</li>
+                    <li>入力が空の状態で次へ進まれたため、構文解析をスキップしました。</li>
+                `;
+                return;
+            }
+
+            repPositives.innerHTML += `<li><strong>計測データ:</strong> 3回の発話ラリーで合計 <strong>${totalWords}語</strong> が入力されました。</li>`;
+            
+            if (matchedSignals.length > 0) {
+                const uniqueSignals = [...new Set(matchedSignals)];
+                repPositives.innerHTML += `<li><strong>検出された構文シグナル:</strong> <code style="background:#e0e7ff; padding:2px 6px; border-radius:4px; font-weight:bold; color:#4338ca;">${uniqueSignals.join(', ')}</code></li>`;
+                
+                uniqueSignals.forEach(sig => {
+                    if(sig === 'because') repPositives.innerHTML += `<li>📝 <strong>because:</strong> 因果論理による命題の結合が確認できます。</li>`;
+                    if(sig === 'when') repPositives.innerHTML += `<li>📝 <strong>when:</strong> 時間的枠組み・状況限定のフレームが機能しています。</li>`;
+                    if(sig === 'if') repPositives.innerHTML += `<li>📝 <strong>if:</strong> 反事実または条件設定による複雑な事態把握（construal）が試みられています。</li>`;
+                    if(['although', 'while', 'however'].includes(sig)) repPositives.innerHTML += `<li>📝 <strong>${sig}:</strong> 譲歩・対比を用いた多角的な談話展開の萌芽が見られます。</li>`;
+                });
+            } else {
+                repPositives.innerHTML += `<li>⚠️ <strong>構文マーカー未検出:</strong> 接続詞や関係詞が検出されませんでした。単文の並列にとどまっている可能性があります。</li>`;
+            }
+
+            repPositives.innerHTML += `<div style="margin-top:15px; padding:10px; background:#fffbeb; border-radius:6px; font-size:13px; border-left:4px solid #d97706;">
+                <strong>📋 目標段階（${currentLevelKey.toUpperCase()}）との照合:</strong><br>
+                このレベルでは、イベントを単に並べるだけでなく、主観を排した客観化や複文構造の制御ができているかが焦点となります。出力された語彙や複雑さをモデルデータと見比べてみてください。
+            </div>`;
+        }
+    });
+</script>
+
+</body>
+</html>
