@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EIKEN Speaking Simulator - Bug-Fixed Full Spec</title>
+    <title>EIKEN Speaking Simulator - Core Text Edition</title>
     <style>
         :root {
             --slate-900: #0f172a;
@@ -20,13 +20,13 @@
         body { background-color: #e2e8f0; color: #334155; padding: 15px; }
 
         .container {
-            max-width: 850px;
+            max-width: 800px;
             margin: 0 auto;
             background: #ffffff;
             border-radius: var(--radius);
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             padding: 25px;
-            min-height: 90vh;
+            min-height: 85vh;
             display: flex;
             flex-direction: column;
         }
@@ -38,7 +38,7 @@
             margin-bottom: 20px;
         }
 
-        h1 { color: var(--slate-900); font-size: 24px; }
+        h1 { color: var(--slate-900); font-size: 22px; }
         .subtitle { font-size: 13px; color: #64748b; font-weight: bold; margin-top: 4px; }
 
         .screen { display: none; flex: 1; flex-direction: column; }
@@ -69,22 +69,17 @@
 
         .card-workspace { background: #fff; border: 2px solid var(--slate-900); border-radius: var(--radius); padding: 18px; margin-bottom: 15px; }
         .meta-tag { display: inline-block; padding: 2px 8px; background: var(--slate-800); color: white; font-size: 11px; font-weight: bold; border-radius: 4px; margin-bottom: 8px; }
-        .passage-text { font-size: 17px; line-height: 1.6; color: #0f172a; white-space: pre-line; }
+        .passage-text { font-size: 17px; line-height: 1.6; color: #0f172a; white-space: pre-line; font-family: 'Times New Roman', serif; }
         
-        .storyboard { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
-        @media (min-width: 600px) { .storyboard-multicell { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); } }
-        .story-cell { background: #f8fafc; border: 1px solid var(--border); padding: 10px; border-radius: 6px; font-size: 13px; }
-        .cell-num { font-weight: bold; color: var(--teal-600); border-bottom: 1px solid var(--border); margin-bottom: 4px; }
-
-        .topic-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
-        .topic-item { padding: 10px 15px; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; }
+        .topic-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; margin-bottom: 15px; }
+        .topic-item { padding: 12px 15px; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; }
         .topic-item.selected { background: #ccfbf1; border-color: var(--teal-600); color: #0f766e; }
 
         .q-alert-box { background: #f0f9ff; border-left: 5px solid #0284c7; padding: 15px; border-radius: var(--radius); margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; }
-        .q-prompt { font-size: 17px; font-weight: bold; color: #0369a1; }
-        .audio-trigger { background: white; border: 1px solid var(--border); width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 16px; }
+        .q-prompt { font-size: 17px; font-weight: bold; color: #0369a1; flex: 1; padding-right: 10px; }
+        .audio-trigger { background: white; border: 1px solid var(--border); width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 16px; flex-shrink: 0; }
 
-        .input-area { width: 100%; height: 120px; padding: 12px; border: 2px dashed #94a3b8; border-radius: var(--radius); font-size: 15px; resize: none; margin-bottom: 15px; }
+        .input-area { width: 100%; height: 130px; padding: 12px; border: 2px dashed #94a3b8; border-radius: var(--radius); font-size: 15px; resize: none; margin-bottom: 15px; }
 
         .help-drawer { background: #fffbeb; border: 1px solid #fef3c7; padding: 15px; border-radius: var(--radius); margin-bottom: 15px; }
         .help-heading { font-size: 13px; color: #b45309; font-weight: bold; margin-bottom: 4px; }
@@ -109,18 +104,17 @@
 <div class="container">
     <header>
         <h1>EIKEN Speaking Simulator</h1>
-        <div class="subtitle">【バグ修正済】全級本番完全準拠版</div>
+        <div class="subtitle">イラスト完全排除 ｜ テキスト・ディスコース特化型プロトコル</div>
     </header>
 
-    <!-- 1. 設定画面 -->
     <div id="scr-setup" class="screen active">
         <div class="form-group">
-            <label for="cfg-level">受験ターゲット級（完全シミュレーション）</label>
+            <label for="cfg-level">受験ターゲット級</label>
             <select id="cfg-level">
-                <option value="lv_1">英検 1級 (スピーチ2分 ＋ 厳格なトピック深掘り質疑2問)</option>
-                <option value="lv_p1">英検 準1級 (4コマナレーション1分準備 ＋ 社会性Q&A2問)</option>
-                <option value="lv_2" selected>英検 2級 (音読1問 ＋ 3コマイラストストーリー描写 ＋ 意見表明2問)</option>
-                <option value="lv_3">英検 3級 (音読1問 ＋ イラスト挙動Q&A2問 ＋ パーソナルQ&A2問)</option>
+                <option value="lv_1">英検 1級 (自由選択スピーチ ＋ 厳格なトピック深掘り質疑2問)</option>
+                <option value="lv_p1">英検 準1級 (社会性Q&A 3問構成特化型)</option>
+                <option value="lv_2" selected>英検 2級 (パッセージ音読 ＋ 内容質問1問 ＋ 意見表明Q&A 2問)</option>
+                <option value="lv_3">英検 3級 (パッセージ音読 ＋ 内容質問1問 ＋ パーソナルQ&A 2問)</option>
             </select>
         </div>
 
@@ -128,66 +122,60 @@
             <label for="cfg-mode">運用モード</label>
             <select id="cfg-mode">
                 <option value="mod_p">練習モード（制限時間なし・メタヒント常時開放）</option>
-                <option value="mod_e">本番リハーサルモード（各級正規タイマー作動・ヒント禁止）</option>
+                <option value="mod_e">本番リハーサルモード（タイマー連動・ヒント非表示）</option>
             </select>
         </div>
 
         <div class="config-box">
-            <label for="cfg-speed">面接官の英語スピーチレート</label>
+            <label for="cfg-speed">面接官の発話スピード調整（Web Speech API）</label>
             <div class="flex-range">
                 <input type="range" id="cfg-speed" min="0.7" max="1.3" step="0.05" value="0.95">
             </div>
         </div>
 
-        <button class="btn btn-secondary" onclick="bootSimulator()">模擬面接セッションを開始する</button>
+        <button class="btn btn-secondary" onclick="bootSimulator()">模擬面接を開始する</button>
     </div>
 
-    <!-- 2. 試験シミュレータ本体 -->
     <div id="scr-trainer" class="screen">
         <div class="progress-container"><div id="ui-progress" class="progress-bar"></div></div>
         
         <div class="status-badge">
             <div id="ui-phase">Phase - / -</div>
-            <div id="ui-timer">思考時間: --</div>
+            <div id="ui-timer">残り時間: --</div>
         </div>
 
-        <!-- 1級用トピックセレクタ -->
         <div id="ui-topic-zone" class="topic-list" style="display: none;"></div>
 
-        <!-- マテリアル表示エリア -->
         <div id="ui-card-area" class="card-workspace" style="display: none;">
-            <div id="ui-meta-tag" class="meta-tag">MATERIAL</div>
+            <div id="ui-meta-tag" class="meta-tag">PASSAGE</div>
             <div id="ui-passage" class="passage-text"></div>
-            <div id="ui-storyboard" class="storyboard"></div>
         </div>
 
         <div class="q-alert-box">
-            <div id="ui-prompt" class="q-prompt">Initializing question...</div>
+            <div id="ui-prompt" class="q-prompt">Initializing...</div>
             <button class="audio-trigger" onclick="audioRepeat()">🔊</button>
         </div>
 
         <div id="ui-rec-indicator" class="rec-pulse" style="visibility: hidden;">
-            <span>🔴 マイク収音中... 英語で発話してください</span>
+            <span>🔴 マイク音声収音中... 英語で答えてください</span>
         </div>
 
-        <textarea id="ui-response" class="input-area" placeholder="ここに英語を入力、またはマイクボタンを起動して発話を入力してください。"></textarea>
+        <textarea id="ui-response" class="input-area" placeholder="ここに英語を入力、またはマイクボタンを起動してスピーチを入力してください。"></textarea>
 
-        <!-- ヒントパネル -->
         <div id="ui-help-drawer" class="help-drawer" style="display: none;">
             <div class="help-heading">💡 着眼点・ディスコース構築の鍵</div>
             <div id="ui-help-hint" class="help-body"></div>
-            <div class="help-heading">✨ プロフェッショナル模範解答例 (Model Answer)</div>
+            <div class="help-heading">✨ 模範解答例 (Model Answer)</div>
             <div id="ui-help-model" class="help-body"></div>
         </div>
 
         <div class="control-grid">
             <button id="btn-mic" class="btn btn-secondary" onclick="toggleMic()">🎤 音声入力 開始</button>
             <button id="btn-hint" class="btn btn-outline" onclick="openHint()">ヒント確認</button>
-            <button class="btn btn-accent span-2" onclick="commitPhase()">この解答を確定して進む</button>
+            <button class="btn btn-accent span-2" onclick="commitPhase()">解答を確定して次へ</button>
         </div>
     </div>
 
-    <!-- 3. 多角的診断レポート -->
     <div id="scr-report" class="screen">
         <h2 style="text-align: center; color: var(--slate-900); margin-bottom: 20px;">面接診断レポート</h2>
 
@@ -196,15 +184,15 @@
             <div class="grid-3">
                 <div class="stat-card"><div>セッション総語数</div><div id="rep-words" class="num">0語</div></div>
                 <div class="stat-card"><div>論理シグナル（接合詞）</div><div id="rep-signals" class="num">0回</div></div>
-                <div class="stat-card"><div>時制・文法ギミック</div><div id="rep-grammar" class="num">0回</div></div>
+                <div class="stat-card"><div>構造・文法ギミック</div><div id="rep-grammar" class="num">0点</div></div>
             </div>
         </div>
 
         <div class="analytics-block">
             <div class="analytics-title">🎯 応用言語学的フィードバック</div>
-            <div style="font-weight: bold; color: var(--emerald-600); margin-bottom: 5px;">👍 クリアできている強み</div>
+            <div style="font-weight: bold; color: var(--emerald-600); margin-bottom: 5px;">👍 発話の強み</div>
             <ul id="rep-positives" class="feedback-list" style="margin-bottom: 15px;"></ul>
-            <div style="font-weight: bold; color: #dc2626; margin-bottom: 5px;">🔧 改善に向けた処方箋</div>
+            <div style="font-weight: bold; color: #dc2626; margin-bottom: 5px;">🔧 改善へのアプローチ</div>
             <ul id="rep-negatives" class="feedback-list"></ul>
         </div>
 
@@ -213,7 +201,7 @@
 </div>
 
 <script>
-    // --- DATA-KEY BUG FIXED DATABASE ---
+    // --- NON-ILLUSTRATION HIGH-PRECISION DATABASE ---
     const eikenDatabase = {
         lv_1: [
             {
@@ -226,56 +214,47 @@
                     "Does the rise of artificial intelligence pose an existential threat to human labor?"
                 ],
                 q: "Select one topic from the list above and deliver a 2-minute speech. (1 minute for preparation)",
-                h: "序論・本論(2点)・結論のフォーマルなフレームワークを守り、抽象度の高い社会課題に英語で2分間コミットします。",
-                m: "I believe that economic globalization has yielded more benefits than harm. Primarily, it has accelerated technological transfer across borders, lifting millions out of extreme poverty in developing nations. Furthermore, international trade interdependence fosters political stability by increasing the opportunity cost of war."
+                h: "1級最重要タスク。序論・本論(2点)・結論のフォーマルなフレームワークを守り、抽象度の高い社会課題に英語で2分間コミットします。",
+                m: "I believe that economic globalization has yielded more benefits than harm. Primarily, it has accelerated technological transfer across borders, lifting millions out of extreme poverty in developing nations. Furthermore, international trade interdependence fosters political stability by increasing the opportunity cost of war. Consequently, despite domestic wealth gaps, globalized markets remain an engine for net positive human progress."
             },
             {
                 mode: "standard_qa",
-                q: "You mentioned that economic interdependence prevents conflicts. How do you account for recent geopolitical tensions suggesting otherwise?",
+                q: "You mentioned that economic interdependence prevents conflicts. However, recent geopolitical tensions suggest otherwise. How do you account for this contradiction?",
                 h: "面接官からのカウンター質問。前言のロジックを崩さず、'Admittedly...'等で一部譲歩しつつ自説の有効範囲をロジカルに再定義します。",
-                m: "Admittedly, economic ties cannot completely erase deep-seated ideological disputes. However, full-scale military conflict is often avoided precisely due to the catastrophic supply-chain damage both sides would suffer."
+                m: "Admittedly, economic ties cannot completely erase deep-seated ideological disputes. However, full-scale military conflict is often avoided precisely due to the catastrophic supply-chain damage both sides would suffer, proving that economic interdependence still acts as a critical deterrent."
             },
             {
                 mode: "standard_qa",
                 q: "Some critics argue that globalization erodes local cultural identity. Do you believe this loss is an acceptable price to pay?",
-                h: "1級Q&A第2問。文化社会学的なマクロ視点を用い、排他的二者択一を回避する論法が有効です。",
-                m: "I do not see it as a zero-sum game. While certain traditional practices might change, globalization also allows local cultures to be digitalized and shared worldwide."
+                h: "文化社会学的なマクロ視点を用い、排他的二者択一を回避する論法が有効です。",
+                m: "I do not see it as a zero-sum game. While certain traditional practices might change, globalization also allows local cultures to be digitalized and shared worldwide. Therefore, it frequently leads to cultural hybridization rather than pure erosion."
             }
         ],
         lv_p1: [
             {
-                mode: "p1_narrate",
-                meta: "準1級：4コマナレーション問題",
-                passage: "【状況設定】You have 1 minute to prepare. Imagine you are the person in the story. Start your narration after the countdown.",
-                cells: [
-                    "【1コマ目】場所: オフィスの給湯室 / 状況: 佐藤さんがゴミ箱の前で、ペットボトルとプラスチックが混ざって捨てられているのを見て、困った顔をしている。 / 壁のカレンダー: 'Monday'",
-                    "【2コマ目】場所: ミーティングルーム / 状況: 佐藤さんが同僚たちを集めて、プロジェクターに『Office Recycling Campaign』と映し出し、身を乗り出して熱心に説明している。",
-                    "【3コマ目】場所: 1週間後の給湯室 / 状況: 佐藤さんが壁に『PLASTIC ONLY』『PAPER ONLY』と大きく色分けされたポスターを貼っている。",
-                    "【4コマ目】場所: その翌月 / 状況: 同僚たちが笑顔できちんと分別してゴミを捨てている。それを見て佐藤さんが非常に満足そうに微笑んでいる。"
-                ],
-                q: "Please look at the picture-story and begin your narration. (Time limit: 2 minutes)",
-                h: "全ての動詞を「過去形（または過去進行形）」で統一し、各コマの文字情報（Monday, Campaign, ポスターの文字）を必ずパラグラフ内に回収します。",
-                m: "One Monday, a man named Mr. Sato noticed that plastic bottles and paper were mixed together in the office trash can. The next day, he held a meeting and explained a new recycling campaign to his colleagues. A few days later, he decided to put up large, clear notices saying 'PLASTIC ONLY' on the wall. A month later, he was glad to see that all the employees were cooperating correctly."
+                mode: "standard_qa",
+                q: "Some people say that traditional print media, such as newspapers and magazines, will completely disappear in the near future. What do you think?",
+                h: "準1級社会性Q&A。デジタルシフトの利便性と、紙媒体が持つ信頼性・アーカイブ価値を対比させると論理が引き締まります。",
+                m: "I agree with this perspective to a large extent. With the rapid expansion of high-speed internet, most people now access breaking news instantly on their smartphones for free. Consequently, printing and distribution costs make traditional newspapers financially unsustainable."
             },
             {
                 mode: "standard_qa",
-                q: "Do you think that modern companies should punish employees who do not follow environmental regulations in the workplace?",
-                h: "社会的妥当性を問う質問。罰則（Punishment）の有効性と、インセンティブの対比構造で論理を展開します。",
-                m: "No, I don't think so. Punishing employees might create a negative atmosphere in the office. Instead, companies should provide small rewards for departments that achieve excellent recycling rates."
+                q: "Do you think that corporate investments in eco-friendly technology will hinder economic growth?",
+                h: "環境と経済のトレードオフ問題。短期的コストと長期的ベネフィット（ブランド価値や持続可能性）の二軸で展開します。",
+                m: "No, I don't think so. While initial costs for developing green technology are quite high, it eventually leads to massive energy savings. Moreover, modern consumers prefer buying from sustainable brands, which drives long-term profits."
             },
             {
                 mode: "standard_qa",
-                q: "In your opinion, will environmental awareness among young people increase in the future?",
-                h: "未来予測。教育環境（Education）やSNSの普及動向などの確たる論拠を1点付加します。",
-                m: "Yes, definitely. Children today are learning a lot about ecology and climate change at school from a very young age. Therefore, their awareness will naturally grow."
+                q: "In modern society, many parents choose to enroll their children in specialized dynamic coaching or sports academies outside of school. Do you think this trend is beneficial?",
+                h: "教育・社会トレンドに関する問題。専門的スキルの獲得という利点と、過度な競争プレッシャーという懸念を天秤にかけます。",
+                m: "Yes, it is highly beneficial because it allows children to receive tailored instruction from expert coaches that regular schools cannot provide. However, parents must ensure that their children do not face excessive psychological pressure."
             }
         ],
         lv_2: [
             {
                 mode: "read_text",
-                meta: "2級：パッセージ音読 ＆ 英文内容質問",
-                passage: "[Passage]\n【Organic Farming】\nIn recent years, organic farming has attracted a lot of attention. Many farmers have stopped using chemical fertilizers. By doing so, they can produce safer vegetables and protect the local soil from pollution.",
-                q: "Please read the passage silently for 20 seconds. Then, read it aloud. After you finish, click to receive the question.",
+                passage: "【Organic Farming】\nIn recent years, organic farming has attracted a lot of attention. Many farmers have stopped using chemical fertilizers. By doing so, they can produce safer vegetables and protect the local soil from pollution.",
+                q: "Please read the passage silently for 20 seconds. Then, read it aloud.",
                 h: "タイトルから丁寧に音読。ピリオドでの確実なポーズ、カンマでの上げ下げを意識します。",
                 m: "In recent years, organic farming has attracted a lot of attention. Many farmers have stopped using chemical fertilizers. By doing so, they can produce safer vegetables and protect the local soil from pollution."
             },
@@ -284,19 +263,6 @@
                 q: "According to the passage, how can farmers produce safer vegetables and protect the local soil?",
                 h: "パッセージ内の「By doing so」の直前フレーズを探し、「By ＋ 動詞-ing」の形に変換してスマートに解答を構築します。",
                 m: "By stopping using chemical fertilizers."
-            },
-            {
-                mode: "e2_story",
-                meta: "2級：3コマイラストストーリー描写",
-                passage: "【状況設定】You have 20 seconds to prepare. Start your story with the given phrase.",
-                cells: [
-                    "【1コマ目】状況: 晴れた日、川沿いの公園で家族がピクニックを楽しんでいる。父親が子供とキャッチボールをしている。",
-                    "【2コマ目】状況: 1時間後、急に空が暗くなり、激しい雨が降り出す。家族は荷物を抱えて慌てて大きな木の下へ走っている。",
-                    "【3コマ目】状況: その後、駅のホームにて。家族は全員服が濡れて寒そうに震えているが、次の電車が来るまであと30分もある電光掲示板を見て、困惑している。"
-                ],
-                q: "Please look at the pictures and describe the story. Start with: 'One sunny day, Mr. Tanaka and his family went to a park near the river...'",
-                h: "指定された導入フレーズに続け、2コマ目「One hour later,」、3コマ目「Then,」などの時間経過表現を頭に添えて、すべて過去形で実況します。",
-                m: "One sunny day, Mr. Tanaka and his family went to a park near the river. Mr. Tanaka was playing catch with his son. One hour later, suddenly it began to rain heavily, so they ran under a big tree. Then, at the train station, they felt disappointed when they saw the sign saying the next train would not arrive for thirty minutes."
             },
             {
                 mode: "standard_qa",
@@ -308,14 +274,13 @@
                 mode: "standard_qa",
                 q: "Today, many people prefer buying local products rather than imported ones. Do you think this trend is good?",
                 h: "Yes/Noで立場を決めた後、2つの英文で背景やメリットを肉付けして発話を完結させます。",
-                m: "Yes, I think so. Local food is much fresher than imported food, so it is better for our health. In addition, buying local goods helps our local economy."
+                m: "Yes, I think so. Local food is much fresher than imported food, so it is better for our health. In addition, buying local goods helps the economy of our own towns."
             }
         ],
         lv_3: [
             {
                 mode: "read_text",
-                meta: "3級：パッセージ音読",
-                passage: "[Passage]\n【Using Smart Cards】\nMany people use smart cards when they take trains or buses. These cards make traveling very convenient. Also, people can use them to buy drinks at stations.",
+                passage: "【Using Smart Cards】\nMany people use smart cards when they take trains or buses. These cards make traveling very convenient. Also, people can use them to buy drinks at stations.",
                 q: "Please read the passage silently for 20 seconds. Then, read it aloud.",
                 h: "単語の聞き取りやすさが重視されます。焦らず大きな声でハキハキと発音してください。",
                 m: "Many people use smart cards when they take trains or buses. These cards make traveling very convenient. Also, people can use them to buy drinks at stations."
@@ -328,23 +293,15 @@
             },
             {
                 mode: "standard_qa",
-                meta: "3級：イラスト描写問題（状況テキスト）",
-                passage: "【カードのイラスト状況】\n・駅の売店の前。男の子が自動販売機でジュースを買おうとお金を入れようとしている。\n・ベンチには女性が座っており、カバンから本を取り出している。\n・ドアの近くに、犬が2匹並んでお座りしている。",
-                q: "Please look at the boy at the vending machine. What is he going to do?",
-                h: "「He is going to ＋ 動詞の原形」または現在進行形を用いて、絵の人物の直近の行動を説明します。",
-                m: "He is going to buy a drink."
-            },
-            {
-                mode: "standard_qa",
-                q: "Please look at the bench. How many dogs are there near the door?",
-                h: "「There are ＋ 数 ＋ 名詞複数形...」の基本構文に当てはめて、正確に数え上げます。",
-                m: "There are two dogs near the door."
-            },
-            {
-                mode: "standard_qa",
                 q: "What is your favorite season? (Please tell me more.)",
                 h: "お気に入りの季節を答えた後、面接官の「Please tell me more.」に対して理由を1文付け足します。",
                 m: "I like summer the best. Because I can enjoy swimming in the sea with my friends."
+            },
+            {
+                mode: "standard_qa",
+                q: "Do you like to read books on weekends?",
+                h: "Yes/Noを答えた後、Yesなら何を読むか、Noなら普段何をするかを想定して2文目を構成します。",
+                m: "No, I don't. I usually play video games or practice sports at the park on weekends."
             }
         ]
     };
@@ -380,11 +337,8 @@
 
     function bootSimulator() {
         const lv = document.getElementById('cfg-level').value;
-        // バグ修正：データベースのキー(lv_1, lv_p1, lv_2, lv_3)と完全一致させ、データをクローン
-        if (!eikenDatabase[lv]) {
-            alert("エラー: データが見つかりません。");
-            return;
-        }
+        if (!eikenDatabase[lv]) return;
+
         sessionList = JSON.parse(JSON.stringify(eikenDatabase[lv]));
         idx = 0; answers = [];
 
@@ -402,7 +356,6 @@
         document.getElementById('ui-help-drawer').style.display = 'none';
         document.getElementById('ui-topic-zone').style.display = 'none';
         document.getElementById('ui-card-area').style.display = 'none';
-        document.getElementById('ui-storyboard').innerHTML = '';
         shutMic();
 
         const total = sessionList.length;
@@ -433,21 +386,9 @@
             data.q = `Selected Topic: "${data.topics[0]}". Please begin your 2-minute speech.`;
         }
 
-        if (data.passage || data.cells) {
+        if (data.passage) {
             document.getElementById('ui-card-area').style.display = 'block';
-            document.getElementById('ui-meta-tag').textContent = data.meta || "TEST MATERIAL";
-            document.getElementById('ui-passage').textContent = data.passage || "";
-            
-            if (data.cells) {
-                const sb = document.getElementById('ui-storyboard');
-                sb.className = "storyboard" + (data.cells.length > 1 ? " storyboard-multicell" : "");
-                data.cells.forEach((cell, cidx) => {
-                    const box = document.createElement('div');
-                    box.className = "story-cell";
-                    box.innerHTML = `<div class="cell-num">Frame ${cidx + 1}</div><div>${cell}</div>`;
-                    sb.appendChild(box);
-                });
-            }
+            document.getElementById('ui-passage').textContent = data.passage;
         }
 
         setTimeout(() => { triggerTts(data.mode === "1k_select" ? "Please look at the topics and prepare your speech." : data.q); }, 400);
@@ -455,7 +396,7 @@
         clearInterval(clock);
         const mod = document.getElementById('cfg-mode').value;
         if (mod === 'mod_e') {
-            if (data.mode === "1k_select" || data.mode === "p1_narrate") limit = 120;
+            if (data.mode === "1k_select") limit = 120;
             else if (data.mode === "read_text") limit = 35;
             else limit = 60;
         } else {
@@ -544,21 +485,21 @@
         pos.innerHTML = ""; neg.innerHTML = "";
 
         if (lv === 'lv_1' || lv === 'lv_p1') {
-            if (words >= 100) {
-                pos.innerHTML += "<li><strong>発話の十分性（Fluency）:</strong> 上位級に必須とされる情報量と展開力が担保されています。</li>";
+            if (words >= 80) {
+                pos.innerHTML += "<li><strong>ディスコースの十分性（Fluency）:</strong> 各トピックの抽象度に対して、十分な情報密度を持った発話が展開されています。</li>";
             } else {
-                neg.innerHTML += "<li><strong>パラグラフの拡張:</strong> 語数が少なめです。背景の因果関係（Cause & Effect）をもう1文足す意識を持ちましょう。</li>";
+                neg.innerHTML += "<li><strong>パラグラフの拡張:</strong> やや語数が少なめです。論理の飛躍を防ぐために、因果関係（Cause & Effect）を示すディスコースマーカーと根拠をもう1文補強しましょう。</li>";
             }
         } else {
-            if (words >= 30) {
-                pos.innerHTML += "<li><strong>フルセンテンス応答の定着:</strong> 単語の羅列を脱却し、S+Vの揃った英文で応答できています。</li>";
+            if (words >= 25) {
+                pos.innerHTML += "<li><strong>フルセンテンス応答（S+V）の定着:</strong> フレーズや単語の羅列を脱却し、構造化された英文で応答できています。</li>";
             } else {
-                neg.innerHTML += "<li><strong>2文構成（Add-on）の意識:</strong> 1つの質問に対して1文で終わる傾向があります。BecauseやAlsoを用いて肉付けしましょう。</li>";
+                neg.innerHTML += "<li><strong>Add-on（2文構成）の意識:</strong> 1つの問いに対して1文で終了する傾向が見られます。BecauseやAlso、In additionを用いて「常に2文以上で肉付けする」癖をつけるとさらに精度が上がります。</li>";
             }
         }
 
         if(pos.innerHTML === "") pos.innerHTML = "<li>セッション完了。タイピングおよびマイクの収音ログが正常に記録されました。</li>";
-        if(neg.innerHTML === "") neg.innerHTML = "<li>お見事です。現行の判定ロジックにおいて、致命的なディスコースの乱れは見られません。</li>";
+        if(neg.innerHTML === "") neg.innerHTML = "<li>お見事です。現行の判定ロジックにおいて、致命的な論理の破綻は見られません。</li>";
     }
 
     function exitReport() {
