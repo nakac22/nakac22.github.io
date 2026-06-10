@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英語面接練習場 - 教員採用試験対策版</title>
+    <style>
+        :root {
+            --slate-900: #0f172a;
+            --slate-100: #f1f5f9;
+            --teal-600: #0d9488;
+            --indigo-600: #4f46e5;
+            --border: #cbd5e1;
+            --radius: 8px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background-color: #e2e8f0; color: #334155; padding: 15px; }
+        .container { max-width: 800px; margin: 0 auto; background: #ffffff; border-radius: var(--radius); padding: 25px; min-height: 85vh; display: flex; flex-direction: column; }
+        header { text-align: center; border-bottom: 3px solid var(--slate-900); padding-bottom: 12px; margin-bottom: 20px; }
+        h1 { color: var(--slate-900); font-size: 20px; font-family: monospace; }
+        .screen { display: none; }
+        .btn { background-color: var(--slate-900); color: white; border: none; padding: 14px 28px; font-size: 16px; font-weight: bold; border-radius: var(--radius); cursor: pointer; text-align: center; width: 100%; margin-top: 10px; }
+        .btn-secondary { background-color: var(--teal-600); }
+        .btn-accent { background-color: #d97706; }
+        .btn-outline { background-color: transparent; color: #475569; border: 2px solid #cbd5e1; }
+        select { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius); font-size: 15px; margin-bottom: 20px; }
+        
+        .slider-box { background: #f8fafc; padding: 15px; border: 2px solid var(--border); border-radius: var(--radius); margin-bottom: 20px; }
+        .slider-label { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 8px; }
+        .slider-input { width: 100%; accent-color: var(--indigo-600); cursor: pointer; }
+
+        .topic-item { padding: 15px; background: #ffffff; border: 2px solid var(--border); border-radius: 6px; font-weight: bold; margin-bottom: 10px; }
+        
+        .q-alert-box { background: #f0f9ff; border-left: 5px solid #0284c7; padding: 15px; border-radius: var(--radius); margin-bottom: 15px; font-size: 16px; font-weight: bold; line-height: 1.4; }
+        .input-area { width: 100%; height: 130px; padding: 12px; border: 2px dashed #94a3b8; border-radius: var(--radius); font-size: 15px; margin-bottom: 15px; resize: none; }
+        .help-drawer { background: #fffbeb; border: 1px solid #fef3c7; padding: 15px; border-radius: var(--radius); margin-bottom: 15px; font-size: 14px; }
+        .analytics-block { border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; background: #f8fafc; margin-bottom: 20px; }
+        .stat-num { font-size: 24px; font-weight: bold; color: var(--indigo-600); }
+        .feedback-list { padding-left: 20px; margin-top: 10px; font-size: 14px; line-height: 1.5; }
+    </style>
+
+    <script>
+        // データ定義マトリクス
+        const poolFixed = {
+            title: "自己紹介と自己PR",
+            lv1: { q: "Please introduce yourself and tell us your strengths in 30 seconds.", h: "名前、大学名、そして自らの強みとなるキーワード（kind, energeticなど）を短い文でストレートに宣言しましょう。", m: "My name is Hanako Gifu. I graduated from Gifu University. My strength is my energy. I always smile and make students happy." },
+            lv2: { q: "Please introduce yourself and tell us your strengths in 30 seconds.", h: "強みを述べたあと、 because や when を使って「なぜそれが強みと言えるのか」の根拠となる経験を1文付け足します。", m: "My name is Hanako Gifu from Gifu University. My biggest strength is communication. I can make friends easily because I worked as a camp leader for children for two years." },
+            lv3: { q: "Please introduce yourself and tell us your strengths in 30 seconds.", h: "First などのシグナルを使い、強みを裏付ける具体的なエピソード（部活動、アルバイト、ボランティアなど）を論理的に構成します。", m: "My name is Hanako Gifu, and I am a graduate of Gifu University. I have two main strengths. First, I am a hard worker. I practiced baseball every day. Second, I love helping others. I want to use these strengths to support my students." },
+            lv4: { q: "Please introduce yourself and tell us your strengths in 30 seconds.", h: "自らの強みが「実際の学校現場や教職においてどのように生かされるか」という教育的視点に結びつけてアピールします。", m: "My name is Hanako Gifu. My strength is adaptability, which I developed through my study abroad experience. In the classroom, this allows me to understand diverse student backgrounds and create an inclusive learning environment where every child feels valued." },
+            lv5: { q: "Please introduce yourself and tell us your strengths in 30 seconds.", h: "短い時間の中で、自己のアイデンティティ、具体的経験、精度高い専門性をパラグラフ構成で要約します。", m: "I am Hanako Gifu, a graduate specializing in English education. Throughout my university life, I actively organized local community events for children, enhancing my leadership skills. I am highly confident that my proactive attitude and passion for student growth will directly contribute to fostering global mindsets in your schools." }
+        };
+
+        const poolRandomCandidates = [
+            {
+                title: "教員を志望する理由",
+                lv1: { q: "Why do you want to be a school teacher?", h: "「子どもが好き」「英語が好き」という純粋な動機をストレートに伝えます。", m: "I want to be a teacher because I love children. I also want to teach English to them." },
+                lv2: { q: "Why do you want to be a school teacher?", h: "自分が学生時代に出会った「憧れの先生」のエピソードなどを交えて理由を具体化します。", m: "I want to be a teacher because my high school English teacher helped me a lot. She was very kind, and I want to be like her." },
+                lv3: { q: "Why do you want to be a school teacher?", h: "教職の魅力について、2つの視点（First, Second）から論理的に述べます。", m: "I want to be a teacher for two reasons. First, I want to help students find their potential. Second, I believe that learning English opens new windows to the world for young people." },
+                lv4: { q: "Why do you want to be a school teacher?", h: "生徒の認知・社会的な成長に伴走することの社会的意義と教職への覚悟を記述します。", m: "My motivation comes from the belief that education shapes the future. I want to guide students not only to master English but also to think critically and respect different cultures as global citizens." },
+                lv5: { q: "Why do you want to be a school teacher?", h: "教育実習やボランティアでの気づきを言語化し、生徒の変容を促すエージェントとしての情熱を展開します。", m: "I chose this career because I witnessed the transformative power of education during my teaching practice. When a struggling student finally grasped a concept, their face lit up with confidence. I want to dedicate my life to creating those moments of discovery and empowering the next generation." }
+            },
+            {
+                title: "本県を志望する理由",
+                lv1: { q: "Why do you want to work in this prefecture?", h: "地元への愛着や、この地域の子どもたちを育てたいという熱意をシンプルに表明します。", m: "I love this prefecture. I was born here, so I want to help children in my hometown." },
+                lv2: { q: "Why do you want to work in this prefecture?", h: "この地域が抱える特徴や教育環境の良さを because で結びつけて説明します。", m: "I want to work here because this prefecture has rich nature and wonderful people. I want to teach children in this great environment." },
+                lv3: { q: "Why do you want to work in this prefecture?", h: "本県の教育施策や地域の特色を意識し、2つの軸で構成します。", m: "I have two main reasons. First, I want to give back to my community where I grew up. Second, this prefecture focuses heavily on active learning, and I want to contribute to this progressive educational movement." },
+                lv4: { q: "Why do you want to work in this prefecture?", h: "本県が目指す教育ビジョンと、自らの専門性（英語教育、生徒指導など）がどうマッチしているかを論述します。", m: "I strongly admire this prefecture's commitment to enhancing practical English communication skills. With my background in communicative language teaching, I am eager to implement dynamic lessons that align perfectly with the prefecture's educational goals." },
+                lv5: { q: "Why do you want to work in this prefecture?", h: "地域の教育的課題や独自施策に深く言及し、当事者意識を持って本県の教育改革に貢献する決意を述べます。", m: "This prefecture is currently pioneering innovative projects in digital education and cross-cultural exchange. By working here, I can actively integrate these administrative strengths into my daily classes, fostering resilient, open-minded students who can proudly represent our local community on a global stage." }
+            },
+            {
+                title: "教師として最も大切にしたいこと",
+                lv1: { q: "What is the most important thing for you as a teacher?", h: "最も大切にしたい教育信条（信頼関係など）を1つ明確に述べます。", m: "Trust is the most important thing. I want to listen to my students every day." },
+                lv2: { q: "What is the most important thing for you as a teacher?", h: "それを大切にしたい理由を、生徒の心の安定や学習意欲と結びつけて説明します。", m: "The most important thing is to make a safe classroom. If students feel safe, they can enjoy studying and talking with friends." },
+                lv3: { q: "What is the most important thing for you as a teacher?", h: "信頼関係の構築と、日々の授業改善の2つの側面など、バランス良く大切にしたいポイントを論理展開します。", m: "I value two things most. First, building strong relationships with students by talking to them outside of class. Second, preparing high-quality lessons so that every student can experience the joy of learning." },
+                lv4: { q: "What is the most important thing for you as a teacher?", h: "生徒一人ひとりの多様性を認め、誰一人取り残さない学級経営の重要性に昇華させます。", m: "For me, recognizing individual diversity is paramount. Every student has unique strengths and struggles, so a teacher must provide tailored support to ensure that no single child feels isolated or left behind in the learning process." },
+                lv5: { q: "What is the most important thing for you as a teacher?", h: "信頼、安心、環境づくりについて、包括的な教育哲学としてパラグラフで論証します。", m: "The core of my educational philosophy is fostering psychological safety within the classroom. When students feel unconditionally respected by their teacher and peers, they become willing to take intellectual risks and learn from failures. My ultimate goal is to establish this supportive ecosystem to facilitate autonomous, lifelong learning." }
+            },
+            {
+                title: "クラスのいじめ問題への対処",
+                lv1: { q: "How would you handle a bullying problem in your classroom?", h: "まずは「すぐに行動する」「生徒の話を聞く」という迅速な姿勢を伝えます。", m: "I will act quickly. I will talk to the students and help the victim immediately." },
+                lv2: { q: "How would you handle a bullying problem in your classroom?", h: "被害生徒を守ること、その他の教員と情報共有することを because や when で説明します。", m: "When I find a bullying problem, I will protect the victim first. Then, I will talk to other teachers because teamwork is very important." },
+                lv3: { q: "How would you handle a bullying problem in your classroom?", h: "初期対応（話を聞く）と、組織的対応（学年、管理職、保護者との連携）の2ステップを明確に述べます。", m: "I will take two immediate steps. First, I will interview both students separately to understand the facts and ensure the victim's safety. Second, I will report the issue to the principal and work together with the school counselor." },
+                lv4: { q: "How would you handle a bullying problem in your classroom?", h: "日頃の学級経営における早期発見・予防システムの構築にまで視野を広げて論述します。", m: "Dealing with bullying requires a swift, organized response and constant prevention. I will collaborate with the teaching staff to ensure the victim's physical and emotional safety, while routinely creating a classroom culture where minor changes in student behavior are never overlooked." },
+                lv5: { q: "How would you handle a bullying problem in your classroom?", h: "組織的・多角的な対応アプローチと、いじめを許さない集団ダイナミクスの形成について記述します。", m: "If bullying is detected, I will immediately initiate an institutional response by involving the grade management team and parents, prioritizing the victim's absolute protection. Simultaneously, I will address the underlying classroom dynamic through subtle guidance, transforming passive bystanders into an active defense network that collectively rejects any form of harassment." }
+            }
+        ];
+
+        // 状態管理用グローバル変数
+        let selectedRandomNodes = [];
+        let currentLevelKey = 'lv3';
+        let qIdx = 0;
+        let answersLog = [];
+        let micActive = false;
+        let rec = null;
+
+        // 質問をシャッフルして固定する関数
+        function shuffleQuestions() {
+            let shuffled = [...poolRandomCandidates].sort(() => 0.5 - Math.random());
+            selectedRandomNodes = [shuffled[0], shuffled[1]];
+        }
+
+        // 完全にページのロードが完了（DOM+アセットすべてが確定）した瞬間にイベントを紐づける
+        window.onload = function() {
+            
+            // ページロード時に確実に初期問題を選出
+            shuffleQuestions();
+
+            // DOM要素の取得
+            const scrSetup = document.getElementById('scr-setup');
+            const scrTopic = document.getElementById('scr-topic');
+            const scrTrainer = document.getElementById('scr-trainer');
+            const scrReport = document.getElementById('scr-report');
+
+            const btnGotoTopic = document.getElementById('btn-goto-topic');
+            const btnBootTrainer = document.getElementById('btn-boot-trainer');
+            const btnBackToSetup = document.getElementById('btn-back-to-setup');
+            const btnAudioRepeat = document.getElementById('btn-audio-repeat');
+            const btnHint = document.getElementById('btn-hint');
+            const btnMic = document.getElementById('btn-mic');
+            const btnCommitPhase = document.getElementById('btn-commit-phase');
+            const btnExitReport = document.getElementById('btn-exit-report');
+
+            const cfgLevel = document.getElementById('cfg-level');
+            const cfgMode = document.getElementById('cfg-mode');
+            const cfgRate = document.getElementById('cfg-rate');
+            const uiRateVal = document.getElementById('ui-rate-val');
+            
+            const uiPrompt = document.getElementById('ui-prompt');
+            const uiPhaseInfo = document.getElementById('ui-phase-info');
+            const uiResponse = document.getElementById('ui-response');
+            const uiHelpDrawer = document.getElementById('ui-help-drawer');
+            const uiHelpHint = document.getElementById('ui-help-hint');
+            const uiHelpModel = document.getElementById('ui-help-model');
+
+            const previewQ2 = document.getElementById('preview-q2');
+            const previewQ3 = document.getElementById('preview-q3');
+
+            // 速度スライダー連動
+            cfgRate.addEventListener('input', function() {
+                uiRateVal.textContent = `${this.value}x ${this.value == 1.0 ? '(標準)' : ''}`;
+            });
+
+            // 画面切り替え共通
+            function changeScreen(targetId) {
+                scrSetup.style.display = 'none';
+                scrTopic.style.display = 'none';
+                scrTrainer.style.display = 'none';
+                scrReport.style.display = 'none';
+                document.getElementById(targetId).style.display = 'block';
+            }
+
+            // インデックスに応じた問題オブジェクトの安全な抽出
+            function getCurrentQuestionObj() {
+                if (qIdx === 0) return poolFixed[currentLevelKey];
+                if (qIdx === 1) return selectedRandomNodes[0][currentLevelKey];
+                if (qIdx === 2) return selectedRandomNodes[1][currentLevelKey];
+                return null;
+            }
+
+            // 質問ロード
+            function loadQuestion() {
+                uiResponse.value = '';
+                uiHelpDrawer.style.display = 'none';
+                uiPhaseInfo.textContent = `Question ${qIdx + 1} / 3`;
+
+                const data = getCurrentQuestionObj();
+                if (!data) {
+                    uiPrompt.textContent = "データロードエラーが発生しました。最初からやり直してください。";
+                    return;
+                }
+
+                uiPrompt.textContent = data.q;
+                uiHelpHint.textContent = data.h;
+                uiHelpModel.textContent = data.m;
+
+                speakText(data.q);
+
+                if (cfgMode.value === 'mod_e') {
+                    btnHint.style.display = 'none';
+                } else {
+                    btnHint.style.display = 'block';
+                }
+            }
+
+            // 音声朗読
+            function speakText(text) {
+                if ('speechSynthesis' in window) {
+                    try {
+                        window.speechSynthesis.cancel();
+                        const utterance = new SpeechSynthesisUtterance(text);
+                        utterance.lang = 'en-US';
+                        utterance.rate = parseFloat(cfgRate.value) || 1.0;
+                        window.speechSynthesis.speak(utterance);
+                    } catch (e) {
+                        console.log("Speech error caught.");
+                    }
+                }
+            }
+
+            // 音声認識マイク初期化
+            function initSpeechRecognition() {
+                try {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    if (!SpeechRecognition) return null;
+                    
+                    const r = new SpeechRecognition();
+                    r.continuous = true;
+                    r.lang = 'en-US';
+                    r.onresult = function(event) {
+                        let textBuffer = '';
+                        for (let i = event.resultIndex; i < event.results.length; ++i) {
+                            if (event.results[i].isFinal) {
+                                textBuffer += event.results[i][0].transcript;
+                            }
+                        }
+                        if (textBuffer) {
+                            uiResponse.value += textBuffer + ' ';
+                        }
+                    };
+                    return r;
+                } catch (e) {
+                    return null;
+                }
+            }
+            rec = initSpeechRecognition();
+
+            // --- ボタンイベント登録群 ---
+
+            // 設定 ➔ トピック確認へ進む
+            btnGotoTopic.addEventListener('click', function() {
+                currentLevelKey = cfgLevel.value; 
+                
+                if (selectedRandomNodes && selectedRandomNodes.length >= 2) {
+                    previewQ2.textContent = `【第2問】 ${selectedRandomNodes[0].title}`;
+                    previewQ3.textContent = `【第3問】 ${selectedRandomNodes[1].title}`;
+                }
+                changeScreen('scr-topic');
+            });
+
+            // トピック確認 ➔ 設定へ戻る
+            btnBackToSetup.addEventListener('click', function() {
+                changeScreen('scr-setup');
+            });
+
+            // トピック確認 ➔ 模擬面接を開始する
+            btnBootTrainer.addEventListener('click', function() {
+                currentLevelKey = cfgLevel.value; 
+                qIdx = 0;
+                answersLog = [];
+                changeScreen('scr-trainer');
+                loadQuestion();
+            });
+
+            // 再朗読
+            btnAudioRepeat.addEventListener('click', function() {
+                let data = getCurrentQuestionObj();
+                if (data) speakText(data.q);
+            });
+
+            // ヒント表示
+            btnHint.addEventListener('click', function() {
+                uiHelpDrawer.style.display = 'block';
+            });
+
+            // マイクON/OFF
+            btnMic.addEventListener('click', function() {
+                if (!rec) {
+                    alert("お使いの環境はブラウザ音声認識非対応です。直接入力をご利用ください。");
+                    return;
+                }
+                if (micActive) {
+                    rec.stop();
+                    micActive = false;
+                    btnMic.style.background = "";
+                    btnMic.textContent = "🎤 音声入力 開始/停止";
+                } else {
+                    try {
+                        rec.start();
+                        micActive = true;
+                        btnMic.style.background = "#fed7d7";
+                        btnMic.textContent = "⏹ 音声入力 停止";
+                    } catch (err) {
+                        console.log(err);
+                    }
+                }
+            });
+
+            // 解答確定して次へ
+            btnCommitPhase.addEventListener('click', function() {
+                if (micActive && rec) {
+                    try { rec.stop(); } catch(e){}
+                    micActive = false;
+                    btnMic.style.background = "";
+                    btnMic.textContent = "🎤 音声入力 開始/停止";
+                }
+
+                const rawInput = uiResponse.value;
+                const cleanedInput = rawInput.replace(/\s+/g, ' ').trim();
+                answersLog.push(cleanedInput);
+
+                if (qIdx < 2) {
+                    qIdx++;
+                    loadQuestion();
+                } else {
+                    renderFinalReport();
+                }
+            });
+
+            // 診断画面からやり直す
+            btnExitReport.addEventListener('click', function() {
+                shuffleQuestions(); 
+                changeScreen('scr-setup');
+            });
+
+            // レポート描画
+            function renderFinalReport() {
+                changeScreen('scr-report');
+
+                let totalWords = 0;
+                let matchedSignals = [];
+                let hasContent = false;
+
+                const connectionMarkers = [
+                    'because', 'when', 'if', 'first', 'second', 'finally', 
+                    'however', 'therefore', 'which', 'that', 'but', 'and'
+                ];
+
+                answersLog.forEach((userText) => {
+                    if (userText && userText.length > 0) {
+                        hasContent = true;
+                        const words = userText.split(/\s+/);
+                        totalWords += words.filter(w => w.length > 0).length;
+
+                        connectionMarkers.forEach((marker) => {
+                            const regex = new RegExp('\\b' + marker + '\\b', 'gi');
+                            const match = userText.match(regex);
+                            if (match) {
+                                for(let i=0; i<match.length; i++) {
+                                    matchedSignals.push(marker.toLowerCase());
+                                }
+                            }
+                        });
+                    }
+                });
+
+                const repWords = document.getElementById('rep-words');
+                const repSignals = document.getElementById('rep-signals');
+                const repPositives = document.getElementById('rep-positives');
+
+                repWords.textContent = `${totalWords}語`;
+                repSignals.textContent = `${matchedSignals.length}回`;
+                repPositives.innerHTML = "";
+
+                if (!hasContent || totalWords === 0) {
+                    repPositives.innerHTML = `
+                        <li style="color:#dc2626; font-weight:bold;">⚠️ 【判定不能】発話テキストが検出されませんでした。</li>
+                        <li>入力が空の状態で終了したため、分析を行いませんでした。</li>
+                    `;
+                    return;
+                }
+
+                repPositives.innerHTML += `<li><strong>計測データ:</strong> 3問のラリーで合計 <strong>${totalWords}語</strong> の発話が記録されました。</li>`;
+                
+                if (matchedSignals.length > 0) {
+                    const uniqueSignals = [...new Set(matchedSignals)];
+                    repPositives.innerHTML += `<li><strong>検出された構造マーカー:</strong> <code style="background:#e0e7ff; padding:2px 6px; border-radius:4px; font-weight:bold; color:#4338ca;">${uniqueSignals.join(', ')}</code></li>`;
+                    
+                    if(uniqueSignals.includes('first') || uniqueSignals.includes('second')) {
+                        repPositives.innerHTML += `<li>📝 <strong>列挙（First / Second）:</strong> 複数のアプローチや理由を構造化して伝える骨組みが機能しています。面接官が聞き取りやすい展開です。</li>`;
+                    }
+                    if(uniqueSignals.includes('because')) {
+                        repPositives.innerHTML += `<li>📝 <strong>因果（because）:</strong> 主張にしっかりと言語的根拠を接続できています。</li>`;
+                    }
+                    if(uniqueSignals.includes('when') || uniqueSignals.includes('if')) {
+                        repPositives.innerHTML += `<li>📝 <strong>状況想定（when / if）:</strong> 学校現場の具体的なシーンや生徒の動態を想定して解答を組み立てられています。</li>`;
+                    }
+                    if(uniqueSignals.includes('however') || uniqueSignals.includes('therefore')) {
+                        repPositives.innerHTML += `<li>📝 <strong>論理展開（however / therefore）:</strong> A2〜B1レベルを超え、談話（ディスコース）をより洗練されたものに引き上げています。</li>`;
+                    }
+                } else {
+                    repPositives.innerHTML += `<li>⚠️ <strong>構文マーカー未検出:</strong> 接続詞やシグナルが検出されませんでした。意識して because や First を導入してみましょう。</li>`;
+                }
+
+                repPositives.innerHTML += `<div style="margin-top:15px; padding:10px; background:#fffbeb; border-radius:6px; font-size:13px; border-left:4px solid #d97706;">
+                    <strong>📋 教員採用試験における評価の視点:</strong><br>
+                    教採の英語面接は流暢性の勝負ではなく、<strong>「質問への的確なダイレクトアンサー」</strong>と<strong>「児童生徒理解に基づいた熱意の具体化」</strong>が評価を分けます。選択した目標レベル（${currentLevelKey.toUpperCase()}）の模範解答を口に馴染むまで声に出して繰り返し練習してください。
+                </div>`;
+            }
+        };
+    </script>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>英語面接練習場 (教員採用試験対策)</h1>
+    </header>
+
+    <!-- 1. 設定画面 -->
+    <div id="scr-setup" class="screen" style="display: block;">
+        <label style="display:block; font-weight:bold; margin-bottom:8px;">1. 目標レベルの選択（CEFR A2〜B1水準）</label>
+        <select id="cfg-level">
+            <option value="lv1">Level 1 : 基礎意思表明（短い単文を並べて熱意を伝える段階）</option>
+            <option value="lv2">Level 2 : 理由・具体化（BecauseやWhenを用いて根拠を1つ添える段階）</option>
+            <option value="lv3" selected>Level 3 : 論理的展開（First, Second等を用いて複数のアプローチを述べる段階）</option>
+            <option value="lv4">Level 4 : 教育観の接合（自らの強みや教師像を具体例と結びつけて一般化する段階）</option>
+            <option value="lv5">Level 5 : 自律的パラグラフ（教育課題への実践的アプローチを多角的に構成する段階）</option>
+        </select>
+
+        <label style="display:block; font-weight:bold; margin-bottom:8px;">2. 練習モード</label>
+        <select id="cfg-mode">
+            <option value="mod_p">プラクティス（ヒント・模範解答を表示）</option>
+            <option value="mod_e">リアル検証（ヒント非表示）</option>
+        </select>
+
+        <div class="slider-box">
+            <div class="slider-label">
+                <span>3. 質問の読み上げ速度</span>
+                <span id="ui-rate-val">1.0x (標準)</span>
+            </div>
+            <input type="range" id="cfg-rate" class="slider-input" min="0.5" max="1.5" step="0.1" value="1.0">
+        </div>
+
+        <button id="btn-goto-topic" class="btn btn-secondary">トピック確認へ進む ➔</button>
+    </div>
+
+    <!-- 2. トピック確認画面 -->
+    <div id="scr-topic" class="screen">
+        <p style="font-weight:bold; margin-bottom:15px;">📋 今回の面接構成（自動選出完了）：</p>
+        
+        <div id="ui-topic-list">
+            <div class="topic-item" style="background: #e0e7ff; border-color: var(--indigo-600); color: #4338ca;">
+                【第1問・必須】自己紹介と自己PR（30秒間）
+            </div>
+            <div id="preview-q2" class="topic-item" style="background: #fafafa; border-color: #cbd5e1; color: #64748b;">
+                【第2問】（読み込み中...）
+            </div>
+            <div id="preview-q3" class="topic-item" style="background: #fafafa; border-color: #cbd5e1; color: #64748b;">
+                【第3問】（読み込み中...）
+            </div>
+        </div>
+
+        <button id="btn-boot-trainer" class="btn btn-secondary">模擬面接を開始する ➔</button>
+        <button id="btn-back-to-setup" class="btn btn-outline" style="margin-top:10px;">⏰ 条件を選び直す</button>
+    </div>
+
+    <!-- 3. 実行画面 -->
+    <div id="scr-trainer" class="screen">
+        <h3 id="ui-phase-info" style="margin-bottom:10px; color:var(--indigo-600);">Question 1 / 3</h3>
+        <div class="q-alert-box">
+            <div id="ui-prompt">Loading...</div>
+        </div>
+        
+        <button id="btn-audio-repeat" class="btn btn-outline" style="margin-bottom:15px; width:auto; padding:6px 12px; font-size:13px;">🔊 質問文を再朗読</button>
+
+        <textarea id="ui-response" class="input-area" placeholder="ここに英語を入力するか、音声入力を起動して話してください。"></textarea>
+
+        <div id="ui-help-drawer" class="help-drawer" style="display: none;">
+            <p style="font-weight:bold; color:#b45309;">💡 受験生への着眼点・アピールのコツ:</p>
+            <p id="ui-help-hint" style="margin-bottom:10px;"></p>
+            <p style="font-weight:bold; color:var(--teal-600);">✨ 模範解答例:</p>
+            <p id="ui-help-model" style="font-style: italic;"></p>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <button id="btn-mic" class="btn btn-outline">🎤 音声入力 開始/停止</button>
+            <button id="btn-hint" class="btn btn-outline">解説・ヒント表示</button>
+        </div>
+        <button id="btn-commit-phase" class="btn btn-accent">解答を確定して次へ ➔</button>
+    </div>
+
+    <!-- 4. 診断画面 -->
+    <div id="scr-report" class="screen">
+        <h2 style="text-align: center; margin-bottom: 20px;">教員採用試験 英語発話データ分析</h2>
+        
+        <div class="analytics-block">
+            <p style="font-weight:bold; margin-bottom:10px;">📊 ユーザー発話テキストからの実測データ</p>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; text-align:center;">
+                <div style="background:white; padding:10px; border-radius:6px;">
+                    <div>実際の総語数</div>
+                    <div id="rep-words" class="stat-num">0語</div>
+                </div>
+                <div style="background:white; padding:10px; border-radius:6px;">
+                    <div>検出された論理接続詞・構造マーカー</div>
+                    <div id="rep-signals" class="stat-num">0回</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="analytics-block">
+            <p style="font-weight:bold; color:var(--teal-600);">🎯 発話実態に基づく客観総評</p>
+            <ul id="rep-positives" class="feedback-list"></ul>
+        </div>
+
+        <button id="btn-exit-report" class="btn">もう一度最初から解く</button>
+    </div>
+</div>
+
+</body>
+</html>
