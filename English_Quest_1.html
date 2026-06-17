@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Quest 1 - 多層的英語観への誘い</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --text-color: #1e293b;
+            --primary-color: #1e3a8a;
+            --accent-color: #3b82f6;
+            --border-color: #cbd5e1;
+            --card-bg: #ffffff;
+            --stamp-active: #16a34a;
+            --stamp-empty: #94a3b8;
+            --success-bg: #f0fdf4;
+            --success-border: #16a34a;
+            --error-bg: #fef2f2;
+            --error-border: #dc2626;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.7;
+            padding: 30px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 850px;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            position: relative;
+            min-height: 650px;
+        }
+
+        h1 {
+            font-size: 2.4rem;
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            font-weight: 800;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #64748b;
+            margin-bottom: 35px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+
+        p { margin-bottom: 18px; }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s, transform 0.1s;
+            display: inline-block;
+        }
+
+        .btn:hover { background-color: #1d4ed8; }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled {
+            background-color: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .nav-menu {
+            position: absolute;
+            top: 35px;
+            right: 40px;
+        }
+        .nav-menu .btn-nav {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            background: transparent;
+            color: #64748b;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+        .nav-menu .btn-nav:hover {
+            background: #f1f5f9;
+            color: var(--primary-color);
+        }
+
+        .screen { display: none; margin-top: 20px; }
+        .screen.active { display: block; }
+
+        .intro-box {
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .quest-world-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.01);
+        }
+        .quest-world-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        .quest-world-header h3 { color: var(--primary-color); font-size: 1.3rem; font-weight: 700; }
+
+        .stamps-row {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 10px 0 20px 0;
+        }
+        .stamp-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 72px;
+        }
+        .stamp-circle {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            border: 2px dashed var(--stamp-empty);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--stamp-empty);
+            background: #fafafa;
+            transition: all 0.3s;
+            margin-bottom: 8px;
+        }
+        .stamp-box.cleared .stamp-circle {
+            border: 2px solid var(--stamp-active);
+            color: var(--stamp-active);
+            background: #f0fdf4;
+            transform: rotate(-8deg);
+        }
+        .stamp-title { font-size: 0.65rem; color: #64748b; text-align: center; font-weight: bold; line-height: 1.2; }
+
+        .level-nodes {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .level-node-btn {
+            padding: 12px;
+            font-size: 0.9rem;
+            background-color: #f8fafc;
+            color: var(--text-color);
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .level-node-btn:hover:not(:disabled) {
+            background-color: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+        .level-node-btn.cleared {
+            background-color: #f0fdf4;
+            border-color: #bbf7d0;
+            color: #15803d;
+        }
+
+        .story-text-area {
+            font-size: 1.1rem;
+            background: #f8fafc;
+            padding: 30px;
+            border-radius: 10px;
+            border-left: 6px solid var(--primary-color);
+            margin-bottom: 30px;
+        }
+        .story-text-area p:last-child { margin-bottom: 0; }
+
+        .academic-badge-zone {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .academic-badge {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+        .academic-badge.social {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .question-zone {
+            font-weight: 700;
+            font-size: 1.15rem;
+            margin-bottom: 20px;
+            color: #0f172a;
+            background: #fff;
+            padding: 10px 0;
+        }
+        
+        .choices-zone { display: flex; flex-direction: column; gap: 14px; margin-bottom: 30px; }
+        .choice-item-btn {
+            background: #fff;
+            color: var(--text-color);
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            text-align: left;
+            padding: 18px;
+            font-size: 1.05rem;
+            width: 100%;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+        }
+        .choice-item-btn:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; }
+        .choice-item-btn.correct { background-color: #edfdf2 !important; border-color: var(--success-border) !important; font-weight: bold; color: #16a34a; }
+        .choice-item-btn.wrong { background-color: #fdf2f2 !important; border-color: var(--error-border) !important; color: #dc2626; opacity: 0.8; }
+
+        .feedback-zone { padding: 25px; border-radius: 10px; display: none; margin-top: 25px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+        .feedback-zone.correct-zone { background: var(--success-bg); border: 1px solid var(--success-border); }
+        .feedback-zone.wrong-zone { background: var(--error-bg); border: 1px solid var(--error-border); }
+        .feedback-status { font-size: 1.3rem; font-weight: bold; margin-bottom: 10px; }
+
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            #app { padding: 20px; min-height: auto; }
+            .nav-menu { position: static; text-align: right; margin-bottom: 20px; }
+            h1 { font-size: 1.8rem; }
+            .quest-world-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .level-nodes { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div id="global-nav" class="nav-menu" style="display: none;">
+        <button class="btn-nav" onclick="saveAndExit()">セーブしてマップに戻る</button>
+    </div>
+
+    <div id="screen-main" class="screen active">
+        <h1>English Quest 1</h1>
+        <div class="subtitle">〜多層的英語観への誘い〜</div>
+
+        <div class="intro-box">
+            <strong style="color:var(--primary-color); font-size:1.1rem; display:block; margin-bottom:6px;">【Quest I: モノの世界】テーマ</strong>
+            英語話者は、まず世界を分類し、整理し、共有します。日本語話者が比較的、流動的・文脈依存的に世界を見るのに対し、英語話者は対象をカテゴリー化しながら理解する傾向が強い性質があります。Quest Iでは、その「入口」を中学1年生の文法から順を追って体感していきましょう。
+        </div>
+
+        <h2>冒険の進捗</h2>
+        <div id="worlds-container"></div>
+
+        <div style="text-align: center; margin-top: 40px;">
+            <button onclick="resetSaveData()" style="background:#dc2626; font-size:0.8rem; padding:8px 16px;" class="btn">冒険の書（セーブデータ）をリセット</button>
+        </div>
+    </div>
+
+    <div id="screen-quest" class="screen">
+        <h2 id="quest-header-title">Level X</h2>
+        
+        <div class="story-text-area" id="story-container"></div>
+
+        <div class="question-zone" id="question-container"></div>
+
+        <div class="choices-zone" id="choices-container"></div>
+
+        <div class="feedback-zone" id="feedback-container">
+            <div class="feedback-status" id="feedback-status"></div>
+            <div id="feedback-text"></div>
+            <div style="text-align: right; margin-top: 25px;">
+                <button id="next-action-btn" class="btn" onclick="advanceQuest()">次のレベルへ進む</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 構造化データ（Quest I: モノの世界 全10レベル・完全版） ---
+    const questData = {
+        id: "quest1",
+        title: "Quest I: モノの世界",
+        levels: [
+            {
+                id: "q1_l1",
+                title: "名前を与える",
+                stampLabel: "カテゴリー化",
+                stampEmoji: "🏷️",
+                cognitive: "カテゴリー化",
+                social: "共同注視",
+                grammar: "be動詞",
+                text: [
+                    "世界を理解する第一歩は「分類（カテゴリー化）」です。私たちは生まれた瞬間から、目の前を通り過ぎる無数の光景や生き物に名前を与えて整理しています。",
+                    "中学の最初に習う be動詞（am, is, are）の本質は、単なる「イコール記号」ではありません。話し手と聞き手が同じ対象にパッと視線を合わせ（共同注視）、その対象を『これは、あのグループの一員ですよ』と、頭の中の引き出し（カテゴリー）にカチッと当てはめる宣言なのです。"
+                ],
+                question: "【問題】目の前をトコトコと走っていく、ある未知の四足歩行の生き物を指して、話し手と聞き手が同時に注目しながら「あれは犬というカテゴリーの生き物だよ」と言い切るとき、英語話者の頭の中の動きを最もよく表している英文はどちらでしょう？",
+                choices: [
+                    { text: "That is a dog.", correct: true, feedback: "大正解です！ 英語話者は、視線の先にある具体的な生き物を “That” で捕まえ、それが “a dog（犬というカテゴリーに属する、数あるうちの1つの個体）” であると be動詞（is）を使ってカチッと枠にはめ込みます。言葉を使って世界を切り分け、聞き手と「これは犬だね」という認識を共有する（共同注視）。これこそが、すべての英文法の出発点となる認知の仕組みです。" },
+                    { text: "That dog.", correct: false, feedback: "残念、これだと単に「あの犬」と名詞を並べただけで、頭の中の「引き出しに入れる（カテゴリー化する）」という強い判定の役割を果たす形（be動詞）が抜けてしまっています。英語話者は、主語と名詞を繋ぐ瞬間に『これはこのグループの一員だ』と言い切ることで、世界を整理整頓しています。もう一度よくイメージして選んでみてください。" }
+                ]
+            },
+            {
+                id: "q1_l2",
+                title: "距離のある世界",
+                stampLabel: "視点と心理",
+                stampEmoji: "🗺️",
+                cognitive: "視点（Perspective）",
+                social: "心理的距離",
+                grammar: "this / that",
+                text: [
+                    "世界を分類した人間は、次に自分と対象との「距離」を測り始めます。英語話者は、物理的な距離だけでなく、『自分の安全なナワバリの内側か、それとも外側か』という心理的な境界線をもの凄く意識します。",
+                    "それが中学で習う “this” と “that” の正体です。自分の手の届く範囲（内側）にあるものはすべて this。そこから一歩でも外に出た、相手の領域やだだっ広い空間にあるものは、すべて一線を引き、客観的な視点から that と呼びます。"
+                ],
+                question: "【問題】あなたが「自分の手でしっかりと持っているスマホ」を指して、『このスマホ、最近調子が悪くてさ』と相手に話しかけるとき、あなたの心理的ナワバリの感覚を正しく表現しているのはどちらでしょう？",
+                choices: [
+                    { text: "this phone", correct: true, feedback: "大正解です！ 自分の手に触れている、あるいは自分のパーソナルスペース（ナワバリ）に完全に入り込んでいる対象に対して、人間は強い親近感を持ち、 “this” を選択します。逆に、物理的・心理的に一歩外側にあるものはすべて “that” で距離を置きます。このように、どこに自分の「視点」の拠点を置くかで言葉が変わる面白さを、認知言語学では『視点（perspective）』と呼びます。" },
+                    { text: "that phone", correct: false, feedback: "おっと、これだとスマホがあなたのナワバリの外側（相手の近くや、離れた客観的な場所）にあるニュアンスになってしまいます。今、スマホはあなたの「手の中」にガッチリ入っています。自分の領域に巻き込んでいるときの感覚をもう一度思い出して、選んでみてください。" }
+                ]
+            },
+            {
+                id: "q1_l3",
+                title: "一つとたくさん",
+                stampLabel: "個体と集合",
+                stampEmoji: "🔢",
+                cognitive: "個体と集合",
+                social: "数量の明示",
+                grammar: "単数・複数",
+                text: [
+                    "日本語では「机の上に本がある」と言ったとき、その本が1冊なのか10冊なのかは文脈に任されます。しかし、英語話者は世界を認識した瞬間に、そのモノが『独立した1つの形（個体）か、それとも集まり（集合）か』を強制的に宣言させられます。",
+                    "英語において「数」を明示することは、社会の中でトラブルを避け、正確な情報を他者と共有するための必須の作法なのです。目で見た瞬間に、頭の中で「1」か「複数」かのスイッチがパチッと切り替わっています。"
+                ],
+                question: "【問題】カウンターの上に、クッキリとした輪郭を持った「消しゴムが1個だけ」ポツンと置かれている光景を目にしたとき、英語話者の脳内スクリーンに真っ先に浮かぶ形（言葉）はどちらでしょう？",
+                choices: [
+                    { text: "an eraser", correct: true, feedback: "大正解です！ 頭の中にポツンと浮かんだ「1つのクッキリした輪郭」を捉えているため、単数を示す “an” が自然と起動します。もしこれがジャラジャラと複数あれば、個体の境界線が混ざり合うため、瞬時に集合体として捉えて “erasers” に切り替わります。英語を見るということは、彼らが世界を「1つの塊」として見ているか、「集まり」として見ているかという脳内カメラのズーム度合いを追体験することなのです。" },
+                    { text: "erasers", correct: false, feedback: "これだと、脳内カメラがズームアウトして、複数の消しゴムがバラバラと集まっている「集合」の光景を捉えてしまいます。今、目の前にあるのは「たった1個」の消しゴムです。そのクッキリとした1つの輪郭に焦点を当てて、もう一度選んでみてください。" }
+                ]
+            },
+            {
+                id: "q1_l4",
+                title: "存在を先に示す",
+                stampLabel: "存在の導入",
+                stampEmoji: "🎪",
+                cognitive: "存在の導入",
+                social: "情報提示の順序",
+                grammar: "There is / certain noun",
+                text: [
+                    "学校で習う “There is / are 〜” の構文。「〜がある」と訳しますが、なぜ普通に主語から始めずに、わざわざこんな回りくどい言い方をするのでしょうか？",
+                    "これは、聞き手の脳内スクリーンに対する「おもてなしの文法」です。聞き手がまだ全く予期していない新しいモノ（新情報）をいきなりドンと出すと、相手の脳は処理が追いつきません。だから、まず “There is...” と言って『これからスクリーンに新しいモノを1つ設置しますよ！心の準備をしてね』と視線を誘導し、その後にモノをそっと置くのです。"
+                ],
+                question: "【問題】物語の語り出しのように、聞き手がまだ見たことも聞いたこともない「1人の男の子」の存在を、相手の脳内スクリーンに初めてそっと登場させたいとき、最も自然なカメラワークの英文はどちらでしょう？",
+                choices: [
+                    { text: "There is a boy.", correct: true, feedback: "素晴らしい、大正解です！ “There is” という予報を流すことで、聞き手は「あ、これから何かが画面に出てくるんだな」と心の準備ができます。そしてその後に “a boy” を導入する。これが社会的な会話をスムーズにするための「情報提示の順序」の工夫です。逆に “The boy is there.” と言うと、「例のあの少年が、あそこにいるよ」という全く別の引き出しを開けることになります。" },
+                    { text: "The boy is there.", correct: false, feedback: "おっと、これだと “The” がついているので、聞き手もすでに知っている「例のあの男の子」が「あそこにいるよ」という話になってしまいます。今は、まだ相手が知らない男の子の存在を、世界に新しくポッと誕生させる場面です。聞き手の頭にスクリーンの枠を準備してあげる表現を、もう一度選んでみてください。" }
+                ]
+            },
+            {
+                id: "q1_l5",
+                title: "初登場の a",
+                stampLabel: "新情報の輪郭",
+                stampEmoji: "🟢",
+                cognitive: "新情報",
+                social: "聞き手の未知対象",
+                grammar: "a / an",
+                text: [
+                    "いよいよ「a」の深層に迫ります。学校では「数えられる名詞の前に置く」と習いますが、本質は違います。“a” の役割は、『世界に無数にある同じグループの中から、どれでもいいから1つを引っ張り出してきて、形（輪郭）を与えて見せる』ことです。",
+                    "したがって、会話において「聞き手がまだ正体を知らない、初めて話題に上るモノ（新情報）」には、この “a” が付きやすくなります。相手にとって未知の対象の輪郭を、今まさに形作ってあげている最中なのです。"
+                ],
+                question: "【問題】友達との会話の冒頭で、「昨日ね、ある（特定のどれ、というわけではないけれど）映画を1本観たんだ」と、初めてその話題を切り出すとき、自然な英語はどちらでしょう？",
+                choices: [
+                    { text: "I watched a movie yesterday.", correct: true, feedback: "大正解！ “a movie” と言うことで、「世の中にある無数の映画というカテゴリーの中から、どれでもいいから1つの形を引っ張ってきたよ（どれかは君はまだ知らないけれどね）」というニュアンスが完璧に伝わります。聞き手はこれを聞いて、「へえ、どんな映画を観たんだろう？」と次の展開を待つことができます。これが “a” の持つ新情報の提示能力です。" },
+                    { text: "I watched the movie yesterday.", correct: false, feedback: "おっと、これだと “the” を使ってしまっているので、聞き手の頭の中に「え？例のあの映画のこと？僕たちそんな映画の話、事前にしてたっけ？」とハテナマークが浮かんでしまいます。相手がまだ知らない初登場のモノに、ポッと最初の輪郭を与えるときの冠詞を、もう一度選んでみてください。" }
+                ]
+            },
+            {
+                id: "q1_l6",
+                title: "共有の the",
+                stampLabel: "共有知識",
+                stampEmoji: "💡",
+                cognitive: "共有知識",
+                social: "共同理解",
+                grammar: "the",
+                text: [
+                    "“a” が「どれでもいいから1つ」なら、 “the” の本質は何でしょうか。それは【お互いのスポットライト】です。話し手と聞き手の間で、「あ、例のあれね」「この空間なら当然それしかないよね」と、お互いの脳内スクリーンで全く同じピンポイントの対象にライトが当たる瞬間、 “the” が発動します。",
+                    "これは、同じ社会や同じ文脈を生きている人間同士の「共同理解」の目印なのです。だからこそ、初めて出すモノであっても、その場の状況から1つに決まるなら the になります。"
+                ],
+                question: "【問題】あなたが誰かと一緒にある部屋にいるとき、その部屋には「窓が1つだけ」しかありません。相手に対して「ちょっとその窓を開けてくれない？」と頼むとき、自然な英語はどちらでしょう？",
+                choices: [
+                    { text: "Open the window.", correct: true, feedback: "完璧です、大正解！ その部屋に窓が1つしかない以上、話し手も聞き手も、視線を向けずとも「どの窓のことか」が100%ピンポイントで共有できますよね。お互いの脳内のスポットライトが自動的にその窓にカチッと当たるため、初めて話題に出すかどうかに関係なく “the” が選ばれるのです。これこそが、社会的な空間認知が生み出す “the” の力です。" },
+                    { text: "Open a window.", correct: false, feedback: "これだと、 “a” （どれでもいいから1つ）なので、「世の中にたくさんある窓のうち、どれでもいいから1つ開けてよ」というニュアンスになります。部屋に1つしか窓がないのにこう言われると、聞き手は「え？どの窓のこと?他にもどこかに隠し窓があるの？」と戸惑ってしまいます。お互いの意識が1点に重なる感覚をもう一度イメージしてみましょう。" }
+                ]
+            },
+            {
+                id: "q1_l7",
+                title: "犬ではなく Dogs",
+                stampLabel: "プロトタイプ",
+                stampEmoji: "🐕",
+                cognitive: "プロトタイプ",
+                social: "一般論の構築",
+                grammar: "総称用法",
+                text: [
+                    "「犬は従順な生き物だ」のように、特定の1匹ではなく「犬というグループ（カテゴリー）全体」について一般論を語りたいとき、英語話者はどうするでしょうか？",
+                    "ここで、認知言語学の『プロトタイプ（代表例）』という考え方が登場します。彼らは、頭の中の引き出しにある「犬たちの集まり」をざっと見渡して、そのカテゴリー全体を代表させるために、名詞を複数形（s）にして、あえて a も the もつけずに裸のままドンと提示します。これが、彼らが社会の中で一般論やルールを語るときの標準的な形なのです。"
+                ],
+                question: "【問題】特定の誰かのペットではなく、一般論として「犬（という生き物全体）は、猫よりも忠実である傾向がある」と言いたいとき、英語話者が最も好むしっくりくる表現はどちらでしょう？",
+                choices: [
+                    { text: "Dogs are more loyal than cats.", correct: true, feedback: "大正解！ 冠詞を何もつけずに複数形にした “Dogs” は、頭の中にある「犬カテゴリーのメンバーたち」を広く見渡している絵になります。これが一般論を語る上で最も客観的で、ネイティブが日常的にも論文でも好む表現です。このように、カテゴリー全体を代表させて語る仕組みを文法では『総称用法』と言いますが、これも頭の中のカテゴリーの扱い方そのものなのです。" },
+                    { text: "The dog is more loyal than the cat.", correct: false, feedback: "間違いではありませんが、これだと “the” の持つ「スポットライト」の力が強く働き、まるで「犬という種の、生物学的なプロトタイプ（標本）」を顕微鏡で覗き込んで学術的に語っているような、少し硬すぎる、あるいは不自然に気取ったニュアンスになってしまいます。一般的なメンバー全体を見渡すカジュアルな絵を、もう一度選んでみてください。" }
+                ]
+            },
+            {
+                id: "q1_l8",
+                title: "人とモノを結ぶ",
+                stampLabel: "所有の概念化",
+                stampEmoji: "🤝",
+                cognitive: "所有の概念化",
+                social: "人間関係と領分",
+                grammar: "所有格 (my / your...)",
+                text: [
+                    "英語話者は、モノが「誰の影響圏（領分）に属しているか」を非常にクリアに区別します。それが “my（私の）” や “your（あなたの）” といった所有格です。",
+                    "面白いのは、彼らは自分の財布や家だけでなく、自分の「手」や「足」といった身体の一部でさえも、精神としての自分（主格の I）が客観的に『所有しているモノ』としてメタ認知して切り分ける点です。人間関係や社会的な境界線をハッキリさせるために、この「誰の領分か」の明示は欠かせません。"
+                ],
+                question: "【問題】あなたが不意に転んでしまって、自分の手を痛めてしまったとき、英語話者は自分の身体をどうメタ認知して表現するでしょう？自然な英文を選んでください。",
+                choices: [
+                    { text: "I hurt my hand.", correct: true, feedback: "大正解です！ 英語話者は、自分の身体のパーツであっても “my hand（私が所有する手）” と客観的に切り離して概念化し、それを主語である “I” が 「傷つけた（hurt）」という構造で捉えます。日本語の「手をケガした」のように、自分と身体が曖昧に一体化している感覚とは異なり、自分（主）とモノ（従）の境界線をハッキリさせる英語話者らしい世界観がここに現れています。" },
+                    { text: "I hurt the hand.", correct: false, feedback: "これだと “the hand” と他人事のようにスポットライトを当てているため、まるで「そこらに転がっている、誰のものとも知れない切り離された手」を傷つけたかのような、非常に不気味で非人間的なニュアンスになってしまいます。自分の影響圏・領分にあるパーツであることを示す形を、もう一度選んでみてください。" }
+                ]
+            },
+            {
+                id: "q1_l9",
+                title: "同じことを繰り返さない",
+                stampLabel: "参照の仕組み",
+                stampEmoji: "♻️",
+                cognitive: "参照（Anaphora）",
+                social: "会話の効率化",
+                grammar: "代名詞 (he / she / it / they)",
+                text: [
+                    "一度カテゴリー化し、数を確認し、a や the でお互いの脳内にセットしたモノ。それを会話の中で何度も “Tom” とか “the big black dog” と呼び直すのは、お互いの脳にとっても社会的なコミュニケーションにとっても非常に非効率です。",
+                    "そこで登場するのが代名詞（he, she, it, they）です。代名詞の本質は、情報の「究極の圧縮」です。『さっき脳内スクリーンにセットした、あの引き出しのデータをそのまま引き継ぐよ！』というショートカットキーの役割を果たしているのです。"
+                ],
+                question: "【問題】会話の中で「さっき話題に出した、あの1匹の犬（the dog）」のことを、2文目で再び指し示して情報をコンパクトに引き継ぎたいとき、選ぶべき最も効率的な代名詞はどちらでしょう？",
+                choices: [
+                    { text: "It is very friendly.", correct: true, feedback: "大正解です！ すでに “the dog” として脳内に1つの輪郭を持ってセットされているので、2回目はそれを「1つの客観的な対象」として極限まで圧縮した “It” で参照します。これにより、聞き手も余計な脳のエネルギーを使わずに、スムーズに会話の続きを理解できます。代名詞は、話し手と聞き手の間の『脳内データの同期』を省エネで行うための、社会的な大発明なのです。" },
+                    { text: "They are very friendly.", correct: false, feedback: "おっと、これだと “They” （彼ら・それら）になってしまうので、脳内引き出しが「複数の集合体」にすり替わってしまいます。さっき話題にセットしたのは、1匹のクッキリした犬でしたよね。そのデータをそのまま綺麗に引き継ぐ形を、もう一度選んでみてください。" }
+                ]
+            },
+            {
+                id: "q1_l10",
+                title: "モノの世界の完成",
+                stampLabel: "世界の総括",
+                stampEmoji: "👑",
+                cognitive: "メタ認知",
+                social: "世界の共有と完成",
+                grammar: "Quest I 総復習",
+                text: [
+                    "おめでとうございます！ついにQuest Iの最終レベルに到達しました。",
+                    "私たちはこの旅で、英語話者がいかに緻密に世界をプログラミングしているかを見てきました。彼らはまず世界を【分類し（Lv1）】、【距離を測り（Lv2）】、【数を数え（Lv3）】、【存在を示し（Lv4）】、【初めてのモノに形を与え（Lv5）】、【スポットライトを共有し（Lv6）】、【一般論を語り（Lv7）】直観的に【所有の領分を決め（Lv8）】、【情報をスマートに引き継ぐ（Lv9）】。",
+                    "このすべてのパーツが組み合わさることで、英語という言語の「モノの世界」が美しく完成します。バラバラに見えていた中学文法が、すべて人間の心の動きとして1本の線に繋がったはずです。"
+                ],
+                question: "【総合問題】ここまでの知識を総動員してください。話し手が「まだ相手の知らない、1匹の可愛い猫」を新しく世界のスクリーンに登場させ、次に「その猫」を引き継ぎながら、自分のナワバリの内側（手元）で可愛がっている一連の光景を、最も完璧な認知の順序で表現している英語のペアはどちらでしょう？",
+                choices: [
+                    { text: "There is a cute cat. I love this cat.", correct: true, feedback: "完璧です！！！これ以上ない最高のフィナーレです！ まず “There is” と “a cute cat” で聞き手の脳内に新しい猫の輪郭を優しく設置し、2文目ではその猫が自分のすぐ近く（ナワバリ内）に引き寄せられているからこそ “this cat” と視点を指定して愛着を表現しています。文法規則の丸暗記ではなく、英語の形を通じて『英語話者の頭の中のカメラワーク』が完全にあなたのものになりました。Quest I クリア、本当にお見事でした！" },
+                    { text: "The cat is here. I love that cat.", correct: false, feedback: "これだと、1文目でいきなり “The cat” （例の猫）とスポットライトを当てて聞き手を戸惑わせ、2文目では “that cat” （あの遠くの猫）と突き放してしまっているので、手元で愛着を持って可愛がっている最初のイメージとカメラワークが矛盾してしまいます。これまでのレベルの繋がりをもう一度思い出し、最高の物語を完成させてください！" }
+                ]
+            }
+        ]
+    };
+
+    // --- セーブデータ管理 ---
+    let playerProgress = { clearedLevelIds: [] };
+
+    function loadGame() {
+        const saved = localStorage.getItem('english_quest_q1_save');
+        if (saved) {
+            try { playerProgress = JSON.parse(saved); } catch(e) { console.error(e); }
+        }
+    }
+
+    function saveGame() {
+        localStorage.setItem('english_quest_q1_save', JSON.stringify(playerProgress));
+    }
+
+    function resetSaveData() {
+        if (confirm("これまでのQuest Iの冒険の書をリセットします。よろしいですか？")) {
+            localStorage.removeItem('english_quest_q1_save');
+            playerProgress = { clearedLevelIds: [] };
+            alert("リセットしました。新たな旅を始めましょう！");
+            renderMainScreen();
+        }
+    }
+
+    // --- 画面遷移管理 ---
+    function switchScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+
+        if (screenId === 'screen-main') {
+            document.getElementById('global-nav').style.display = 'none';
+        } else {
+            document.getElementById('global-nav').style.display = 'block';
+        }
+    }
+
+    function saveAndExit() {
+        saveGame();
+        renderMainScreen();
+        switchScreen('screen-main');
+    }
+
+    // --- メイン画面の動的生成 ---
+    function renderMainScreen() {
+        loadGame();
+        const container = document.getElementById('worlds-container');
+        container.innerHTML = '';
+
+        const worldCard = document.createElement('div');
+        worldCard.className = 'quest-world-card';
+
+        const header = document.createElement('div');
+        header.className = 'quest-world-header';
+        
+        const totalLevels = questData.levels.length;
+        const clearedCount = questData.levels.filter(l => playerProgress.clearedLevelIds.includes(l.id)).length;
+        
+        header.innerHTML = `
+            <h3>${questData.title}</h3>
+            <span style="font-size:0.9rem; color:#475569; font-weight:bold;">獲得スタンプ: ${clearedCount} / ${totalLevels}</span>
+        `;
+        worldCard.appendChild(header);
+
+        // スタンプラリー行
+        const stampsRow = document.createElement('div');
+        stampsRow.className = 'stamps-row';
+        
+        questData.levels.forEach(lvl => {
+            const isLvlCleared = playerProgress.clearedLevelIds.includes(lvl.id);
+            const stampBox = document.createElement('div');
+            stampBox.className = `stamp-box ${isLvlCleared ? 'cleared' : ''}`;
+            stampBox.innerHTML = `
+                <div class="stamp-circle">${isLvlCleared ? lvl.stampEmoji : '？'}</div>
+                <div class="stamp-title">${lvl.stampLabel}</div>
+            `;
+            stampsRow.appendChild(stampBox);
+        });
+        worldCard.appendChild(stampsRow);
+
+        // レベル選択ボタン（グリッド）
+        const nodesDiv = document.createElement('div');
+        nodesDiv.className = 'level-nodes';
+
+        questData.levels.forEach((lvl, idx) => {
+            const isLvlCleared = playerProgress.clearedLevelIds.includes(lvl.id);
+            let isLocked = false;
+            
+            // ロック機能（直前のレベルクリアが条件）
+            if (idx > 0) {
+                const prevLvlId = questData.levels[idx - 1].id;
+                if (!playerProgress.clearedLevelIds.includes(prevLvlId)) {
+                    isLocked = true;
+                }
+            }
+
+            const nodeBtn = document.createElement('button');
+            nodeBtn.className = `level-node-btn ${isLvlCleared ? 'cleared' : ''}`;
+            
+            if (isLocked) {
+                nodeBtn.innerText = `🔒 Lv ${idx+1}`;
+                nodeBtn.disabled = true;
+            } else {
+                nodeBtn.innerText = `${isLvlCleared ? '✓ ' : ''}Level ${idx+1}`;
+                nodeBtn.onclick = () => startQuest(idx);
+            }
+            nodesDiv.appendChild(nodeBtn);
+        });
+        worldCard.appendChild(nodesDiv);
+        container.appendChild(worldCard);
+    }
+
+    // --- クエスト進行ロジック ---
+    let activeLevelIndex = 0;
+
+    // 正しいFisher-Yatesシャッフル関数
+    function shuffleArray(array) {
+        const clone = [...array];
+        for (let i = clone.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            // 二つの要素を正しくスワップ（入れ替え）
+            const temp = clone[i];
+            clone[i] = clone[j];
+            clone[j] = temp;
+        }
+        return clone;
+    }
+
+    function startQuest(levelIndex) {
+        activeLevelIndex = levelIndex;
+        switchScreen('screen-quest');
+
+        const lvlData = questData.levels[levelIndex];
+
+        // 重複を解消したタイトル表示
+        document.getElementById('quest-header-title').innerText = `Level ${levelIndex + 1} : ${lvlData.title}`;
+        
+        // 解説文とタグの流し込み
+        const storyBox = document.getElementById('story-container');
+        storyBox.innerHTML = `
+            <div class="academic-badge-zone">
+                <span class="academic-badge">中心文法: ${lvlData.grammar}</span>
+                <span class="academic-badge">認知言語学: ${lvlData.cognitive}</span>
+                <span class="academic-badge social">社会言語学: ${lvlData.social}</span>
+            </div>
+        `;
+        lvlData.text.forEach(para => {
+            const p = document.createElement('p');
+            p.innerText = para;
+            storyBox.appendChild(p);
+        });
+
+        document.getElementById('question-container').innerText = lvlData.question;
+        
+        // 選択肢の生成
+        const choicesBox = document.getElementById('choices-container');
+        choicesBox.innerHTML = '';
+
+        document.getElementById('feedback-container').style.display = 'none';
+
+        // 元のインデックス（正誤判定用）を保持したままシャッフル
+        const indexedChoices = lvlData.choices.map((c, i) => ({ ...c, originalIndex: i }));
+        const shuffledChoices = shuffleArray(indexedChoices);
+
+        shuffledChoices.forEach((choice) => {
+            const btn = document.createElement('button');
+            btn.className = 'choice-item-btn';
+            btn.innerText = choice.text;
+            btn.onclick = () => selectChoice(choice.originalIndex, btn);
+            choicesBox.appendChild(btn);
+        });
+    }
+
+    function selectChoice(originalIndex, clickedBtn) {
+        const lvlData = questData.levels[activeLevelIndex];
+        const selectedChoice = lvlData.choices[originalIndex];
+
+        const buttons = document.querySelectorAll('.choice-item-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        const feedbackContainer = document.getElementById('feedback-container');
+        const statusText = document.getElementById('feedback-status');
+        const fbText = document.getElementById('feedback-text');
+        const nextBtn = document.getElementById('next-action-btn');
+
+        feedbackContainer.style.display = 'block';
+
+        if (selectedChoice.correct) {
+            clickedBtn.classList.add('correct');
+            feedbackContainer.className = "feedback-zone correct-zone";
+            statusText.innerText = "💡 正解！その通りです。";
+            fbText.innerHTML = selectedChoice.feedback;
+            nextBtn.style.display = 'inline-block';
+
+            if (!playerProgress.clearedLevelIds.includes(lvlData.id)) {
+                playerProgress.clearedLevelIds.push(lvlData.id);
+                saveGame();
+            }
+        } else {
+            clickedBtn.classList.add('wrong');
+            feedbackContainer.className = "feedback-zone wrong-zone";
+            statusText.innerText = "🔍 もう一度、英語話者の脳内カメラをイメージしてみよう";
+            fbText.innerHTML = selectedChoice.feedback;
+            nextBtn.style.display = 'none';
+
+            // 不正解時は1.5秒後に他の選択肢を再有効化
+            setTimeout(() => {
+                buttons.forEach(b => {
+                    if (!b.classList.contains('wrong')) b.disabled = false;
+                });
+            }, 1500);
+        }
+    }
+
+    function advanceQuest() {
+        const lvlData = questData.levels[activeLevelIndex];
+        alert(`『${lvlData.stampLabel}』のスタンプを獲得しました！`);
+        saveAndExit();
+    }
+
+    window.onload = () => {
+        renderMainScreen();
+    };
+</script>
+
+</body>
+</html>
