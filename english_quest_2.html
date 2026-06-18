@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Quest 2 - 時間の認知と視点</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --text-color: #1e293b;
+            --primary-color: #1e3a8a;
+            --accent-color: #3b82f6;
+            --border-color: #cbd5e1;
+            --card-bg: #ffffff;
+            --stamp-active: #3f6b5a; /* 先生のHPカラー */
+            --stamp-empty: #94a3b8;
+            --success-bg: #f0fdf4;
+            --success-border: #3f6b5a;
+            --error-bg: #fef2f2;
+            --error-border: #dc2626;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); line-height: 1.8; padding: 30px 20px; display: flex; justify-content: center; }
+        
+        #app {
+            width: 100%;
+            max-width: 850px;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            position: relative;
+            min-height: 650px;
+        }
+
+        .avatar-container { text-align: center; margin-bottom: 15px; }
+        .avatar-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #eff6ff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+
+        h1 { font-size: 2.4rem; text-align: center; color: var(--primary-color); margin-bottom: 8px; font-weight: 800; }
+        .subtitle { text-align: center; font-size: 1.2rem; color: #64748b; margin-bottom: 35px; }
+        h2 { font-size: 1.5rem; margin-top: 30px; margin-bottom: 15px; color: var(--primary-color); border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+        h3.chapter-title { font-size: 1.15rem; color: #475569; margin-top: 25px; margin-bottom: 10px; padding-left: 8px; border-left: 4px solid var(--accent-color); font-weight: 700; }
+        p { margin-bottom: 18px; }
+
+        .btn {
+            background-color: var(--primary-color); color: white; border: none; padding: 14px 28px; font-size: 1rem;
+            border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.2s, transform 0.1s; display: inline-block;
+        }
+        .btn:hover { background-color: #1d4ed8; }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { background-color: #cbd5e1; cursor: not-allowed; transform: none; }
+
+        .nav-menu { position: absolute; top: 35px; right: 40px; }
+        .nav-menu .btn-nav { padding: 8px 16px; font-size: 0.85rem; background: transparent; color: #64748b; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; }
+        .nav-menu .btn-nav:hover { background: #f1f5f9; color: var(--primary-color); }
+
+        .screen { display: none; margin-top: 20px; }
+        .screen.active { display: block; }
+
+        .intro-box { background: #f1f5f9; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 4px solid var(--primary-color); }
+
+        .quest-world-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; margin-bottom: 25px; }
+        .quest-world-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px dashed var(--border-color); }
+        .quest-world-header h3 { color: var(--primary-color); font-size: 1.3rem; font-weight: 700; }
+
+        /* スタンプエリアの共通化・軽量化 */
+        .stamps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 8px; padding: 10px 0; margin-bottom: 20px; background: #f8fafc; padding: 12px; border-radius: 8px; }
+        .stamp-dot { width: 32px; height: 32px; border-radius: 50%; border: 2px dashed var(--stamp-empty); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: var(--stamp-empty); background: #fff; transition: all 0.3s; }
+        .stamp-dot.cleared { border: 2px solid var(--stamp-active); color: var(--stamp-active); background: #e8f5e9; transform: scale(1.05); }
+
+        .level-nodes { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .level-node-btn { padding: 10px; font-size: 0.85rem; background-color: #f8fafc; color: var(--text-color); border: 1px solid #e2e8f0; border-radius: 6px; font-weight: 600; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .level-node-btn:hover:not(:disabled) { background-color: #f1f5f9; border-color: #cbd5e1; }
+        .level-node-btn.cleared { background-color: #edfdf2; border-color: #bbf7d0; color: #15803d; }
+
+        .story-text-area { font-size: 1.05rem; background: #f8fafc; padding: 30px; border-radius: 10px; border-left: 6px solid var(--primary-color); margin-bottom: 30px; }
+        .story-text-area p { margin-bottom: 12px; }
+        .story-text-area p:last-child { margin-bottom: 0; }
+
+        .academic-badge-zone { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .academic-badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; font-weight: bold; background: #e0e7ff; color: #4338ca; }
+        .academic-badge.social { background: #fef3c7; color: #b45309; }
+
+        .question-zone { font-weight: 700; font-size: 1.15rem; margin-bottom: 20px; color: #0f172a; }
+        .choices-zone { display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px; }
+        .choice-item-btn { background: #fff; color: var(--text-color); border: 1px solid #e2e8f0; border-radius: 8px; text-align: left; padding: 15px; font-size: 1rem; width: 100%; cursor: pointer; font-weight: 500; transition: all 0.2s; line-height: 1.5; }
+        .choice-item-btn:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; }
+        .choice-item-btn.correct { background-color: #edfdf2 !important; border-color: var(--success-border) !important; font-weight: bold; color: #16a34a; }
+        .choice-item-btn.wrong { background-color: #fdf2f2 !important; border-color: var(--error-border) !important; color: #dc2626; opacity: 0.8; }
+
+        .feedback-zone { padding: 25px; border-radius: 10px; display: none; margin-top: 25px; line-height: 1.7; }
+        .feedback-zone.correct-zone { background: var(--success-bg); border: 1px solid var(--success-border); }
+        .feedback-zone.wrong-zone { background: var(--error-bg); border: 1px solid var(--error-border); }
+        .feedback-status { font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; }
+        .academic-bridge-content { margin-top: 15px; padding-top: 15px; border-top: 1px dashed #cbd5e1; font-size: 0.95rem; color: #334155; }
+
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            #app { padding: 20px; }
+            .nav-menu { position: static; text-align: right; margin-bottom: 20px; }
+            h1 { font-size: 1.8rem; }
+            .level-nodes { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div id="global-nav" class="nav-menu" style="display: none;">
+        <button class="btn-nav" onclick="saveAndExit()">セーブしてマップに戻る</button>
+    </div>
+
+    <div id="screen-main" class="screen active">
+        <div class="avatar-container">
+            <!-- 共通アバター（ore.png / 存在しない場合は非表示） -->
+            <img src="ore.png" alt="Navigator" class="avatar-img" onerror="this.src='グッドをする俺.png'; this.onerror=function(){this.style.display='none';};">
+        </div>
+        
+        <h1>English Quest 2</h1>
+        <div class="subtitle">〜時間の認知と視点〜</div>
+
+        <div class="intro-box">
+            <strong style="color:var(--primary-color); font-size:1.1rem; display:block; margin-bottom:6px;">【Quest II: 時間の世界】テーマ</strong>
+            人間は時間を客観的な流れのまま見ているのではありません。出来事が「今とどう関係するか」「どこから眺めるか」「どのくらい続くか」「どのくらい確実か」によって主観的に理解しています。英語話者の時間カメラをインストールし、文法の中核へ飛び込みましょう！
+        </div>
+
+        <h2>冒険の進捗（全40レベル）</h2>
+        <div id="worlds-container"></div>
+
+        <div style="text-align: center; margin-top: 40px;">
+            <button onclick="resetSaveData()" style="background:#dc2626; font-size:0.8rem; padding:8px 16px;" class="btn">冒険の書（セーブデータ）をリセット</button>
+        </div>
+    </div>
+
+    <div id="screen-quest" class="screen">
+        <h2 id="quest-header-title">Level X</h2>
+        <div class="story-text-area" id="story-container"></div>
+        <div class="question-zone" id="question-container"></div>
+        <div class="choices-zone" id="choices-container"></div>
+
+        <div class="feedback-zone" id="feedback-container">
+            <div class="feedback-status" id="feedback-status"></div>
+            <div id="feedback-text"></div>
+            <div style="text-align: right; margin-top: 25px;">
+                <button id="next-action-btn" class="btn" onclick="advanceQuest()">スタンプを獲得してマップに戻る</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 構造化データ：全40レベルの完全記述データ ---
+    const questData = {
+        id: "quest2",
+        title: "Quest II: 時間の世界",
+        chapters: [
+            { title: "第1章 「今」という基準点 (Lv1〜8)", startIdx: 0, endIdx: 7 },
+            { title: "第2章 過去という別世界 (Lv9〜16)", startIdx: 8, endIdx: 15 },
+            { title: "第3章 進行する時間 (Lv17〜22)", startIdx: 16, endIdx: 21 },
+            { title: "第4章 過去と現在をつなぐ橋 (Lv23〜31)", startIdx: 22, endIdx: 30 },
+            { title: "第5章 未来という未完成世界 (Lv32〜38)", startIdx: 31, endIdx: 37 },
+            { title: "第6章 英語話者の時間観 (Lv39〜40)", startIdx: 38, endIdx: 39 }
+        ],
+        levels: [
+            // --- 第1章 ---
+            {
+                id: "q2_l1", title: "今を切り取る", grammar: "現在形", cognitive: "基準点設定", social: "英語観",
+                text: [
+                    "あなたの時計の秒針がチクタクと動いている光景を想像してください。私たちは日常、「いまこの瞬間」を生きています。しかし不思議なことに、英語の『現在形』は、その一瞬だけを指す言葉ではありません。",
+                    "英語話者にとって、世界はまず『今』という確固たる基準点から始まります。彼らの言う現在形とは、昨日も今日も明日も、その基準点の周辺で『いつでも当たり前に成り立つ安定した世界』をズームアウトして切り取る感覚なのです。では、自己紹介で自分の職業を言うとき、カメラはどこを向いているでしょうか？"
+                ],
+                question: "【問題】「私は岐阜大学の学生です（あるいは教員です）」と、今の一瞬だけでなく、昨日も明日も変わらない自分の安定したアイデンティティとして相手に伝えるとき、最もふさわしい表現はどちらでしょう？",
+                choices: [
+                    { text: "I am a student at Gifu University.", correct: true, feedback: "<strong>【解説】</strong>大正解！ 現在形 “am” は、一瞬の火花のような動作ではなく、過去・現在・未来にわたって『当たり前に成立する安定した状態』を宣言します。だからこそ、所属や職業を語るのに最適なのです。<div class='academic-bridge-content'>💡 **学問への架け橋**：認知言語学において、時間が経過しても変化しない安定した関係性を捉える概念を**「状態（State）」**と呼びます。現在形は、話し手が「今」をハブ（基準点）にして、時間を超えた確実な世界を提示するシステムなのです。</div>" },
+                    { text: "I am being a student at Gifu University.", correct: false, feedback: "<strong>【解説】</strong>これだと進行形（being）のニュアンスが混ざり、「今この瞬間だけ、一時的に学生のフリをしている」という、奇妙で不自然なカメラワークになってしまいます。どっしりとした安定した現在形を選び直しましょう。" }
+                ]
+            },
+            {
+                id: "q2_l2", title: "変わらない事実", grammar: "現在形", cognitive: "恒常性", social: "英語観",
+                text: [
+                    "理科の実験室で、ビーカーに入った水がコンロの炎で熱せられ、100度に達して激しく沸騰している光景を想像してください。この現象は、100年前のイギリスでも、明日の日本でも、気圧が同じなら絶対に変わりません。",
+                    "このように、人間の都合や時間の流れの枠外にある「科学的真理」や「普遍の事実」を語るとき、英語話者は迷わず現在形を選択します。彼らの脳内では、真理とは『時間が経過しても一切揺るがない、究極の安定世界』としてマッピングされているからです。"
+                ],
+                question: "【問題】「水は100度で沸騰する」という、時間の枠を超えた普遍の科学的真理を客観的に言い切るとき、最も適切な英文はどちらでしょう？",
+                choices: [
+                    { text: "Water boils at 100°C.", correct: true, feedback: "<strong>【解説】</strong>正解です！ 普遍の事実は、過去・現在・未来のいつでも成り立つため、現在形 “boils” が100%の確率で起動します。時間の経過によって劣化しない事実には、現在形という「不動のフレーム」が与えられるのです。<div class='academic-bridge-content'>💡 **学問への架け橋**：認知言語学では、このように時間的な境界を持たず、常に成立し続ける性質を**「恒常性（Permanence）」**と呼びます。文法は、人間が世界のルールをどうメタ認知しているかを反映しているのです。</div>" },
+                    { text: "Water is boiling at 100°C.", correct: false, feedback: "<strong>【解説】</strong>これだと「（今、目の前にある特定の）水が100度で沸騰している最中だ」という、一時的な実況中継になってしまい、一般的な科学の真理ではなくなってしまいます。普遍の心理を示す形をもう一度選びましょう。" }
+                ]
+            },
+            {
+                id: "q2_l3", title: "習慣という時間", grammar: "現在形", cognitive: "反復パターン", social: "英語観",
+                text: [
+                    "毎朝、目覚まし時計の音でパッと目を覚まし、眠い目をこすりながら歯を磨き、決まった時間に家を出るあなたの日常を想像してください。一つ一つの動作は一瞬で終わりますが、それが毎日繰り返されることで、あなたの中に「生活のレール」が敷かれます。",
+                    "人間は繰り返しでできています。英語話者は、この定期的に反復される「習慣」を、バラバラの点の動作ではなく、人生の中にずっと存在している『一つの安定した模様（パターン）』として捉えます。だからこそ、ここでも現在形が大活躍するのです。"
+                ],
+                question: "【問題】「私は毎日、朝食にトーストを食べます」という、自分の生活の一部として定着している反復パターンを表現するとき、最もふさわしい形はどちらでしょう？",
+                choices: [
+                    { text: "I eat toast for breakfast every day.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “I eat” という現在形が “every day” とガッチリ噛み合うことで、「昨日も今日も、そして明日もおそらく同じレールの上を走る」という、反復パターンの認知が完成します。<div class='academic-bridge-content'>💡 **学問への架け橋**：心理学や言語学において、個別の出来事を脳内で抽象化し、構造的な習慣として認識する働きを**「スキーマの形成」**や**「反復パターン認知」**と呼びます。現在形は、あなたの生活の構造を描写する言葉なのです。</div>" },
+                    { text: "I am eating toast for breakfast every day.", correct: false, feedback: "<strong>【解説】</strong>これだと、毎日「今まさに口にトーストを詰め込んでいる真っ最中だ」という、非常に窮屈で不自然な絵になってしまいます。生活のパターンをゆったりと描写する現在形を選び直してください。" }
+                ]
+            },
+            {
+                id: "q2_l4", title: "頻度で世界を見る", grammar: "always / usually", cognitive: "プロトタイプ効果", social: "英語観",
+                text: [
+                    "カレンダーを目の前に広げて、自分がどれだけの頻度である行動をしているか、上から指で数えていく場面を想像してください。全てのマス目が埋まっている状態から、時々ポツポツと穴が空いている状態まで、頻度のグラデーションが存在します。",
+                    "英語話者は、世界の確率を言葉で微調整します。その代表が “always（100%）” や “usually（80〜90%）” です。これらは現在形の世界に『どれくらい例外なくそのパターンが繰り返されるか』という確率のグラデーション（色彩）を塗り替える役割を持っています。"
+                ],
+                question: "【問題】「彼はいつも（例外なく100%の確率で）時間通りに来る」と、彼の絶対的な信頼性を現在形のパターンとして語るとき、空欄に滑り込ませるべき副詞はどちらでしょう？<br>He (  ) comes on time.",
+                choices: [
+                    { text: "always", correct: true, feedback: "<strong>【解説】</strong>その通り！ “always” は確率100%のプロトタイプ（典型）を示し、現在形と組み合わさることで「例外のない絶対的な法則」を脳内に描きます。これに対して “usually” は「大抵はそうだけど、たまに例外もある」という一歩引いたニュアンスになります。<div class='academic-bridge-content'>💡 **学問への架け橋**：認知言語学の**「プロトタイプ理論」**によれば、人間の概念には「最も典型的な中心」が存在します。 “always” は、現在形の持つ恒常性の感覚を、確率の観点から100%の典型値にロックする強力なモディファイア（修飾語）なのです。</div>" },
+                    { text: "usually", correct: false, feedback: "<strong>【解説】</strong> “usually” も素晴らしい副詞ですが、これだと「普通は時間通りに来る（が、たまに遅れることもある）」という80〜90%の確率になり、「いつも例外なく」という絶対的なニュアンスからは少し後退してしまいます。もう一度選んでみましょう。" }
+                ]
+            },
+            {
+                id: "q2_l5", title: "毎回ではなく「だいたい」", grammar: "sometimes", cognitive: "カテゴリー中心性", social: "英語観",
+                text: [
+                    "1週間のうち、3日くらいは自炊をして、残りの日は外食で済ませるような、少し不規則な生活のバランスを想像してください。毎日ではないけれど、自分の人生のタイムラインをざっと見渡したとき、確かにその行動がポツポツと点在している感覚です。",
+                    "“sometimes” という言葉は、確率としては50%程度、つまり「やる時もあれば、やらない時もある」という、カテゴリーのちょうど境界線あたりに位置する感覚です。しかし、これも「時々起きるのがいつものパターンだ」という広い意味での現在形の世界に属しています。"
+                ],
+                question: "【問題】「私は時々、夜遅くにコーヒーを飲むことがある（毎回ではないが、そういうパターンも人生にある）」と伝えるとき、適切な位置に副詞を配置した英文はどちらでしょう？",
+                choices: [
+                    { text: "I sometimes drink coffee late at night.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “sometimes” などの頻度副詞は、動詞の「直前」に置くことで、その動作が発動する確率のスイッチを脳内でパチッと切り替える役割を果たします。「飲む」という行為の打率を5割に設定するカメラワークです。<div class='academic-bridge-content'>💡 **学問への架け橋**：言語学では、こうした頻度の表現を**「量化（Quantification）」**の一部として分析します。毎日（always）から時々（sometimes）への変化は、人間が頭の中で時間の出来事をどれくらい「濃いカテゴリー」として認知しているかを示しています。</div>" },
+                    { text: "I drink coffee late at night sometimes always.", correct: false, feedback: "<strong>【解説】</strong>これだと副詞が後ろに渋滞している上に、 “sometimes（時々）” と “always（いつも）” という矛盾する確率が並んでしまい、脳内カメラが完全にパニックを起こしてしまいます。適切な位置のシンプルな形を再選択してください。" }
+                ]
+            },
+            {
+                id: "q2_l6", title: "現在形で未来を語る", grammar: "The train leaves at 8.", cognitive: "スケジュール認知", social: "英語観",
+                text: [
+                    "駅のホームに立って、巨大な電光掲示板に表示された「発車時刻：午前8:00」という文字を見上げている場面を想像してください。まだ時計の針は7時50分ですが、あなたの中に「電車が8時に出る」ということに対する疑いは1ミリもありません。",
+                    "なぜ未来のことなのに “will” を使わず、現在形 “leaves” で言えるのでしょうか？ それは、その予定が個人の気まぐれではなく、社会の時刻表やカレンダーに組み込まれた『変更不可能な絶対の事実（確定した未来）』だからです。英語話者は、これを「今すでにレールの上に載っている確定世界」として、現在形で処理します。"
+                ],
+                question: "【問題】「その列車は明日の朝8時に出発することになっている」という、時刻表通りの確実な予定を、駅のアナウンンスのように客観的に宣言するとき、最もふさわしい英文はどちらでしょう？",
+                choices: [
+                    { text: "The train leaves at 8 tomorrow morning.", correct: true, feedback: "<strong>【解説】</strong>完璧です！ まだ起きていない未来のことでも、公のスケジュールのように「100%そうなることが今から確定している世界」であれば、英語話者は現在形を使います。彼らにとって、それは科学の真理と同じくらい「不動の事実」だからです。<div class='academic-bridge-content'>💡 **学問への架け橋**：これを認知言語学では**「スケジュール認知」**や**「既定の事実としての概念化」**と呼びます。話し手の主観において、その未来の出来事がすでに現在形の『安定した事実の領域』にまで引き込まれていることを示す面白い文法現象です。</div>" },
+                    { text: "The train will be raw leaving at 8.", correct: false, feedback: "<strong>【解説】</strong>英語として意味をなさない文法崩壊を起こしてしまっています。未来だからといって無理に不確実なwillや奇妙な単語を混ぜる必要はありません。「確定した未来は現在形で言い切る」というカメラワークに焦点を当てましょう。" }
+                ]
+            },
+            {
+                id: "q2_l7", title: "実況の現在", grammar: "He shoots!", cognitive: "臨場感", social: "英語観",
+                text: [
+                    "サッカースタジアムの熱狂の中にいるあなたを想像してください。フォワードの選手がディフェンダーを鮮やかに抜き去り、ゴール前に躍り出ました。そしてまさに今、右足を振り抜いたその瞬間、実況アナウンサーがマイクに向かって絶叫します。",
+                    "通常、一瞬の動作は進行形（is shooting）を使いそうになりますが、スポーツの実況中継では “He shoots!” と現在形が炸裂します。なぜでしょうか？ 現在形には「時間の幅がなく、出来事そのものをダイレクトに言い切る」という性質があるため、目の前の光景をノータイムでそのまま聞き手の脳内に着地させる『究極の臨場感』を生み出せるのです。"
+                ],
+                question: "【問題】目の前で選手がシュートを放ったまさにそのスリリングな一瞬を、テレビの実況のように電撃的なスピード感で描写するときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "He shoots!", correct: true, feedback: "<strong>【解説】</strong>正解です！ “He shoots!” という現在形は、動作の開始から終了までを一つのパッケージとしてカチッと提示するため、遅延ゼロの「今、起きた！」という強烈な臨場感を聞き手に与えます。これが現在形が持つ、もう一つの弾丸のようなカメラワークです。<div class='academic-bridge-content'>💡 **学問への架け橋**：談話分析において、このような表現を**「実況中継の現在（Reportive Present）」**と呼びます。言葉を発する時間と、出来事が起きる時間が完全にシンクロしたとき、現在形は最も純粋な『出来事の切り出し』として機能します。</div>" },
+                    { text: "He was shooting a long time ago.", correct: false, feedback: "<strong>【解説】</strong>これだと過去形（しかもずっと昔）になってしまい、スタジアムの熱狂のリアルタイム感が完全に消え去ってしまいます。今、目の前で火花が散っているその瞬間を捉える形を選び直してください。" }
+                ]
+            },
+            {
+                id: "q2_l8", title: "今という世界の完成", grammar: "第1章 総復習", cognitive: "基準点設定の総括", social: "共有認識",
+                text: [
+                    "素晴らしい！第1章の最終レベルに到達しました。私たちは、英語の現在形が単に「時計の今」だけを指す狭い言葉ではないことを学んできました。職業（Lv1）、科学の真理（Lv2）、毎日の習慣（Lv3）、そして社会のスケジュール（Lv6）まで、すべてを司る共通のOSが見えてきたはずです。",
+                    "英語話者にとっての現在形とは、『今という基準点から見渡した、揺るぎのない確実な世界』のインフラです。この「確定している世界を堂と言い切る感覚」こそが、彼らの時間の基礎を形作っています。では、第1章を締めくくる総合問題に挑みましょう！"
+                ],
+                question: "【総合問題】「地球は太陽の周りを回っている（真理）」という事実と、「私はいつも朝7時に起きる（習慣）」という事実を、どちらも英語話者の『確実な確定世界』として等しく整合性をもって表現している正しいペアはどちらでしょう？",
+                choices: [
+                    { text: "The earth goes around the sun. I always get up at 7.", correct: true, feedback: "<strong>【解説】</strong>完璧です！ 宇宙の法則（goes）も、個人の絶対的な習慣（always get up）も、英語話者の脳内では全く同じ「昨日も今日も明日も変わらない、確実な現在形の世界」として同じ引き出しに美しく整頓されています。お見事！第1章クリアです！<div class='academic-bridge-content'>💡 **学問への架け橋**：このように、異なる現象（普遍の真理と個人の習慣）に同じ文法形式（現在形）が適用されるのは、人間の脳がそれらを「恒常的な構造」という同じ認知の枠組みでメタ認知しているからです。これこそが文法のコア（OS 2.0）です。</div>" },
+                    { text: "The earth went around the sun. I am getting up at 7.", correct: false, feedback: "<strong>【解説】</strong>これだと、地球が太陽の周りを回っていたのが「過去の話（今はもう回っていない？）」になり、自分の習慣は「今この瞬間だけ一時的に起き上がっている」というチグハグな絵になってしまいます。現在形の確実な世界を思い出してください。" }
+                ],
+            },
+
+            // --- 第2章 ---
+            {
+                id: "q2_l9", title: "過去は切り離される", grammar: "過去形", cognitive: "Mental Space", social: "別世界の構築",
+                text: [
+                    "古いセピア色の写真アルバムを手に取り、ペラペラとめくっている場面を想像してください。そこには幼い頃のあなたが映っていますが、今のあなたとは物理的にも環境的にも、完全に切り離された「あっち側の世界」の出来事です。",
+                    "英語の『過去形（-ed）』の本質は、単に時間が昔であることではありません。今を生きる自分の基準点から、文字通り地続きではない別世界へと境界線を引いて、出来事を『あっち側にポンと放り投げる（離反性）』というカメラワークなのです。現在とは完全に切り離された断絶の感覚を掴みましょう。"
+                ],
+                question: "【問題】「私は昨日、京都を訪れました」と、今の自分の現実空間から完全に切り離された、昨日の出来事（別世界）として客観的に言い切るときの正しい形はどちらでしょう？",
+                choices: [
+                    { text: "I visited Kyoto yesterday.", correct: true, feedback: "<strong>【解説】</strong>正解です！ 過去形 “visited” と “yesterday” が合体することで、現在の基準点から完全に隔離された独立の心的空間（Mental Space）が脳内に生成されます。今の私とは関係がない、完結した過去の世界の描写です。<div class='academic-bridge-content'>💡 **学問への架け橋**：ジル・フォコニエの**「メンタルスペース（Mental Space）理論」**では、人間は言葉を使って脳内に様々な仮想の空間を立ち上げるとされています。過去形は、現在から隔離された「過去スペース」を新しく建設する目印なのです。</div>" },
+                    { text: "I visit Kyoto yesterday.", correct: false, feedback: "<strong>【解説】</strong>現在形（visit）を使ってしまうと、脳内カメラが「今の確実な現実世界」を向いてしまうため、後ろにある “yesterday（昨日）” という過去の断絶データと激しく衝突してエラーを起こします。過去形の世界へカメラを切り替えましょう。" }
+                ]
+            },
+            {
+                id: "q2_l10", title: "昨日の私", grammar: "過去の自己", cognitive: "自己の時間的分離", social: "ナラティブ",
+                text: [
+                    "昨日の夜、部屋のベッドで「あぁ、なんであんな恥ずかしい言い間違いをしちゃったんだろう……」と激しく後悔して頭を抱えていたあなたを想像してください。しかし、朝起きて太陽の光を浴びた今のあなたは、もうその渦中にはいません。",
+                    "英語話者は、過去の自分の感情や状態を語るとき、現在の自分をクッキリと守るために、過去形を使って当時の自分を遠くへ突き放します。これを『自己の時間的分離』と呼びます。どれほど生々しい感情であっても、過去形の檻に入れることで、現在のタイムラインを汚さずにすむのです。"
+                ],
+                question: "【問題】「あの時、私は本当に愚かだった（今は違うけれど）」と、過去の未熟な自分を客観的なタイムラインへ切り離して振り返るとき、最も適切な表現はどちらでしょう？",
+                choices: [
+                    { text: "I was foolish at that time.", correct: true, feedback: "<strong>【解説】</strong>その通り！ “I was” と過去形にすることで、「愚かだった自分」を過去のスペースに綺麗に置いてくることができます。現在の私はもう愚かではない、という現在のナワバリの安全を確保するカメラワークが、この “was” には込められています。<div class='academic-bridge-content'>💡 **学問への架け橋**：人間が過去の自分を客観的な他者のように眺める認知の働きを、心理学や認知言語学では**「自己の客体化（Objectification of Self）」**と呼びます。過去形は、時間軸の上で自分を安全に棚卸しするためのツールなのです。</div>" },
+                    { text: "I am foolish at that time.", correct: false, feedback: "<strong>【解説】</strong>これだと現在形（am）なので、「現在の私は愚かである」という現実が “at that time（あの時）” という過去のデータと無理やり結合してしまい、今のあなたがずっと愚かなままになってしまいます。過去形できれいに切り離しましょう。" }
+                ]
+            },
+            {
+                id: "q2_l11", title: "一度起きた出来事", grammar: "過去の事実", cognitive: "イベント認知", social: "事実の共有",
+                text: [
+                    "大昔の歴史の教科書を開き、西暦1066年にノルマン人がイングランドを征服したという、確定した歴史の1ページを眺めている場面を想像してください。そのイベントは、始まりがあって、終わりがあって、すでにカプセルのように綺麗に閉じられた事実です。",
+                    "英語話者にとって、過去形の一番の役割は、このように『タイムライン上で完全に完結し、二度と動かない1つの塊（イベント）』として出来事を提示することです。現在形のような広がりはなく、点としてそこに固定された事実を他者と共有する社会的な作法なのです。"
+                ],
+                question: "【問題】「織田信長は1582年に本能寺で死んだ」という、歴史上の完全に完結した一つの確定イベントを客観的に言い切るときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "Oda Nobunaga died in 1582.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “died” という過去形は、1582年という時間枠の中でその出来事が完全に始まり、そして完結して閉じていることを示します。現在への影響がゼロであるからこそ、不純物のない「純粋な歴史の点」として描写できるのです。<div class='academic-bridge-content'>💡 **学問への架け橋**：認知と言語において、境界線を持ったひとまとまりの出来事を脳内でパッケージ化する働きを**「イベント認知（Event Cognition）」**と呼びます。過去形は、時間の海から特定の出来事を1つの石碑として切り出す文法なのです。</div>" },
+                    { text: "Oda Nobunaga has died in 1582.", correct: false, feedback: "<strong>【解説】</strong>完了形（has died）を “in 1582” のような明確な過去の点と一緒に使うことは、英語のOSでは致命的なエラーになります。なぜなら、完了形は「今に触れる橋」だからです。過去の点には、純粋な過去形を使いましょう。" }
+                ]
+            },
+            {
+                id: "q2_l12", title: "過去の習慣", grammar: "used to", cognitive: "習慣の消失", social: "ナラティブ",
+                text: [
+                    "あなたが子供の頃、放課後に毎日のように近所の公園へ全速力で走り、泥だらけになって日が暮れるまで遊んでいた光景を想像してください。当時はそれが「当たり前の日常（習慣）」でした。しかし、大人になった今は、もうそんなことはしていません。",
+                    "このように、単なる過去の一時的な行動ではなく、「昔はそれが当たり前のパターンだったけれど、今は100%やっていない」という『過去の習慣の消失』をドラマチックに表現するパッケージが “used to” です。過去形よりもさらに強い、現在との断絶のドラマがここにあります。"
+                ],
+                question: "【問題】「私は昔、よくピアノを弾いたものだ（しかし、今はもう全く弾いていない）」という切ない現在の対比を込めて語るとき、最もふさわしい英語の表現はどちらでしょう？",
+                choices: [
+                    { text: "I used to play the piano.", correct: true, feedback: "<strong>【解説】</strong>完璧です！ “used to” の中には、単に「弾いた」という事実だけでなく、「当時はそれが習慣だったけれど、**今はもう100%弾いていない**」という現在の寂しい現実が裏返しとして100%含まれています。これが言葉の持つコントラストの力です。<div class='academic-bridge-content'>💡 **学問への架け橋**：これを認知言語学では**「対比の概念化」**や**「反事実の含意」**と呼びます。過去の習慣を描写することで、明示的には言っていない「現在の状態」を強烈に引き立たせる、人間の高度な対話認知の技術です。</div>" },
+                    { text: "I was playing the piano.", correct: false, feedback: "<strong>【解説】</strong>これだと過去進行形になり、「（あの時）ちょうどピアノを弾いている最中だった」という一瞬のリアルタイムの描写になってしまい、昔の長期的な习惯や、今との劇的な対比のニュアンスは消えてしまいます。" }
+                ]
+            },
+            {
+                id: "q2_l13", title: "昔と今を比べる", grammar: "used to", cognitive: "対比", social: "ナラティブ",
+                text: [
+                    "目の前にある古びた商店街が、今やオシャレな巨大ショッピングモールに生まれ変わっている光景を想像してください。頭の中で、昔の木造の建物の映像と、今のガラス張りの建物の映像が、レイヤーのように重なり合って比較されています。",
+                    "“used to” は、モノの「状態」に対しても使えます。「昔は〜だった」という過去の心の引き出しを引っ張り出すことで、目の前にある「現在の姿」の特異性や変化の大きさを、聞き手に対して社会的に強調して伝えることができるのです。"
+                ],
+                question: "【問題】「ここに昔、大きな劇場があったんだよ（今はもう跡形もないけれど）」と、街の変化の大きさを現在と比較して語りかけるとき、最も適切な英文はどちらでしょう？",
+                choices: [
+                    { text: "There used to be a big theater here.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “There used to be...” は、「昔は当たり前のようにそこに存在していた（でも今は無い）」という、空間の劇的なビフォーアフターを脳内に上映します。聞き手は頭の中で、過去の劇場と現在の空き地（あるいはビル）を瞬時に並べて納得します。<div class='academic-bridge-content'>💡 **学問への架け橋**：認知言語学において、現在の知覚（目の前の景色）の背景に過去の記憶のフレームを重ね合わせて意味を理解する働きを**「ブレンド（Conceptual Blending）」**の一種として捉えることができます。言葉は二つの世界を同時に見せられるのです。</div>" },
+                    { text: "There is always a big theater here.", correct: false, feedback: "<strong>【解説】</strong>これだと現在形（is always）なので、「今も昔も100%ここに劇場がずっと建ち続けている」という話になり、現在の変化を伝えることができなくなってしまいます。過去の消失を語る “used to” を選びましょう。" }
+                ]
+            },
+            {
+                id: "q2_l14", title: "物語の時間", grammar: "過去形連続", cognitive: "ナラティブ", social: "事実の共有",
+                text: [
+                    "小説のページをめくっている場面を想像してください。「男は立ち上がった。上着を羽織った。そして、静かに部屋を出て行った。」出来事が、時間が流れる順番通りに、小気味よくトントンと小箱のように並べられていきます。",
+                    "物語（ナラティブ）を進めるとき、英語話者は過去形を横に並べていきます。過去形をポン、ポン、ポンと連続して出すと、聞き手の脳内では自動的に『それらが起きた順番通りに時間が左から右へ流れていく』という映画のようなフィルムが回り始めます。これがストーリーテリングの基本OSです。"
+                ],
+                question: "【問題】「彼女はカフェに入り、コーヒーを注文し、席に座った」という、一連の連続した出来事を、時間の流れる順序通りに綺麗に物語として描写している英文はどちらでしょう？",
+                choices: [
+                    { text: "She entered the cafe, ordered coffee, and sat down.", correct: true, feedback: "<strong>【解説】</strong>完璧です！ 過去形（entered, ordered, sat）をカンマと and で繋ぐだけで、聞き手の頭の中では「入店 ➔ 注文 ➔ 着席」という時間が一方向へ綺麗に進みます。文法の形そのものが、時間の流れの推進力になっているのです。<div class='academic-bridge-content'>💡 **学問への架け橋**：これを社会言語学や談話分析では**「ナラティブの時間軸（Narrative Timeline）」**と呼びます。言語表現の並び順が、そのまま現実の出来事の時系列順と一致するという、人間の自然な認知に根ざした強力な規則です。</div>" },
+                    { text: "She enters the cafe, ordered coffee, and will sit down.", correct: false, feedback: "<strong>【解説】</strong>現在形、過去形、未来（will）が1つの文の中でバラバラに混ざり合ってしまっており、脳内カメラの三脚が激しく揺れて、時間がどこに向かっているのか全く分からなくなってしまいます。ナラティブの基本に立ち返りましょう。" }
+                ]
+            },
+            {
+                id: "q2_l15", title: "思い出として語る", grammar: "過去形", cognitive: "経験の再構築", social: "ナラティブ",
+                text: [
+                    "旅先から帰ってきたあとの週末、お茶を飲みながら友人に「先週のハワイ旅行、本当に最高だったんだよね。海が綺麗でさ……」と楽しかった思い出を語り聞かせている場面を想像してください。",
+                    "思い出を語るとき、あなたの脳内では、過去の経験が1つの「完成したエピソードのパッケージ」として再構成されています。過去形は、その楽しかった（あるいは辛かった）記憶の箱全体にリボンをかけて、「これが私の思い出のデータです」と相手の脳内へ差し出すための、社会的なコミュニケーションの架け橋なのです。"
+                ],
+                question: "【問題】「先週の旅行は素晴らしかった」と、楽しかった記憶を1つの完成したエピソードとして相手に共有するときの最も自然な過去形の英文はどちらでしょう？",
+                choices: [
+                    { text: "The trip was wonderful last week.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “was” と過去形にし、さらに “last week” という過去の境界線を明示することで、旅行の思い出が1つの綺麗な「完結したエピソード」として相手の頭の中に着地します。これで思い出の共有（コミュニケーション）が成立します。<div class='academic-bridge-content'>💡 **学問への架け橋**：心理学や言語学では、このように個人的な経験を物語として記憶し、他者に語る認知の仕組みを**「エピソード記憶の再構築（Reconstruction of Episodic Memory）」**と呼びます。過去形は、記憶の引き出しの鍵なのです。</div>" },
+                    { text: "The trip is wonderful last week.", correct: false, feedback: "<strong>【解説】</strong>これだと現在形（is）が “last week（先週）” を掴みに行こうとするため、現実のナワバリと過去の思い出の境界線が交錯してエラーになります。思い出をきれいに過去のスペースに配置してあげましょう。" }
+                ]
+            },
+            {
+                id: "q2_l16", title: "過去世界の完成", grammar: "第2章 総復習", cognitive: "世界観の総括", social: "共有認識",
+                text: [
+                    "素晴らしい！第2章を突破しました！ 私たちは、英語の過去形が単なる「昔の記号」ではなく、現在の安全な基準点から『あっち側の別世界（心的空間）』へと境界線をクッキリと引くカメラワークであることを体感してきました。",
+                    "隔離された過去の点（Lv9）、未熟だった過去の自分（Lv10）、動かない歴史の事実（Lv11）、今はなき習慣（Lv12）、そして時系列に流れる物語（Lv14）。これらすべてが、現在から独立した「過去形の世界」の住人たちです。それでは、第2章の総括問題に挑みましょう！"
+                ],
+                question: "【総合問題】「昔はここに住んでいた（今は住んでいない習慣の消失）」という背景と、「昨日、その鍵を見つけた（過去の一度の事実）」という出来事を、どちらも現在からの断絶世界として正しく表現しているペアはどちらでしょう？",
+                choices: [
+                    { text: "I used to live here. I found the key yesterday.", correct: true, feedback: "<strong>【解説】</strong>ビューティフル！完璧です！ “used to live” で過去の習慣の消失を劇的に浮かび上がらせ、 “found ... yesterday” で昨日の隔離されたスペースに完結した事実をポンと着地させています。現在と過去を完全に切り分ける英語のOSが、完全にあなたの脳内に定着しました！第2章クリアです！<div class='academic-bridge-content'>💡 **学問への架け橋**：英語の過去形の本質は、現在のリアリティからの**「心理的遠隔化（Distancing）」**です。この断絶の感覚があるからこそ、英語話者は「事実」と「思い出」と「仮定の話（仮定法）」を同じ過去形の引き出しを使って整理整頓できるのです。</div>" },
+                    { text: "I am living here. I always find the key yesterday.", correct: false, feedback: "<strong>【解説】</strong>これだと「今ここに住んでいる」という現在の話になり、後半は「昨日、いつも鍵を見つける」という、日本語としても英語としても時間の認知が完全に崩壊した怪奇現象のような文になってしまいます。過去の断絶を思い出してください。" }
+                ]
+            },
+
+            // --- 第3章 ---
+            {
+                id: "q2_l17", title: "途中を見る", grammar: "進行形", cognitive: "フレーム", social: "プロセス志向",
+                text: [
+                    "あなたがキッチンで、まな板の上のリンゴに包丁を当てて、トントンと小気味よい音を立てて切っている真っ最中の場面を想像してください。まだ全部は切り終わっていません。動作はまさに「動いている途中」です。",
+                    "学校で習う進行形（be + -ing）の本質は、出来事の始まりから終わりまでを遠くから眺めるのではなく、あえて『その動作の真っ只中にカメラをググッとズームインさせて、始まりと終わりの境界線を画面の外へ押し出す（インサイドからの視点）』という、躍動感あふれるフレームの切り取り方なのです。"
+                ],
+                question: "【問題】「私は今、リンゴを切っているところです」と、まさに動作のプロセスの真っ只中にいる臨場感を相手に伝えるときの正しい進行形の英文はどちらでしょう？",
+                choices: [
+                    { text: "I am cutting an apple.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “am cutting” とすることで、脳内カメラは「カットするというプロセスの内側」に突入します。まだ切り終わっていない（未完結である）からこそ、今まさに動いているという生々しいエネルギー（進行）が言葉から溢れ出るのです。<div class='academic-bridge-content'>💡 **学問への架け橋**：認知言語学において、出来事を内側から切り取って境界線を見えなくするアスペクト（相）の働きを**「内的視点」**や**「フレーム（Framing）」**効果と呼びます。進行形は、時間の流れを一時的にストップさせてその断面を覗き込む顕微鏡なのです。</div>" },
+                    { text: "I cut an apple.", correct: false, feedback: "<strong>【解説】</strong>現在形（I cut）を使ってしまうと、第1章でやったように「私は（普段から習慣的に）リンゴを切る人間です」という、ズームアウトした一般論の冷たい絵になってしまい、今まさに包丁を動かしている躍動感が消えてしまいます。" }
+                ]
+            },
+            {
+                id: "q2_l18", title: "完成ではなく過程", grammar: "進行形", cognitive: "プロセス志向", social: "英語観",
+                text: [
+                    "画家が大きなキャンバスに向かい、パレットの絵の具を筆につけて、真剣な眼差しで巨大な肖像画を描いている場面を想像してください。まだ絵は完成していません。床には絵の具が飛び散り、筆が何度も往復しています。",
+                    "英語話者は、出来事が『完成した状態（結果）』なのか、それとも『まだ完成に向かって走っている途中（プロセス）』なのかを、恐ろしいほど厳密に区別します。進行形を選ぶということは、結果の良し悪しではなく、その「流れる汗やプロセスの美しさ」に社会的スポットライトを当てることなのです。"
+                ],
+                question: "【問題】「彼はその絵を描いている最中だった（まだ描き終えてはいないプロセスの途中）」という光景を、過去のある時点でカメラをズームインして描写するときの正しい形はどちらでしょう？",
+                choices: [
+                    { text: "He was painting the picture.", correct: true, feedback: "<strong>【解説】</strong>その通り！ 過去進行形 “was painting” は、過去のある一瞬を切り取り、彼がまだ絵を完成させていない「プロセスの途中」に視線を固定します。もしこれが “He painted” なら「描き終えた（完成させた）」という結果の報告になります。<div class='academic-bridge-content'>💡 **学問への架け橋**：言語学では、動詞が示す行為が終わり（限界点）に向かって進む性質を**「有界性（Boundedness）」**と呼びます。進行形は、その限界点（ゴール）に到達する手前の『未完成のプロセス』を意図的に引き延ばして見せる認知の技術です。</div>" },
+                    { text: "He painted the picture.", correct: false, feedback: "<strong>【解説】</strong>これだと、さっきの第2章のイベント認知になり、「彼はその絵を（最後までしっかり）描き切った」という完結の報告になってしまいます。今はまだ描き終えていない、途中の情熱を描写したいので、進行形を選びましょう。" }
+                ]
+            },
+            {
+                id: "q2_l19", title: "一時的状態", grammar: "進行形", cognitive: "暫定性", social: "社会的なニュアンス",
+                text: [
+                    "あなたがいつもは岐阜の自宅に住んでいるのに、出張や旅行のために、東京の駅前のホテルに3日間だけ臨時に滞在して部屋のベッドでくつろいでいる場面を想像してください。そこはあなたの終の住処ではなく、すぐに引き払う予定の場所です。",
+                    "第1章で「現在形はどっしりした安定（習慣）」と言いましたが、逆に進行形は『今だけの一時的なこと（暫定性）』を示します。「いつもは違うけれど、今だけ特別にこのレールから外れて一時的にこの状態にいるんだよ」というニュアンスを周囲に伝える、非常にデリケートな社会的な記号なのです。"
+                ],
+                question: "【問題】「私は（普段は別の場所に住んでいるけれど）今だけ一時的にこのホテルに滞在しています」という、暫定的なニュアンスを100%正しく伝えるための英文はどちらでしょう？",
+                choices: [
+                    { text: "I am staying at this hotel.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “am staying” と進行形にすることで、「数日したらチェックアウトして去るけれど、今は一時的にここにいる」という暫定的な絵になります。もし “I stay” と現在形にすると、「私は（いつも定宿として）このホテルに住むように暮らしている」という、どっしりしたニュアンスに化けてしまいます。<div class='academic-bridge-content'>💡 **学問への架け橋**：認知言語学において、一時的で長続きしない性質を**「暫定性（Transitoriness）」**と呼びます。進行形は、動きのない状態動詞（stayなど）にさえも、「いつかは終わる一時的なフェーズ」という動的な境界線を与えることができるのです。</div>" },
+                    { text: "I stay at this hotel every century.", correct: false, feedback: "<strong>【解説】</strong> “every century（毎世紀）” という途方もない時間がついてしまっており、現在形と合わさって「私は100年ごとにこのホテルに住んでいる不死身の人間」のような、時間の認知が完全に歪んだSFの世界になってしまいます。" }
+                ]
+            },
+            {
+                id: "q2_l20", title: "変化の途中", grammar: "be getting", cognitive: "変化認知", social: "英語観",
+                text: [
+                    "夕方、外を歩いていて、太陽が山の向こうに沈み、空の青色がだんだんと薄暗い紫へ、そして黒へとゆっくりグラデーションを描いて変わっていく光景を想像してください。一瞬で夜になるのではなく、世界はなだらかに変化しています。",
+                    "状態の「変化」を描写するとき、英語話者は “get” や “become” の進行形（be getting）を多用します。彼らの脳内カメラは、古い状態から新しい状態へと、世界のパラメーターがリアルタイムでウインウインと動いている、その『移行のグラデーション』を捉えているのです。"
+                ],
+                question: "【問題】「だんだん暗くなってきたね」と、今まさに世界が夜に向かって刻一刻と変化している最中であることを表現するときの最もふさわしい英文はどちらでしょう？",
+                choices: [
+                    { text: "It is getting dark.", correct: true, feedback: "<strong>【解説】</strong>その通り！ “It is getting dark.” は、完全に暗くなった（結果）のではなく、明るい状態から暗い状態へ「パラメーターが移動している真っ最中」のダイナミズムを完璧に捉えています。これが英語話者の大好きな変化の認知カメラです。<div class='academic-bridge-content'>💡 **学問への架け橋**：人間が世界の連続的な変化を頭の中でどう区分けして捉えるかというメカニズムを、認知科学や言語学で**「変化の概念化（Conceptualization of Change）」**と呼びます。進行形は、パラメーターが動くアニメーションそのものなのです。</div>" },
+                    { text: "It gets dark instantly.", correct: false, feedback: "<strong>【解説】</strong>これだと現在形（gets）なので、「（この地域では毎日夕方になると）一瞬で暗くなるのがいつもの不変の法則だ」という、第1章の普遍の真理のような硬い絵になってしまい、今まさに暗くなりつつある目の前のグラデーションが消えてしまいます。" }
+                ]
+            },
+            {
+                id: "q2_l21", title: "背景としての進行形", grammar: "進行形", cognitive: "Foreground / Background", social: "ナラティブ",
+                text: [
+                    "サスペンス映画の冒頭シーンを想像してください。「激しい雨がザーザーと降っていた。風も木々を揺らしていた。……その時、一人の男が静かにドアを開けて入ってきた。」",
+                    "物語を語るとき、ずっと続いている「雨の描写（背景）」と、そこで突発的に起きた「男の侵入（事件）」がありますよね。英語話者は、ずっと動いている長時間のプロセスを『進行形（Background）』で描き、そのスクリーンの中で起きた一瞬の決定的な大事件を『過去形（Foreground）』でドンと前に飛び出させます。この二つの相（アスペクト）の組み合わせで、立体的な映画が完成します。"
+                ],
+                question: "【問題】「私がシャワーを浴びている（ずっと続いていた背景）の最中に、突然電話が鳴った（突発的な事件）」という、立体的な映画のようなシーンを文法的に正しく表現しているのはどちらでしょう？",
+                choices: [
+                    { text: "When I was taking a shower, the phone rang.", correct: true, feedback: "<strong>【解説】</strong>ビューティフル！大正解です！ シャワーという持続的な行為を過去進行形（was taking）にして「背景の幕」として引き延ばし、そこへ電話の呼び出し音を過去形（rang）で「一瞬の光」として突き刺しています。これによって、聞き手の頭の中には見事な映像の遠近感が生まれます。<div class='academic-bridge-content'>💡 **学問への架け橋**：これを認知と言語学では**「図と地（Figure and Ground）」**、あるいは**「前景化（Foregrounding）と後景化（Backgrounding）」**の理論と呼びます。文法とは、言葉を使って聞き手の脳内に『映像のピント』を合わせるゲシュタルト心理学的な装置なのです。</div>" },
+                    { text: "When I took a shower, the phone was ringing forever.", correct: false, feedback: "<strong>【解説】</strong>これだとカメラワークが逆転してしまい、「私が一瞬でシャワーを浴び終わったその瞬間に、電話が永遠に鳴り響き始めた」という、何だかおかしな遠近感の映画になってしまいます。進行形を背景（地）に配置しましょう。" }
+                ]
+            },
+            {
+                id: "q2_l22", title: "進行世界の完成", grammar: "第3章 総復習", cognitive: "インサイド視点の総括", social: "共有認識",
+                text: [
+                    "素晴らしい！第3章をコンプリートしました。 進行形の本質は、出来事の外側から全体を冷たく眺めるのをやめ、あえて『プロセスの内側（インサイド）にカメラを置いて、躍動する途中を切り取る』という、情熱的なカメラワークでしたね。",
+                    "リンゴを切る真っ最中のズーム（Lv17）、未完成の美しさ（Lv18）、今だけの一時的なナワバリ（Lv19）、刻一刻と動く変化のグラデーション（Lv20）、そして映画の背景としてのスクリーンの役割（Lv21）。これですべてのピースが繋がりました。総括問題へ進みましょう！"
+                ],
+                question: "【総合問題】「彼は今、新しい本を書いている（まだ書き終えていないプロセス）」という事実と、「外は雪が降っていた（背景）」という物語のシーンを、どちらもプロセスの内側からの視点で正しく表現しているペアはどちらでしょう？",
+                choices: [
+                    { text: "He is writing a new book. It was snowing outside.", correct: true, feedback: "<strong>【解説】</strong>パーフェクト！ どちらも “-ing” の持つ「プロセスの真っ只中」というインサイド視点が見事に効いています。現在進行形（is writing）が「未完の情熱」を捉え、過去進行形（was snowing）が「物語の映画の背景」を優しく包み込んでいます。第3章、堂々のクリアです！<div class='academic-bridge-content'>💡 **学問への架け橋**：このように、時間が「流れる線」ではなく、「どの視点からズームインして、どのフレームで世界を切り取るか」という主観的なアプローチの集大成が、英語のアスペクト（相）の正体です。暗記ではなく、完全にカメラをマスターしましたね！</div>" },
+                    { text: "He writes a new book. It snowed outside tomorrow.", correct: false, feedback: "<strong>【解説】</strong>これだと “He writes” で「彼は（普段から趣味として）本を執筆する人間である」という冷たい一般論になり、後半は過去形（snowed）と未来（tomorrow）が正面衝突して時間が大爆発してしまっています。ズームインの感覚を取り戻してください。" }
+                ]
+            },
+
+            // --- 第4章 ---
+            {
+                id: "q2_l23", title: "過去が現在に触れる", grammar: "現在完了", cognitive: "リンク", social: "英語観",
+                text: [
+                    "あなたの目の前に、深い谷が横たわっている場面を想像してください。左側には「過去という切り離された絶壁」、右側には「今生きている現在の絶壁」があります。過去形は出来事を左の壁に置き去りにしますが、そこから右の壁に向かって、頑丈な吊り橋をズドーンと架ける瞬間をイメージしてください。",
+                    "これこそが、英語最大の難所と言われる『現在完了形（have + 過去分詞）』の本質、すなわち【過去の出来事を、今につなぎ止める（現在とのリンク）】というカメラワークです。英語話者は、過去に起きたことを、単なる昔話にせず、今の自分の胸の中に『持っている（haveしている）』と宣言するのです。"
+                ],
+                question: "【問題】「私はすでに昼食を食べ終えた（だから、過去に食べたという事実を、今お腹がいっぱいであるという現実と繋げて、私の手元にhaveしている）」という、現在完了の橋が架かった正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "I have already eaten lunch.", correct: true, feedback: "<strong>【解説】</strong>素晴らしい！大正解です！ “have（今持っている）” + “eaten（過去に食べ終えたという完了状態）” が合体することで、過去の行為が現在の絶壁にガチッとリンクします。「だから今、私はお腹が空いていないよ」という現在のリアリティに足を踏み入れているカメラワークです。<div class='academic-bridge-content'>💡 **学問への架け橋**：認知言語学において、この現在完了の本質を**「現在の関連性（Current Relevance）」**や**「二時的点リンク」**と呼びます。過去形が現在からの「断絶」なら、現在完了は過去から現在への「抱擁」なのです。</div>" },
+                    { text: "I ate lunch yesterday already tomorrow.", correct: false, feedback: "<strong>【解説】</strong>過去形（ate）と昨日（yesterday）、そして明日（tomorrow）が1文の中で乱気流を起こしており、現在のナワバリに綺麗に橋を架ける現在完了の美しい構造が完全に壊れてしまっています。haveを伴う形を選びましょう。" }
+                ]
+            },
+            {
+                id: "q2_l24", title: "経験という財産", grammar: "have been", cognitive: "蓄積", social: "英語観",
+                text: [
+                    "あなたの部屋にある大きな貯金箱を想像してください。どこかへ旅行に行くたびに、その思い出の記念コインを1枚ずつチャリン、チャリンと中に貯めていきます。今、あなたの手元にあるその貯金箱は、過去の全ての旅の重みが詰まった『現在の財産』です。",
+                    "現在完了の「経験」用法とは、まさにこの思い出のコインの貯金箱を、今の自分が両手でしっかりと抱え持っている（haveしている）感覚です。「昔、行った」という過去の点の自慢ではなく、「行ったことがあるという目に見えないバッジを、今の私が胸に付けている」という、現在の蓄積の認知なのです。"
+                ],
+                question: "【問題】「私はこれまでに3回、ハワイに行ったことがある（そのハワイバッジを、現在の私の財産としてhaveしている）」という経験の蓄積を正しく表現している英文はどちらでしょう？",
+                choices: [
+                    { text: "I have been to Hawaii three times.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “I have been to...” は、過去にそこを訪れて、今は戻ってきているけれど、その「行ったことがある」という無形の財産を今の自分の引き出しにしっかりと “have” して持っている、という大人のカメラワークです。回数（three times）のコインが貯金箱に貯まっています。<div class='academic-bridge-content'>💡 **学問への架け橋**：これを言語学や心理学では、過去の出来事が個人の内面に積み重なって現在のアイデンティティを構成する**「経験の蓄積（Accumulation of Experience）」**モデルと呼びます。現在完了は、今のあなたの人生の厚みを測るメーターなのです。</div>" },
+                    { text: "I went to Hawaii three times yesterday.", correct: false, feedback: "<strong>【解説】</strong>これだと過去形（went）の断絶世界になり、さらに “yesterday（昨日）” がついているので、「昨日1日の間に、ハワイへ3往復した」という、物理的にあり得ない超音速の強行軍の絵になってしまいます。現在完了の蓄積を選びましょう。" }
+                ]
+            },
+            {
+                id: "q2_l25", title: "人生の経験", grammar: "ever / never", cognitive: "ライフヒストリー", social: "社会的な対話",
+                text: [
+                    "あなたが生まれた瞬間から、今日までの長くて太い一本の「人生の巻物（ライフヒストリー）」を目の前にダーッと広げている場面を想像してください。その巻物の端から端までを、上から下まで虫眼鏡でじっくり見渡して、特定のマークを探します。",
+                    "会話の中で “ever（これまでの人生で一度でも）” や “never（生まれてから一度も〜ない）” という強い副詞を使うとき、英語話者は現在完了の橋の長さを「その人の全人生の巻物」のスケールにまで最大化します。相手のこれまでの歩みすべてに敬意を払い、問いかける社会的な作法です。"
+                ],
+                question: "【問題】「あなたはこれまでの人生で、一度でも富士山に登ったことがありますか？」と、相手の人生の巻物全体に問いかけるときの、資格試験でも定番の最も正しい現在完了の疑問文はどちらでしょう？",
+                choices: [
+                    { text: "Have you ever climbed Mt. Fuji?", correct: true, feedback: "<strong>【解説】</strong>完璧です！ “Have you ever...?” の “ever” は、現在完了の橋を「誕生から今この瞬間までの全タイムライン」へと引き伸ばし、「その中に1点でも登山というイベントがマークされているか？」と現在の所有を尋ねます。だからこそ強烈に深い対話が生まれます。<div class='academic-bridge-content'>💡 **学問への架け橋**：談話分析において、このような表現を**「ライフヒストリー（Life History）へのアクセス」**と呼びます。相手のアイデンティティの総体にスポットライトを当てるための、現在完了形ならではの壮大なカメラワークです。</div>" },
+                    { text: "Did you climbed Mt. Fuji ever?", correct: false, feedback: "<strong>【解説】</strong>これだと過去形の疑問文（Did）の断絶世界の中に、全人生の広がりを示す “ever” が無理やり押し込まれ、さらに “did” の後ろなのに動詞が過去形（climbed）のままという二重のエラーを起こしています。" }
+                ]
+            },
+            {
+                id: "q2_l26", title: "結果が残る", grammar: "I've lost my key.", cognitive: "結果状態", social: "英語観",
+                text: [
+                    "あなたが自宅の玄関の前に立って、バッグの底やポケットを必死にガサゴソと探っている場面を想像してください。どこを探しても鍵がありません。あなたは目の前の閉ざされたドアを見つめながら、「あぁ、鍵をなくしちゃった……（だから今、家に入れないんだ）」と絶望しています。",
+                    "過去形（I lost my key.）だと、なくしたのは昔の話で「今はもう見つかったかもしれない」という断絶になります。しかし、現在完了（I've lost my key.）は違います。過去に失くしたという事実が、現在の絶壁にそのままドスンと居座り、**『その結果、今も鍵がない状態が続いている』**という現在の悲惨な結果状態を生生しく突きつけるのです。"
+                ],
+                question: "【問題】「私は鍵をなくしてしまった（そして、その最悪な結果のまま今も鍵を持っていなくて困っている）」という、現在のリアルな困惑を100%込めて相手に報告するときの正しい形はどちらでしょう？",
+                choices: [
+                    { text: "I have lost my key.", correct: true, feedback: "<strong>【解説】</strong>その通り！ “have lost” と言うことで、過去の紛失事件が現在のあなたをガチガチに縛っている「結果状態（Resultative State）」を表現できます。これを聞いたネイティブの友人は、ただの昔話ではないと察し、「じゃあ、一緒に探そうか？」「うちに泊まる？」と現在の救いの手を差し伸べてくれます。<div class='academic-bridge-content'>💡 **学問への架け橋**：認知言語学では、出来事がもたらした影響が現在もそのまま持続している認知の枠組みを**「結果状態（Resultative State）の保持」**と呼びます。現在完了は、過去の亡霊が今もそこにいることを示す文法なのです。</div>" },
+                    { text: "I lost my key ten years ago and found it.", correct: false, feedback: "<strong>【解説】</strong>これだと過去形（lost）の断絶世界のあとに「そしてそれを見つけた（found）」と続いており、今のあなたが玄関の前で困り果てている切迫した「結果の持続」のニュアンスとは完全に矛盾してしまいます。" }
+                ]
+            },
+            {
+                id: "q2_l27", title: "まだ続いている", grammar: "for / since", cognitive: "時間線", social: "事実の共有",
+                text: [
+                    "一本の長くて丈夫な赤いリボンを想像してください。そのリボンの端っこは「3年前」という過去の点にピンでパチンと留められています。そして、リボンは時間の流れに沿ってずーっと伸びてきて、今、あなたの手元にまで届き、さらに未来へと向かおうとしています。",
+                    "現在完了の「継続」用法は、過去に始まった状態が、現在の基準点まで1本の途切れない『時間線（タイムライン）』としてずーっと地続きで伸びてきている感覚です。ここで使われる “for（〜の間：リボンの長さ）” や “since（〜以来：ピンを留めた起点）” は、その時間線のスケールをクッキリと可視化する道具です。"
+                ],
+                question: "【問題】「私は5年間、岐阜にずっと住んでいます（5年前に住み始め、今も住んでいる時間線）」という事実を正しく表現している英文はどちらでしょう？",
+                choices: [
+                    { text: "I have lived in Gifu for five years.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “have lived” の現在完了形に “for five years” というリボンの長さが組み合わさることで、過去から現在へ地続きに伸びてきた美しい時間線が脳内に描かれます。今もなお、あなたは岐阜の住人なのです。<div class='academic-bridge-content'>💡 **学問への架け橋**：認知言語学において、時間を空間的な「一本の線（リボン）」としてなぞるように捉えるメタファーを**「時間線の空間的マッピング」**と呼びます。現在完了の継続は、まさにこの直線のメタファーを最も純粋に表現した形です。</div>" },
+                    { text: "I lived in Gifu for five years and left.", correct: false, feedback: "<strong>【解説】</strong>これだと純粋な過去形（lived）の断絶世界になり、さらに「そして去った（left）」とあるため、5年間住んでいたのは大昔の話で、今はもう岐阜には住んでいないことになってしまいます。現在への繋がりを保持しましょう。" }
+                ]
+            },
+            {
+                id: "q2_l28", title: "終わっていない世界", grammar: "現在完了", cognitive: "継続", social: "共有認識",
+                text: [
+                    "あなたの目の前に、まだ半分以上白紙が残っている「今週のスケジュール帳」や、今日の午前中の時計の針を想像してください。今日の夜、ベッドに入るまでは、「今日という時間枠（フレーム）」はまだ閉じておらず、絶賛オープン中です。",
+                    "英語話者は、出来事が起きた時間枠が『すでに閉じた世界（過去形）』なのか、それとも『まだ閉じずに今も続いている世界（現在完了）』なのかを冷徹に見極めます。時間枠がまだ生きている（現在を含んでいる）限り、カメラは過去形ではなく現在完了を選択するのです。"
+                ],
+                question: "【問題】まだ「今週」という時間枠が終わっていない木曜日の時点で、「私は今週、3冊の本を読んだ（時間枠はまだ開いているので、これから4冊目を読む可能性もある）」と語るときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "I have read three books this week.", correct: true, feedback: "<strong>【解説】</strong>その通り！ “this week（今週）” は、発話している「今」を中に含んだ、まだ終わっていない未完のフレームです。だからこそ、過去形ではなく現在完了 “have read” の橋を架けてあげるのが英語のOSの正しい作法になります。<div class='academic-bridge-content'>💡 **学問への架け橋**：言語学では、時間表現が発話の現在時点を含むかどうかを**「包括性（Inclusiveness）」**という概念で分析します。現在完了は、終わりの境界線（壁）がまだ閉じていない「オープンな世界」の描写なのです。</div>" },
+                    { text: "I read three books last week this week.", correct: false, feedback: "<strong>【解説】</strong> “last week（先週：閉じた世界）” と “this week（今週：開いた世界）” という、文法的に水と油のフレームが1文の中に無理やり押し込まれ、カメラが完全にブレてしまっています。開いた世界には現在完了を選びましょう。" }
+                ]
+            },
+            {
+                id: "q2_l29", title: "ちょうど今", grammar: "just", cognitive: "近接性", social: "事実の共有",
+                text: [
+                    "目の前で電車のドアがプシューッと閉まり、ガタゴトとゆっくりと動き出したまさにその一瞬を想像してください。あるいは、走ってきた人がホームに滑り込み、今まさに「今ついた！ハァハァ」と息を切らしている場面です。",
+                    "出来事が完了した瞬間が、現在の基準点に対して「目と鼻の先」にある驚くほどの近さであることを示すスパイスが “just（ちょうど今、たった今）” です。過去の行為のしっぽが、現在の絶壁に生々しくピトッと触れているような、極限の『近接性』のカメラワークです。"
+                ],
+                question: "【問題】「私はたった今、宿題を終えたところです（まだペンを置いたばかりで、インクが乾いていないほどの近さ）」という完了の臨場感を正しく表現している英文はどちらでしょう？",
+                choices: [
+                    { text: "I have just finished my homework.", correct: true, feedback: "<strong>【解説】</strong>完璧です！ “have finished” という橋の真ん中に “just” を挟み込むことで、「過去の行為が、まさに今この瞬間にゴールインした」という、距離ゼロの生々しい完了の瞬間が聞き手の脳内に滑り込みます。相手も「おお、お疲れ様！」と即座に反応できます。<div class='academic-bridge-content'>💡 **学問への架け橋**：認知言語学において、時間的な距離感が極めてゼロに近い状態を認識する働きを**「時間的近接性（Temporal Proximity）」**の認知と呼びます。 “just” は、現在完了の橋を一瞬の細い糸にまで絞り込むズームレンズなのです。</div>" },
+                    { text: "I finished my homework a long time ago just.", correct: false, feedback: "<strong>【解説】</strong>これだと過去形（finished）の断絶世界の上に “a long time ago（ずっと昔）” と言っておきながら、最後に “just（たった今）” をつけており、時間が大昔なのか今なのか完全に分裂してしまっています。" }
+                ]
+            },
+            {
+                id: "q2_l30", title: "期待と時間", grammar: "already / yet", cognitive: "予測", social: "社会的な対話",
+                text: [
+                    "あなたが楽しみに待っていた荷物が、予定よりもはるかに早く自宅のチャイムとともに届いて「えっ、もう来たの！？」と驚いている場面。あるいは逆に、待ち合わせの時間を過ぎても相手が来ず、何度もスマホの画面を見つめて「まだ来ないなぁ……」とヤキモキしている場面を想像してください。",
+                    "人間の心にはいつも「こうなるだろう」という未来の予測（期待）があります。現在完了と組み合わさる “already（もうやってしまった：期待以上の驚き）” や “yet（まだやっていない：これからの期待）” は、単なる時間の記号ではなく、人間の『期待の感情』を言葉に乗せて他者と共有する社会的なツールなのです。"
+                ],
+                question: "【問題】「私はもう（予定や相手の期待よりも早く）その宿題を終わらせちゃいましたよ！」と、現在の完了状態を自信満々に相手に伝えるときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "I have already finished the homework.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “already” を現在完了に混ぜることで、「相手が想定していたタイムラインよりも、遥か手前の時点で過去の行為が完了し、すでに今の私の手元にhaveされている」という驚きと自信の絵になります。社会的な会話に感情を乗せる素晴らしい形です。<div class='academic-bridge-content'>💡 **学問への架け橋**：言語学では、話し手の事前の想定や予測のフレームと、現実の出来事のズレを表現する仕組みを**「予測（Expectation）のコントロール」**と呼びます。文法は、冷徹な事実だけでなく、人間の心のバイアスを表現する器なのです。</div>" },
+                    { text: "I have yet finished the homework already.", correct: false, feedback: "<strong>【解説】</strong> “yet（まだ）” と “already（もう）” が1文の中で衝突してしまっており、脳内カメラが「やっていないのか、やったのか」完全に迷子になってエラーを起こしています。シンプルな確信の形を選びましょう。" }
+                ]
+            },
+            {
+                id: "q2_l31", title: "現在完了世界の完成", grammar: "第4章 総復習", cognitive: "リンク概念の総括", social: "共有認識",
+                text: [
+                    "ついに現在完了の壮大な大陸（第4章）を完全制覇しました！おめでとうございます！ 過去形が「あっち側の断絶されたセピア色の世界」だったのに対し、現在完了形は『過去の出来事から、今の私の胸（have）に向かって、太い鋼鉄の橋を架け渡す』という、現在中心のダイナミックな世界観でしたね。",
+                    "昼食のリンク（Lv23）、人生の財産バッジの蓄積（Lv24）、全人生の巻物（Lv25）、今も苦しむ結果状態（Lv26）、伸び続けるリボンの時間線（Lv27）、まだ閉じない今週のフレーム（Lv28）、そして期待の感情（Lv30）。すべてが「今」に触れています。総括問題に挑みましょう！"
+                ],
+                question: "【総合問題】「私はこれまでずっと彼女を知っている（過去から今へ地続きの継続）」という時間線と、「私はちょうど今、鍵を見つけた（現在の絶壁への劇的な着地）」という２つの光景を、現在完了の本質（今へのリンク）で正しく表現しているペアはどちらでしょう？",
+                choices: [
+                    { text: "I have known her for years. I have just found the key.", correct: true, feedback: "<strong>【解説】</strong>ブラボー！！！完璧すぎます！ “have known ... for years” で過去から今へ途切れなく伸びる信頼の時間線を美しく描き、 “have just found” で過去の発見イベントを「たった今」の瞬間にガチッと着地させています。現在完了形の持つ「過去を今に引き寄せるカメラワーク」を、あなたは完全にマスターしました！第4章、最高のクリアです！<div class='academic-bridge-content'>💡 **学問への架け橋**：このように、一見全く違う「継続」と「完了・結果」という用法が同じ “have + 過去分詞” で表されるのは、人間の脳がどちらも『過去の事象を現在の自分の領域に繋ぎ止めてメタ認知する』という共通の認知の橋（OS 2.0）で理解しているからです。</div>" },
+                    { text: "I knew her for years. I found the key tomorrow just.", correct: false, feedback: "<strong>【解説】</strong>これだと過去形（knew）で「昔は知っていた（今はもう知らない）」という冷たい断絶になり、後半は過去形と未来（tomorrow）が正面衝突して大破してしまっています。現在完了の輝かしい橋をもう一度思い出してください。" }
+                ]
+            },
+
+            // --- 第5章 ---
+            {
+                id: "q2_l32", title: "未来は事実ではない", grammar: "will", cognitive: "予測", social: "英語観",
+                text: [
+                    "明日のお天気の週間予報の画面をスマホで見つめている場面を想像してください。「明日の岐阜の降水確率は40%です。曇りのち雨でしょう。」まだ明日は来ていません。雨が降るかどうかは、神のみぞ知る世界です。",
+                    "英語話者のOSにおいて、決定的な大原則があります。それは【未来のことは事実ではない。すべては頭の中の不確実な予測（モード）に過ぎない】ということです。だから英語には現在形や過去形のような「未来形」という独自の動詞の変形が存在しません。助動詞 “will” の本質は、事実の報告ではなく、話し手の脳内での『おそらくそうなるだろうという主観的な予測（推量）』のジャンプなのです。"
+                ],
+                question: "【問題】「明日は雨が降るだろう（私の脳内のデータに基づけば、おそらくそうなる確率が高いと予測する）」と、主観的な予測の世界を表現するときの最も正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "It will rain tomorrow.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “will” は、まだ見ぬ未完成の未来の世界に対して、話し手の頭の中から「きっとこうなるぞ」と矢印をピーンと飛ばす『予測（Prediction）』のカメラワークです。未来形という事実は存在せず、すべては人間の主観のモードなのです。<div class='academic-bridge-content'>💡 **学問への架け橋**：言語学では、事実そのものを表す文法と、話し手の主観的な推量や態度を表す文法（助動詞など）を明確に区別し、後者を**「法性（Modality：モダリティ）」**と呼びます。 “will” は未来の記号ではなく、予測というモダリティの心の引き出しなのです。</div>" },
+                    { text: "It rains tomorrow dynamic.", correct: false, feedback: "<strong>【解説】</strong>個人の気まぐれな天気予報に対して、ただの現在形（rains）を使ってしまうと、第1章の「電車の時刻表」のような、社会的に100%コントロールされた絶対の確定未来になってしまい、普通の天気予報のニュアンスとしては不自然になってしまいます。" }
+                ]
+            },
+            {
+                id: "q2_l33", title: "意思としての未来", grammar: "will", cognitive: "意図", social: "社会的な約束",
+                text: [
+                    "カフェでメニューを開いて、店員さんを呼ぶ場面を想像してください。「ご注文はお決まりですか？」と聞かれ、あなたはメニューの写真を指さして、その瞬間にパッと閃いて「よし、私、ホットコーヒーにするわ！」と答えます。",
+                    "“will” のもう一つの顔が、この【その場で決めた強い意志（意図）】です。 “will” の語源は「名詞の意志（鉄の意志）」です。あらかじめ決まっていた予定ではなく、会話の現場（発話の瞬間）において、自分の心が未来の行動に向かって「よし、やるぞ！」と弾丸のように前方に飛び出す、社会的な決意の表明なのです。"
+                ],
+                question: "【問題】レストランで店員に向かって、「（今その場で決めて）私はステーキにします！」と自分のフレッシュな意志をスパッと伝えるときの正しい表現はどちらでしょう？",
+                choices: [
+                    { text: "I will have the steak.", correct: true, feedback: "<strong>【解説】</strong>その通り！ 店員に聞かれてその場で「よし、これにする意志を今固めたぞ！」と未来へ矢印を飛ばすため、 “I will” が100%のシンクロ率で起動します。これが社会的な対話をドライブさせる意志の “will” です。<div class='academic-bridge-content'>💡 **学問への架け橋**：これを認知と言語学では**「発話内行為としての意図の表明（Expression of Intention）」**と呼びます。自分の意志をその場で言語化して相手に提示することで、未来の行動をその場で社会的に約束する、人間ならではの言葉の力です。</div>" },
+                    { text: "I used to have the steak tomorrow.", correct: false, feedback: "<strong>【解説】</strong>これだと、第2章でやった「昔はステーキを食べたものだ（今は食べていない）」という過去の習慣の消失が、なぜか “tomorrow（明日）” と合体してしまい、時間が完全にねじ切れてエラーを起こしてしまいます。" }
+                ]
+            },
+            {
+                id: "q2_l34", title: "計画された未来", grammar: "be going to", cognitive: "準備状態", social: "英語観",
+                text: [
+                    "あなたのカレンダーのスケジュール帳を想像してください。そこには「来月、友達と韓国旅行に行く」と1週間も前から赤ペンで予定が書き込まれており、すでにスマホで飛行機のチケットも予約し、部屋には半分荷物が詰められたスーツケースが置かれています。",
+                    "その場で決める “will” に対し、 “be going to 〜” は違います。語源通り『今まさに、そのゴールに向かって（going）、トコトコと足を進めている途中（準備状態）にいるよ』という意味です。だからこそ、「あらかじめ前々から決めていた、心づもりのある計画」を描写するのに最適なカメラワークになります。"
+                ],
+                question: "【問題】「私は来月、ハワイを訪れる予定です（チケットも買い、前々から計画して準備を進めている）」という確実な計画を表現するときの最もふさわしい英文はどちらでしょう？",
+                choices: [
+                    { text: "I am going to visit Hawaii next month.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “am going to” を使うことで、脳内カメラは「すでにハワイというゴールに向けて、現在のタイムライン上で具体的な準備のステップを踏み始めている私の姿」を捉えます。聞き手も「お、前から準備してたんだね！」と納得できます。<div class='academic-bridge-content'>💡 **学問への架け橋**：認知言語学では、未来の出来事が現在においてすでに具体的な兆候や準備として始まっている認知のあり方を**「現在に根ざした未来（Present-oriented Future）」**や**「準備状態（Readiness）」**の概念化と呼びます。言葉は、ゴールの手前の足跡を見ているのです。</div>" },
+                    { text: "I will suddenly visit Hawaii next month.", correct: false, feedback: "<strong>【解説】</strong> “will” を使って、さらに “suddenly（突然）” と並べてしまうと、「前々からの計画」ではなく、「来月、何の前触れもなくその場で急に思い立ってハワイに飛び立つ」という、行き当たりばったりの気まぐれなニュアンスになってしまいます。" }
+                ]
+            },
+            {
+                id: "q2_l35", title: "予定された未来", grammar: "現在進行形未来", cognitive: "社会的約束", social: "英語観",
+                text: [
+                    "手元のスマホのLINEの画面を想像してください。「了解！じゃあ明日の夜7時に、駅前のカフェで社長とディナーね！」お互いに手帳に書き込み、相手のスケジュールも拘束している状態です。あなたがサボれば、相手に多大な迷惑がかかります。",
+                    "“be going to” よりもさらに『確定度100%に近い未来』を語るとき、英語話者はなんと【現在進行形（be + -ing）】をそのまま使います（I'm meeting him tomorrow.）。進行形は第3章でやったように「すでにプロセスの内側に突入して動いている最中」です。つまり、社会的・人間関係の約束がすでにウインウインと起動して動いており、よほどの天変地異がない限り絶対にキャンセルされない未来を表現する、究極のカメラワークなのです。"
+                ],
+                question: "【問題】「私は明日の夜、彼と（お互いに約束してスケジュールをガチガチにセットしてあるので、会うプロセスの歯車がすでに回っている状態で）会うことになっています」という公式なニュアンスを伝える正しい表現はどちらでしょう？",
+                choices: [
+                    { text: "I am meeting him tomorrow evening.", correct: true, feedback: "<strong>【解説】</strong>ビューティフル！大正解です！ 未来のことなのに現在進行形（am meeting）を使うことで、「会うというイベントの歯車が、今すでにガチガチに回り始めている（社会的約束）」という、圧倒的な確実性を表現できます。ビジネスや大人の会話で非常に好まれる最高にスマートなカメラワークです。<div class='academic-bridge-content'>💡 **学問への架け橋**：これを言語学では**「未来的配置（Futurate Arrangement）」**や**「相互行為の確定」**と呼びます。人間関係の中でセットされた予定を、主観的なプロセスとしてメタ認知する、人間の社会性の高さが凝縮された文法現象です。</div>" },
+                    { text: "I met him tomorrow evening perhaps.", correct: false, feedback: "<strong>【解説】</strong>これだと過去形（met）と明日（tomorrow）が正面衝突してエラーになり、さらに後ろに “perhaps（おそらく）” がついて予定が不確実になってしまい、大人のガチガチの約束のニュアンスが完全に瓦解してしまいます。" }
+                ]
+            },
+            {
+                id: "q2_l36", title: "未来への確信", grammar: "未来の確率", cognitive: "確率の認知", social: "英語観",
+                text: [
+                    "真っ黒な雨雲が空全体を覆いつくし、生暖かい突風が吹き荒れ、ゴロゴロと遠くで雷鳴が鳴り響いている光景を想像してください。あなたは傘を持っていません。次の瞬間に何が起きるか、視覚的な証拠が目の前に100%揃っています。",
+                    "未来の出来事に対する「確信の度合い（確率）」を、英語話者は目の前にある『客観的な証拠の有無』でサッと切り替えます。頭の中だけの予測なら “will” ですが、目の前に「今にもそうなりそうな生々しい証拠」が突きつけられているときは、体を使って “be going to” のレールに飛び乗るのです。"
+                ],
+                question: "【問題】空が真っ黒になり、今にも雨がドッと降り出しそうな「生々しい視覚的証拠」が目の前に100%揃っているとき、確信を込めて叫ぶのに最もふさわしい英文はどちらでしょう？",
+                choices: [
+                    { text: "Look at the clouds! It is going to rain!", correct: true, feedback: "<strong>【解説】</strong>その通り！ 目の前に真っ黒な雲という「現在の証拠」があるからこそ、その雨に向かってトコトコと事態が進んでいるプロセス（is going to）が完璧にはまります。もし単に “It will rain.” と言うと、証拠のない、頭の中だけの「明日は雨かもね」という単なる論理的推量に聞こえてしまいます。<div class='academic-bridge-content'>💡 **学問への架け橋**：認知言語学において、現在の知覚情報（目に見える証拠）から未来の出来事を必然の帰結として予測する働きを**「知覚的証拠に基づく推量」**と呼びます。文法は、あなたの目が捉えている景色の緊迫感と連動しているのです。</div>" },
+                    { text: "Look at the clouds! It used to rain!", correct: false, feedback: "<strong>【解説】</strong>これだと「雲を見て！昔はよく雨が降ったものだ！」となってしまい、今まさに雨が降り出しそうな目の前の緊急事態と、過去の習慣の消失の引き出しが完全にちぐはぐになってしまいます。未来の確信を選びましょう。" }
+                ]
+            },
+            {
+                id: "q2_l37", title: "未来から現在を見る", grammar: "未来完了", cognitive: "視点移動", social: "英語観",
+                text: [
+                    "今から数ヶ月後の未来のタイムラインへ、タイムマシンに乗ってワープしたあなたを想像してください。あなたは未来のその日に立って、そこから「過去（つまり、今あなたが生きているこの現在）」を満足そうに振り返っています。",
+                    "学校文法の最高峰と言われる『未来完了形（will have + 過去分詞）』の本質は、この【未来への視点移動（タイムワープ）】です。一度、意識のカメラを未来の特定の締め切り点にワープさせ、そこから現在を振り返って「その時までには、この作業はすっかり完了して私の貯金箱の中に “have” されているだろうな」と、未来の視点から現在をメタ認知する高度なカメラワークなのです。"
+                ],
+                question: "【問題】「明日の夕方までには、私はこのレポートをすっかり書き終えているだろう」と、明日の夕方にカメラをワープさせて完了を確信するとき、最も適切な英文はどちらでしょう？",
+                choices: [
+                    { text: "I will have finished the report by tomorrow evening.", correct: true, feedback: "<strong>【解説】</strong>ビューティフル！完璧です！ “will（未来へワープ）” + “have finished（その時点から振り返って、すでに完了してhaveしている状態）” という２つのパーツが見事に脳内で連結し、未来完了の美しいカメラワークが完成します。締め切り（by tomorrow evening）の壁に向かって、未来から時間を逆算する大人の視点です。<div class='academic-bridge-content'>💡 **学問への架け橋**：これを認知言語学では**「メンタルスペースの未来移動」**や**「視点の時間的転移（Perspective Shift）」**と呼びます。今いる場所から離れて、未来の視点から現在の行動の終わりを見通す、人間の極めて高度な時間管理の認知システムです。</div>" },
+                    { text: "I am finishing the report ten years ago by tomorrow.", correct: false, feedback: "<strong>【解説】</strong>進行形（am finishing）と10年前（ten years ago）、そして明日まで（by tomorrow）が1文の中で大衝突を起こし、未来の視点から時間を逆算する現在完了の美しい直線が完全に千切れてしまっています。" }
+                ]
+            },
+            {
+                id: "q2_l38", title: "未来世界の完成", grammar: "第5章 総復習", cognitive: "予測と意図の総括", social: "共有認識",
+                text: [
+                    "素晴らしい！第5章「未来という未完成世界」の全てのチェックポイントをクリアしました！ 私たちは、英語に客観的な未来の事実はなく、すべては『人間の頭の中の予測、意志、計画、約束という、主観的なモードのバリエーション』であることを学んできました。",
+                    "頭の中の予測のwill（Lv32）、その場の意志のwill（Lv33）、前からの計画のbe going to（Lv34）、社会的約束の進行形未来（Lv35）、証拠に基づく確信（Lv36）、そして未来から逆算する未来完了（Lv37）。これですべての未来のグラデーションの引き出しが整頓されました。総括問題へ挑みましょう！"
+                ],
+                question: "【総合問題】「（その場で決めて）私があなたを助けましょう（意志）」という光景と、「（前々から準備して）私は明日彼に会う予定です（計画）」という２つの未来のモードを、英語話者の正しいグラデーションの使い分けで表現しているペアはどちらでしょう？",
+                choices: [
+                    { text: "I will help you. I am going to meet him tomorrow.", correct: true, feedback: "<strong>【解説】</strong>ウルトラパーフェクト！！！ その場のひらめきと鉄の意志の “I will” 、そして事前に計画して事態がそこに向かって進んでいる “I am going to” の使い分けが、100%完璧にカメラワークとして再現されています。未来という不確実な世界を言葉でコントロールする技術が完全にあなたのものになりました！第5章クリアです！<div class='academic-bridge-content'>💡 **学問への架け橋**：未来を語る表現の多様性は、人間が未来に対して抱く「主観的な確信度」や「関与の度合い」の違いを脳が正確に言葉の形（OS 2.0）へマッピングしている証拠です。文法規則の暗記（OS 1.0）を完全に超越しましたね！</div>" },
+                    { text: "I used to help you. I meet him tomorrow automatically.", correct: false, feedback: "<strong>【解説】</strong>これだと「昔はあなたを助けたものだ（今は助けない）」という過去の引き出しになり、後半はただの現在形なので、個人の予定としてはカメラワークが不自然に硬くなってしまいます。未来のグラデーションを思い出してください。" }
+                ]
+            },
+
+            // --- 第6章 ---
+            {
+                id: "q2_l39", title: "時間は流れではなく視点である", grammar: "時間観", cognitive: "Perspective", social: "共有認識",
+                text: [
+                    "さあ、旅の終わりが近づいてきました。第6章の幕開けです。 学校文法（OS 1.0）では、時間は過去から未来へただ一方向に機械的に流れていく冷たい矢印として教えられます。しかし、これまでQuest 2の38個のレベルを戦い抜いてきたあなたの脳内には、全く違う、豊かで立体的な景色が広がっているはずです。",
+                    "英語話者にとって、時間とは客観的な流れそのものではありません。すべては『話し手が今どこに基準点を置き、どの引き出しを開け、どのようなカメラワーク（ズームイン・ズームアウト・タイムワープ）で世界を切り取るか』という、人間の主観的な【視点（Perspective）】そのものなのです。この共有認識に立ったとき、世界中の他者との、より深い社会的な繋がり（コミュニケーション）が可能になります。では、最後の問いへの門を開けましょう。"
+                ],
+                question: "【問題】「英語話者にとっての時間観」を、認知言語学・社会言語学の本質（OS 2.0）に基づいて最も正しく言い表している説明はどちらでしょう？",
+                choices: [
+                    { text: "時間は客観的な絶対のルールではなく、話し手の「視点」や「心の距離感」によって柔軟に切り取られる、主観的な認知のスクリーンである。", correct: true, feedback: "<strong>【解説】</strong>正解です！ 完璧です！ 時間とは、ただ物理的に流れる数字ではなく、人間が世界をどうメタ認知し、他者とどう認識を共有するかという、主観的なカメラワークの集大成です。この視点（OS 2.0）を手に入れたあなたにとって、英語の文法書はもうただの退屈なルールブックではなく、人間の心の動きを鮮やかに映し出すエキサイティングな地図へと姿を変えたはずです！<div class='academic-bridge-content'>💡 **学問への架け橋**：認知言語学の根底にある**「主観性（Subjectivity）」**の理論では、言語構造には話し手の物の見方（視点・焦点化・フレーミング）が必然的に組み込まれているとされています。文法を学ぶことは、他者の「世界の見方」そのものをインストールすることなのです。</div>" },
+                    { text: "時間はただの数式のような不変の記号であり、人間の感情や視点とは一切関係なく、機械的な時制の公式（OS 1.0）の丸暗記によってのみ処理されるべきものである。", correct: false, feedback: "<strong>【解説】</strong>残念！それはあなたがQuest 1とQuest 2の旅で完全に破壊し、乗り越えてきたはずの古い「OS 1.0（ただの暗記文法）」の化石のような考え方です。これまでの40レベルに及ぶカメラワークの躍動感をもう一度思い出して、最高の答えを選び直してください！" }
+                ]
+            },
+            {
+                id: "q2_l40", title: "Quest II 最終章", grammar: "英語観の統合", cognitive: "メタ認知の完成", social: "多層的英語観の獲得",
+                text: [
+                    "おめでとうございます！！！ついに、全40レベルに及ぶ長大な『Quest II：時間の世界』の頂点へ到達しました！ 終わってみれば、英語話者の複雑怪奇に見えた時制システムは、極めてシンプルな5つの脳内アクション（OS 2.0）の組み合わせに過ぎなかったことが理解できるはずです。",
+                    "「今をどっしりと見る（現在形）」「過去を別世界へ切り離す（過去形）」「プロセスの内側の途中を見る（進行形）」「過去の経験を今の胸に蓄える（現在完了）」「未完成の未来を主観で予測する（未来のモード）」。この5つのコアを完全に統合したとき、あなたの脳内には、世界の言語学者たちが到達した『多層的英語観』の美しいピラミッドが堂々と完成します。さあ、冒険の書に最後の、そして最も輝かしいスタンプを押し、このQuest IIを完結させましょう！"
+                ],
+                question: "【最終総合問題】Quest IIのすべてをここに総括します。英語話者が時間を理解し、社会的に他者と世界を共有する際に行っている「5つの認知カメラワーク」のすべてを、最も完璧に集約し、言語の本質を言い尽くしている文はどちらでしょう？",
+                choices: [
+                    { text: "英語話者は、不変の【今】を基準点として世界を安定させ、過去を【別世界】として安全に切り離し、出来事の【過程の真っ只中】にズームインし、過去の経験を【現在の財産】として橋で繋ぎ、未完の未来を【主観のモード】で予測することで、時間を多層的に理解している。", correct: true, feedback: "<strong>【解説】</strong>✨🎉👑【QUEST II 完全制覇！！！】👑🎉✨ 素晴らしい、本当に、本当にお見事です！ 現在形の恒常性、過去形の離反性、進行形の内的視点、現在完了の現在関連性、そして未来のモダリティ。学校文法の冷たい死んだ記号だったすべての時制が、あなたの頭の中で「生き生きとした人間特有の認知カメラワーク（OS 2.0）」として完全に1つの美しい思想へと統合されました！この深い多層的英語観の獲得は、これからのあなたの英語の習得（使用基盤モデル）の歩みを、何倍にも加速させる最強の羅針盤となるでしょう。偉大な旅のクリア、心からお祝い申し上げます！！！<div class='academic-bridge-content'>🎓 **Navigatorからの最終メッセージ**：文法とは、暗記して従うべき法律ではなく、人間が世界を愛おしみ、整理し、他者と分かち合うために紡ぎ出した『認知の芸術』です。これにてQuest II、完全完結です。最高の冒険をありがとう！👍</div>" },
+                    { text: "英語の時制とは、単に日本語の「〜する」「〜した」を機械的に英語の記号へ置き換えるだけのパズルであり、話し手の視点や世界観の違いなどは一切存在しない単一の記号処理である。", correct: false, feedback: "<strong>【解説】</strong>最後の最後でOS 1.0の罠にかかってしまうわけにはいきません！私たちは、形（Form）の裏側にある、英語話者の生々しい世界の捉え方のドラマ（Meaning/Use）を40レベルにわたって体感してきたはずです。あなたの獲得した「OS 2.0」の最高の誇りにかけて、栄光の正解を撃ち抜いてください！" }
+                ]
+            }
+        ]
+    };
+
+    // --- セーブデータ管理（元のロジックを完全維持） ---
+    let playerProgress = { clearedLevelIds: [] };
+
+    function loadGame() {
+        const saved = localStorage.getItem('english_quest_q2_save');
+        if (saved) {
+            try { playerProgress = JSON.parse(saved); } catch(e) { console.error(e); }
+        }
+    }
+
+    function saveGame() {
+        localStorage.setItem('english_quest_q2_save', JSON.stringify(playerProgress));
+    }
+
+    function resetSaveData() {
+        if (confirm("これまでのQuest 2の冒険の書をリセットします。よろしいですか？")) {
+            localStorage.removeItem('english_quest_q2_save');
+            playerProgress = { clearedLevelIds: [] };
+            alert("リセットしました。新たな時間の旅へ出発しましょう！");
+            renderMainScreen();
+        }
+    }
+
+    // --- 画面遷移管理（元のロジックを完全維持） ---
+    function switchScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        if (screenId === 'screen-main') {
+            document.getElementById('global-nav').style.display = 'none';
+        } else {
+            document.getElementById('global-nav').style.display = 'block';
+        }
+    }
+
+    function saveAndExit() {
+        saveGame();
+        renderMainScreen();
+        switchScreen('screen-main');
+    }
+
+    // --- メイン画面の動的生成（章立てヘッダー対応版） ---
+    function renderMainScreen() {
+        loadGame();
+        const container = document.getElementById('worlds-container');
+        container.innerHTML = '';
+
+        const worldCard = document.createElement('div');
+        worldCard.className = 'quest-world-card';
+
+        const header = document.createElement('div');
+        header.className = 'quest-world-header';
+        
+        const totalLevels = questData.levels.length;
+        const clearedCount = questData.levels.filter(l => playerProgress.clearedLevelIds.includes(l.id)).length;
+        
+        header.innerHTML = `
+            <h3>${questData.title}</h3>
+            <span style="font-size:0.9rem; color:#475569; font-weight:bold;">獲得スタンプ: ${clearedCount} / ${totalLevels}</span>
+        `;
+        worldCard.appendChild(header);
+
+        // 軽量化された共通スタンプグリッド
+        const stampsGrid = document.createElement('div');
+        stampsGrid.className = 'stamps-grid';
+        questData.levels.forEach((lvl, idx) => {
+            const isLvlCleared = playerProgress.clearedLevelIds.includes(lvl.id);
+            const stampDot = document.createElement('div');
+            stampDot.className = `stamp-dot ${isLvlCleared ? 'cleared' : ''}`;
+            stampDot.innerHTML = isLvlCleared ? '👍' : (idx + 1);
+            stampsGrid.appendChild(stampDot);
+        });
+        worldCard.appendChild(stampsGrid);
+
+        // 章立てごとに見出しをつけながらボタンを配置
+        questData.chapters.forEach(ch => {
+            const chHeader = document.createElement('h3');
+            chHeader.className = 'chapter-title';
+            chHeader.innerText = ch.title;
+            worldCard.appendChild(chHeader);
+
+            const nodesDiv = document.createElement('div');
+            nodesDiv.className = 'level-nodes';
+
+            for (let i = ch.startIdx; i <= ch.endIdx; i++) {
+                const lvl = questData.levels[i];
+                const isLvlCleared = playerProgress.clearedLevelIds.includes(lvl.id);
+                
+                let isLocked = false;
+                if (i > 0) {
+                    const prevLvlId = questData.levels[i - 1].id;
+                    if (!playerProgress.clearedLevelIds.includes(prevLvlId)) {
+                        isLocked = true;
+                    }
+                }
+
+                const nodeBtn = document.createElement('button');
+                nodeBtn.className = `level-node-btn ${isLvlCleared ? 'cleared' : ''}`;
+                
+                if (isLocked) {
+                    nodeBtn.innerText = `🔒 Lv ${i + 1}`;
+                    nodeBtn.disabled = true;
+                } else {
+                    nodeBtn.innerText = `${isLvlCleared ? '✓ ' : ''}Level ${i + 1}`;
+                    nodeBtn.onclick = () => startQuest(i);
+                }
+                nodesDiv.appendChild(nodeBtn);
+            }
+            worldCard.appendChild(nodesDiv);
+        });
+
+        container.appendChild(worldCard);
+    }
+
+    // --- クエスト進行ロジック（シャッフルロジック完全維持） ---
+    let activeLevelIndex = 0;
+
+    function shuffleArray(array) {
+        const clone = [...array];
+        for (let i = clone.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const temp = clone[i];
+            clone[i] = clone[j];
+            clone[j] = temp;
+        }
+        return clone;
+    }
+
+    function startQuest(levelIndex) {
+        activeLevelIndex = levelIndex;
+        switchScreen('screen-quest');
+
+        const lvlData = questData.levels[levelIndex];
+        document.getElementById('quest-header-title').innerText = `Level ${levelIndex + 1} : ${lvlData.title}`;
+        
+        const storyBox = document.getElementById('story-container');
+        storyBox.innerHTML = `
+            <div class="academic-badge-zone">
+                <span class="academic-badge">中心文法: ${lvlData.grammar}</span>
+                <span class="academic-badge">認知言語学: ${lvlData.cognitive}</span>
+                <span class="academic-badge social">社会言語学・英語観: ${lvlData.social}</span>
+            </div>
+        `;
+        lvlData.text.forEach(para => {
+            const p = document.createElement('p');
+            p.innerText = para;
+            storyBox.appendChild(p);
+        });
+
+        document.getElementById('question-container').innerHTML = lvlData.question;
+        
+        const choicesBox = document.getElementById('choices-container');
+        choicesBox.innerHTML = '';
+        document.getElementById('feedback-container').style.display = 'none';
+
+        const indexedChoices = lvlData.choices.map((c, i) => ({ ...c, originalIndex: i }));
+        const shuffledChoices = shuffleArray(indexedChoices);
+
+        shuffledChoices.forEach((choice) => {
+            const btn = document.createElement('button');
+            btn.className = 'choice-item-btn';
+            btn.innerHTML = choice.text;
+            btn.onclick = () => selectChoice(choice.originalIndex, btn);
+            choicesBox.appendChild(btn);
+        });
+    }
+
+    function selectChoice(originalIndex, clickedBtn) {
+        const lvlData = questData.levels[activeLevelIndex];
+        const selectedChoice = lvlData.choices[originalIndex];
+
+        const buttons = document.querySelectorAll('.choice-item-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        const feedbackContainer = document.getElementById('feedback-container');
+        const statusText = document.getElementById('feedback-status');
+        const fbText = document.getElementById('feedback-text');
+        const nextBtn = document.getElementById('next-action-btn');
+
+        feedbackContainer.style.display = 'block';
+
+        if (selectedChoice.correct) {
+            clickedBtn.classList.add('correct');
+            feedbackContainer.className = "feedback-zone correct-zone";
+            statusText.innerText = "👍 大正解！そのカメラワークです。";
+            fbText.innerHTML = selectedChoice.feedback;
+            nextBtn.style.display = 'inline-block';
+
+            if (!playerProgress.clearedLevelIds.includes(lvlData.id)) {
+                playerProgress.clearedLevelIds.push(lvlData.id);
+                saveGame();
+            }
+        } else {
+            clickedBtn.classList.add('wrong');
+            feedbackContainer.className = "feedback-zone wrong-zone";
+            statusText.innerText = "🔍 英語話者の時間の見方を、もう一度イメージしてみよう";
+            fbText.innerHTML = selectedChoice.feedback;
+            nextBtn.style.display = 'none';
+
+            setTimeout(() => {
+                buttons.forEach(b => {
+                    if (!b.classList.contains('wrong')) b.disabled = false;
+                });
+            }, 1500);
+        }
+    }
+
+    function advanceQuest() {
+        alert(`タイムラインスタンプを獲得しました！`);
+        saveAndExit();
+    }
+
+    window.onload = () => {
+        renderMainScreen();
+    };
+</script>
+
+</body>
+</html>
