@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Quest 3 - 心の中の世界と可能性</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --text-color: #1e293b;
+            --primary-color: #1e3a8a;
+            --accent-color: #3b82f6;
+            --border-color: #cbd5e1;
+            --card-bg: #ffffff;
+            --stamp-active: #3f6b5a; /* 先生のHPカラー */
+            --stamp-empty: #94a3b8;
+            --success-bg: #f0fdf4;
+            --success-border: #3f6b5a;
+            --error-bg: #fef2f2;
+            --error-border: #dc2626;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); line-height: 1.8; padding: 30px 20px; display: flex; justify-content: center; }
+        
+        #app {
+            width: 100%;
+            max-width: 850px;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            position: relative;
+            min-height: 650px;
+        }
+
+        .avatar-container { text-align: center; margin-bottom: 15px; }
+        .avatar-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #eff6ff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+
+        h1 { font-size: 2.4rem; text-align: center; color: var(--primary-color); margin-bottom: 8px; font-weight: 800; }
+        .subtitle { text-align: center; font-size: 1.2rem; color: #64748b; margin-bottom: 35px; }
+        h2 { font-size: 1.5rem; margin-top: 30px; margin-bottom: 15px; color: var(--primary-color); border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+        h3.chapter-title { font-size: 1.15rem; color: #475569; margin-top: 25px; margin-bottom: 10px; padding-left: 8px; border-left: 4px solid var(--accent-color); font-weight: 700; }
+        p { margin-bottom: 18px; }
+
+        .btn {
+            background-color: var(--primary-color); color: white; border: none; padding: 14px 28px; font-size: 1rem;
+            border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.2s, transform 0.1s; display: inline-block;
+        }
+        .btn:hover { background-color: #1d4ed8; }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { background-color: #cbd5e1; cursor: not-allowed; transform: none; }
+
+        .nav-menu { position: absolute; top: 35px; right: 40px; }
+        .nav-menu .btn-nav { padding: 8px 16px; font-size: 0.85rem; background: transparent; color: #64748b; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; }
+        .nav-menu .btn-nav:hover { background: #f1f5f9; color: var(--primary-color); }
+
+        .screen { display: none; margin-top: 20px; }
+        .screen.active { display: block; }
+
+        .intro-box { background: #f1f5f9; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 4px solid var(--primary-color); }
+
+        .quest-world-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; margin-bottom: 25px; }
+        .quest-world-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px dashed var(--border-color); }
+        .quest-world-header h3 { color: var(--primary-color); font-size: 1.3rem; font-weight: 700; }
+
+        .stamps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 8px; padding: 10px 0; margin-bottom: 20px; background: #f8fafc; padding: 12px; border-radius: 8px; }
+        .stamp-dot { width: 32px; height: 32px; border-radius: 50%; border: 2px dashed var(--stamp-empty); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: var(--stamp-empty); background: #fff; transition: all 0.3s; }
+        .stamp-dot.cleared { border: 2px solid var(--stamp-active); color: var(--stamp-active); background: #e8f5e9; transform: scale(1.05); }
+
+        .level-nodes { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .level-node-btn { padding: 10px; font-size: 0.85rem; background-color: #f8fafc; color: var(--text-color); border: 1px solid #e2e8f0; border-radius: 6px; font-weight: 600; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .level-node-btn:hover:not(:disabled) { background-color: #f1f5f9; border-color: #cbd5e1; }
+        .level-node-btn.cleared { background-color: #edfdf2; border-color: #bbf7d0; color: #15803d; }
+
+        .story-text-area { font-size: 1.05rem; background: #f8fafc; padding: 30px; border-radius: 10px; border-left: 6px solid var(--primary-color); margin-bottom: 30px; }
+        .story-text-area p { margin-bottom: 12px; }
+        .story-text-area p:last-child { margin-bottom: 0; }
+
+        .academic-badge-zone { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .academic-badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; font-weight: bold; background: #e0e7ff; color: #4338ca; }
+        .academic-badge.social { background: #fef3c7; color: #b45309; }
+
+        .question-zone { font-weight: 700; font-size: 1.15rem; margin-bottom: 20px; color: #0f172a; }
+        .choices-zone { display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px; }
+        .choice-item-btn { background: #fff; color: var(--text-color); border: 1px solid #e2e8f0; border-radius: 8px; text-align: left; padding: 15px; font-size: 1rem; width: 100%; cursor: pointer; font-weight: 500; transition: all 0.2s; line-height: 1.5; }
+        .choice-item-btn:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; }
+        .choice-item-btn.correct { background-color: #edfdf2 !important; border-color: var(--success-border) !important; font-weight: bold; color: #16a34a; }
+        .choice-item-btn.wrong { background-color: #fdf2f2 !important; border-color: var(--error-border) !important; color: #dc2626; opacity: 0.8; }
+
+        .feedback-zone { padding: 25px; border-radius: 10px; display: none; margin-top: 25px; line-height: 1.7; }
+        .feedback-zone.correct-zone { background: var(--success-bg); border: 1px solid var(--success-border); }
+        .feedback-zone.wrong-zone { background: var(--error-bg); border: 1px solid var(--error-border); }
+        .feedback-status { font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; }
+        .academic-bridge-content { margin-top: 15px; padding-top: 15px; border-top: 1px dashed #cbd5e1; font-size: 0.95rem; color: #334155; }
+
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            #app { padding: 20px; }
+            .nav-menu { position: static; text-align: right; margin-bottom: 20px; }
+            h1 { font-size: 1.8rem; }
+            .level-nodes { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div id="global-nav" class="nav-menu" style="display: none;">
+        <button class="btn-nav" onclick="saveAndExit()">セーブしてマップに戻る</button>
+    </div>
+
+    <div id="screen-main" class="screen active">
+        <div class="avatar-container">
+            <img src="ore.png" alt="Navigator" class="avatar-img" onerror="this.src='グッドをする俺.png'; this.onerror=function(){this.style.display='none';};">
+        </div>
+        
+        <h1>English Quest 3</h1>
+        <div class="subtitle">〜心の中の世界と可能性〜</div>
+
+        <div class="intro-box">
+            <strong style="color:var(--primary-color); font-size:1.1rem; display:block; margin-bottom:6px;">【Quest III: 可能性の世界】テーマ</strong>
+            人間は目の前の現実だけで生きているわけではありません。明日の予定を考えたり、相手の気持ちを推測したり、失敗した未来を想像したり、成功する未来を夢見たり、ルールを作ったり。こうしたことができるから人間なのです。英語の助動詞・仮定法は、そんな「人間が頭の中に作る別世界」を表現する装置です。
+        </div>
+
+        <h2>冒険の進捗（全40レベル）</h2>
+        <div id="worlds-container"></div>
+
+        <div style="text-align: center; margin-top: 40px;">
+            <button onclick="resetSaveData()" style="background:#dc2626; font-size:0.8rem; padding:8px 16px;" class="btn">冒険の書（セーブデータ）をリセット</button>
+        </div>
+    </div>
+
+    <div id="screen-quest" class="screen">
+        <h2 id="quest-header-title">Level X</h2>
+        <div class="story-text-area" id="story-container"></div>
+        <div class="question-zone" id="question-container"></div>
+        <div class="choices-zone" id="choices-container"></div>
+
+        <div class="feedback-zone" id="feedback-container">
+            <div class="feedback-status" id="feedback-status"></div>
+            <div id="feedback-text"></div>
+            <div style="text-align: right; margin-top: 25px;">
+                <button id="next-action-btn" class="btn" onclick="advanceQuest()">スタンプを獲得してマップに戻る</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const questData = {
+        id: "quest3",
+        title: "Quest III: 可能性の世界",
+        chapters: [
+            { title: "第1章 現実の外側を見る (Lv1〜8)", startIdx: 0, endIdx: 7 },
+            { title: "第2章 社会が作る可能性 (Lv9〜16)", startIdx: 8, endIdx: 15 },
+            { title: "第3章 確実ではない世界 (Lv17〜24)", startIdx: 16, endIdx: 23 },
+            { title: "第4章 心の距離の世界 (Lv25〜32)", startIdx: 24, endIdx: 31 },
+            { title: "第5章 非現実世界への入口 (Lv33〜40)", startIdx: 32, endIdx: 39 }
+        ],
+        levels: [
+            // --- 第1章 ---
+            {
+                id: "q3_l1", title: "できる世界", grammar: "can", cognitive: "能力・未来への可能性", social: "英語観",
+                text: [
+                    "目の前にサッカーボールがあると想像してください。今はただ転がっているだけですが、あなたの頭の中には「思いっきりキックして、ゴールを決めている自分の姿」がパッと浮かびますよね。",
+                    "英語の『can』は、単に「今その行動をしている」という現実ではなく、「頭の中で、その未来の姿をハッキリと映し出せる」という心のエネルギーを意味します。つまり、能力とは『まだ見ぬ未来へジャンプできる可能性』のことなのです。"
+                ],
+                question: "【問題】「私は英語を話すことができます」と、自分の頭の中にある『未来への可能性のパワー』を相手にしっかりと伝えるとき、最もふさわしい表現はどちらでしょう？",
+                choices: [
+                    { text: "I can speak English.", correct: true, feedback: "<strong>【解説】</strong>大正解！ “can” を使うことで、今この瞬間に話しているかどうかに関わらず、「いつでもその未来を引き出せるパワーがあるよ」という頭の中の可能性を宣言できます。<div class='academic-bridge-content'>💡 **学問への架け橋**：認知言語学では、このように人が内に秘めている潜在的な力を**「Potentiality（潜在的可能性）」**と呼びます。canは、頭の中に未来の成功ルートを映し出すレンズなのです。</div>" },
+                    { text: "I speak English everyday without power.", correct: false, feedback: "<strong>【解説】</strong>これだと「私は毎日英語を話す」という単なる事実（現在形）になってしまい、あなたの内に眠っている「いつでもできるぞ！」という未来の可能性やパワーが上手に伝わりません。" }
+                ]
+            },
+            {
+                id: "q3_l2", title: "できない世界", grammar: "cannot", cognitive: "制約", social: "英語観",
+                text: [
+                    "目の前にすごく高くて頑丈な壁がそびえ立っている場面を想像してください。向こう側に進みたいけれど、頭の中でどれだけシミュレーションしても、どうしても壁にぶつかって遮られてしまいます。",
+                    "これが『cannot』の世界です。英語話者の頭の中で、この言葉が起動するときは、進もうとするルートの前に大きな見えないシャッターが下りて、「可能性への道が完全にふさがれている状態」を認知しているのです。"
+                ],
+                question: "【問題】「私はここで泳ぐことはできません（危険な壁やルールに遮られて、可能性の道がゼロである）」と表現するとき、一番しっくりくる英文はどちらでしょう？",
+                choices: [
+                    { text: "I cannot swim here.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “cannot” は、頭の中のシミュレーションで「行動へのルート」が完全にブロックされている状態を示します。可能性のスイッチを完全にオフにするカメラワークです。<div class='academic-bridge-content'>💡 **学問への架け橋**：人間が行動を起こそうとするときに受ける、物理的・心理的な制限を**「制約（Constraint）」**と呼びます。cannotは、その制約の壁が目の前にあることを脳内でパチッと認識したサインです。</div>" },
+                    { text: "I am swimming here with problems.", correct: false, feedback: "<strong>【解説】</strong>これだと進行形なので「問題はあるけれど、今まさにここで泳いでいる最中だ」という、矛盾したおかしな状況になってしまいます。「道がふさがれて進めない」形を選びましょう。" }
+                ]
+            },
+            {
+                id: "q3_l3", title: "能力と状況", grammar: "can swim / can see", cognitive: "内的能力と外的条件", social: "英語観",
+                text: [
+                    "鳥が空を飛ぶ姿と、映画館の暗闇の中でスクリーンがよく見える姿を思い浮かべてみてください。どちらも「できる」ですが、少し種類が違いますよね。",
+                    "英語の can には、自分の体や心の中に備わっている「内なるパワー（泳げる、飛べる）」と、周りの環境が整っているから「チャンスがある（見える、聞こえる）」の２つのカメラワークがあります。英語話者はこれらを「自分の力」と「外の状況」として優しく見分けています。"
+                ],
+                question: "【問題】「（私の視力が良いだけでなく）部屋が明るいので、その文字がよく見えます」という、周りの状況のおかげで可能性の扉が開いている状態を表すのにぴったりな英文はどちらでしょう？",
+                choices: [
+                    { text: "I can see the letters clearly.", correct: true, feedback: "<strong>【解説】</strong>その通り！ ここでの “can” は、自分の筋肉の力というよりも、「見るための邪魔な壁が周りにない（外的条件がクリアである）」という外側の可能性の広がりをキャッチしています。<div class='academic-bridge-content'>💡 **学問への架け橋**：言語学では、自分の内側にある力を「内的能力」、環境が与えてくれるチャンスを「外的条件」と呼びます。canはこの２つの可能性の世界をどちらも優しくカバーできる便利な言葉です。</div>" },
+                    { text: "I must see the letters hard.", correct: false, feedback: "<strong>【解説】</strong>これだと must（絶対に〜しなければならない）になってしまい、「状況が整って見える」のではなく、「プレッシャーをかけられて必死に文字を睨みつけている」という苦しい絵になってしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l4", title: "可能性としての can", grammar: "It can happen.", cognitive: "一般的可能性", social: "英語観",
+                text: [
+                    "天気予報や、学校の帰り道の出来事を想像してください。「誰にでも、どんな場所でも、たまにはそういうトラブルが起きることってあるよね」という、世界のひそかなひずみです。",
+                    "このように、特定の誰かの能力ではなく、「世界全体の仕組みとして、そういうお化けやバグがひょっこり現れるルートがゼロではない（いつでも起こりうる）」という『一般的な可能性』のシャッターを開けるときにも、can はとても自然に使われます。"
+                ],
+                question: "【問題】「誰にだって間違いはありうる（間違うルートは世界に常に用意されている）」という、世界のありふれた可能性を語るとき、資格試験でもよく聞かれる正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "Anyone can make mistakes.", correct: true, feedback: "<strong>【解説】</strong>正解です！ この “can” は「〜することがある、〜しうる」という確率の種火を示します。世界にはそういうルートがいつでも転がっているよ、という客観的なカメラワークです。<div class='academic-bridge-content'>💡 **学問への架け橋**：これを認知言語学では**「一般的可能性（Theoretical Possibility）」**と呼びます。個人の力ではなく、世界全体の構造として「その出来事が生じる余地が組み込まれている」と脳が認知している状態です。</div>" },
+                    { text: "Anyone made mistakes inside tomorrow.", correct: false, feedback: "<strong>【解説】</strong>過去形（made）と明日（tomorrow）がゴチャゴチャに混ざってしまっており、「誰にでもありうる世界」という広いルールの視点が完全に崩壊してしまっています。" }
+                ]
+            },
+            {
+                id: "q3_l5", title: "驚きの can", grammar: "How can that be?", cognitive: "期待違反", social: "英語観",
+                text: [
+                    "手品を見ていて、箱の中から突然ハトが飛び出してきた瞬間を想像してください。あなたの頭の中のルールでは「そんなこと起きるはずがない！」と思っていたルートが、目の前でガシャーンと現実になって現れました。",
+                    "人間の脳は、自分の予想を超えた出来事が起きるとパニックを起こします。疑問文の can は、「私の頭の中の可能性の常識をひっくり返して、一体どういうルートを通ればそんなあり得ないことが起きるって言うの！？」という『驚き』を表現するレバーになるのです。"
+                ],
+                question: "【問題】「一体全体、そんな話がどうして本当であり得るの！？（絶対に信じられない！）」と、驚きと疑いの目で見つめるときに一番ふさわしい英文はどちらでしょう？",
+                choices: [
+                    { text: "How can that story be true?", correct: true, feedback: "<strong>【解説】</strong>完璧です！ “How can...?” は、頭の中の可能性のメーターが振り切れて、「どうやってそのあり得ないルートが繋がったんだ！？」という強い驚き（期待違反）をストレートに相手にぶつける形です。<div class='academic-bridge-content'>💡 **学問への架け橋**：自分の想定していた世界の枠組み（フレーム）が裏切られたときの心の動きを**「期待違反（Expectation Violation）」**と呼びます。canは、心の常識の境界線を激しく揺さぶる言葉でもあるのです。</div>" },
+                    { text: "How does that story become old yesterday?", correct: false, feedback: "<strong>【解説】</strong>これだと「その話はどうやって昨日古くなったの？」という、ただのちぐはぐな質問になってしまい、目の前のあり得ない事実に対する「信じられない！」というリアルな驚きが完全に消えてしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l6", title: "許可の can", grammar: "You can use this room.", cognitive: "社会的許可", social: "対人関係",
+                text: [
+                    "学校の教室の前で、先生があなたに向かって「この部屋、使ってもいいよ」と優しく声をかけてくれる場面を想像してください。それまでは「勝手に入っちゃダメかな」と心のブレーキを踏んでいたあなたの前に、青信号がパッと点灯します。",
+                    "英語の can は、このような『ブレーキを解除して、進んでいいよと道をあけてあげる（許可）』のカメラワークも得意です。社会のルールや人間関係の壁を取り除いて、相手の前に新しい自由なルートを作ってあげる優しいジェスチャーなのです。"
+                ],
+                question: " = 【問題】「私のペンを使ってもいいよ（使っていいルートを開放してあげる）」と、友達に優しく許可を与えてあげるときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "You can use my pen.", correct: true, feedback: "<strong>【解説】</strong>その通り！ “You can” は、「あなたの前にあった禁止の壁を、今どけてあげたよ。だから進んでいいよ！」という社会的許可のスイッチです。会話をスムーズにする定番のカメラワークですね。<div class='academic-bridge-content'>💡 **学問への架け橋**：社会の中で人が行動するための障壁を取り除く認知の働きを**「社会的許可（Social Permission）」**や**「ポテンシャルの解放」**と呼びます。文法は、人と人との間の心の通せんぼを解除する道具でもあります。</div>" },
+                    { text: "You must buy my pen now.", correct: false, feedback: "<strong>【解説】</strong>これだと must（絶対に買いなさい）という強烈な強制の命令になってしまい、ペンを貸してあげる優しい許可のルートとは真逆の、おそろしく強引な絵になってしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l7", title: "未来への入口", grammar: "can の総整理", cognitive: "可能性のネットワーク", social: "共有認識",
+                text: [
+                    "素晴らしい！can の様々な表情を見てきました。ここで一歩立ち止まって、頭の中を整理しましょう。「泳げる（能力）」「文字が見える（状況）」「ありうる（確率）」「どうして！？（驚き）」「いいよ（許可）」。",
+                    "一見バラバラに見えるこれらは、すべて【頭の中に描いた未来へのルート（可能性の光）が開いているか、閉じているか】という、たった１つのコア（OS 2.0）で繋がっています。暗記の殻を破り、この繋がったネットワークの景色をじんわりと味わってください。"
+                ],
+                question: "【問題】「彼は車を運転できる（能力）」と「ここではスマホを使ってもいい（許可）」という２つの意味を、どちらも『ルートが開通している可能性の世界』として等しく1語で綺麗にカバーできる魔法の言葉はどれでしょう？",
+                choices: [
+                    { text: "can", correct: true, feedback: "<strong>【解説】</strong>正解です！ どちらも “can” の引き出し1つで完璧に対応できます。英語話者の脳内では、自分の腕力も、社会のルールも、すべては「そこに進むルートが開いている」という同じ認知のカメラでパシャリと撮影されているのです。<div class='academic-bridge-content'>💡 **学問への架け橋**：このように、1つの言葉が中心のコア（根源的意味）から様々な意味へ綺麗に枝分かれしている現象を言語学で**「多義ネットワーク」**と呼びます。canの本質は、可能性のルートの開通です。</div>" },
+                    { text: "will", correct: false, feedback: "<strong>【解説】</strong> “will” は、このあとの章で出てくる「未来への予測や強い鉄の意志」を飛ばす言葉なので、今すでに備わっている「能力」や、今その場で与える「許可」のルートを開くカメラワークとしては噛み合いません。" }
+                ]
+            },
+            {
+                id: "q3_l8", title: "第1章ボス", grammar: "「能力」と「可能性」", cognitive: "現実の外側の総括", social: "共有認識",
+                text: [
+                    "お見事、第1章のボスレベルです！ 私たちは、目の前の現実のさらに一歩外側にある「可能性の世界」のドアを can という鍵を使って開けてきました。人間は、ただ事実を見るだけでなく、その裏にある可能性のオーラを見つめています。",
+                    "能力とは未来のパワー（Lv1）。制約の壁はcannot（Lv2）。状況が整うチャンス（Lv3）。世界のバグとしてのありうる確率（Lv4）。驚き（Lv5）と許可（Lv6）。これらすべてをマスターしたあなたなら、次の総合問題の罠もきっと見抜けるはずです。いざ勝負！"
+                ],
+                question: "【第1章ボス問題】「暗闇でも猫はモノを見ることができる（能力）」という光景と、「そんなバカなことがあり得るか？（驚き・疑い）」という心の叫びを、どちらも正しく表現している最強のペアはどちらでしょう？",
+                choices: [
+                    { text: "Cats can see in the dark. How can that be true?", correct: true, feedback: "<strong>【解説】</strong>ビューティフル！完全撃破です！ 猫の内なる感覚のパワー（can see）も、常識をひっくり返された驚きの叫び（How can...?）も、どちらも可能性のルートをめぐる can の見事なカメラワークで美しく整頓されています。第1章クリアです！<div class='academic-bridge-content'>💡 **学問への架け橋**：人間が事実の枠を超えて、頭の中に「もしものルート」をいくつも建設するメタ認知の力を**「メンタル・シミュレーション」**の基礎と呼びます。canのマスターは、現実の外側を見るための第一歩なのです。</div>" },
+                    { text: "Cats must see in the dark. How is that yesterday?", correct: false, feedback: "<strong>【解説】</strong>これだと「猫は絶対に暗闇で見なければならない」という謎の義務になり、後半は「それはどのように昨日ですか？」という時間の迷子になってしまい、ボスの強力なガードに弾かれてしまいます。canの力を信じましょう！" }
+                ]
+            },
+
+            // --- 第2章 ---
+            {
+                id: "q3_l9", title: "許可の世界", grammar: "may", cognitive: "制度・壁の開放", social: "大人の作法",
+                text: [
+                    "お城の重い巨大な門の前に立っているあなたを想像してください。門番の兵隊が、王様の許可証を確認して、ギギギ……とゆっくりと門を開けてくれました。あなたは一歩、神聖なエリアへと足を踏み入れます。",
+                    "英語の『may』の本質は、can よりもさらにカチッとした【オフィシャルな社会のルールや上からの許可】です。個人の気まぐれではなく、制度や目上の人の権威によって、「立ち入り禁止のロープが厳かに上げられ、進んで良い道が作られる」という大人のカメラワークなのです。"
+                ],
+                question: "【問題】「（規約や上司の許可によって）あなたはこの資料を閲覧してもよろしい」と、お墨付きのルートを公式に提示するときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "You may read this document.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “may” を使うことで、社会的なルールや制度の壁がクリアになり、「正式に進んでよいルートが目の前に敷かれた」という大人の公式なニュアンスが100%表現されます。<div class='academic-bridge-content'>💡 **学問への架け橋**：認知言語学において、社会的な障壁やルールが取り除かれる認知の枠組みを**「制度的許可（Institutional Permission）」**と呼びます。mayは、社会が認めた公式なルートのゴーサインなのです。</div>" },
+                    { text: "You can raw read this yesterday.", correct: false, feedback: "<strong>【解説】</strong>英語として意味をなさない単語が混ざっている上に、昨日（yesterday）という過去が混入してしまい、今まさに公式な許可のルートを相手に提示する大人のスマートさが完全に消えてしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l10", title: "丁寧な許可", grammar: "May I…?", cognitive: "権限の確認", social: "敬意の表明",
+                text: [
+                    "ホテルの高級な受付カウンターや、大学の教授室のドアをトントンとノックする場面を想像してください。あなたは「私のような者が、あなたの神聖なナワバリに一歩入ってもよろしいでしょうか？」と、相手の権威にそっと敬意を払います。",
+                    "“May I...?” は、自分のやりたい行動のスイッチを勝手に押さず、「社会的な許可のレバーを握っているのは、あなた（あるいは公式なルール）です。そのレバーを引いていただけますか？」と相手にお伺いを立てる、最高に上品で丁寧なカメラワークなのです。"
+                ],
+                question: "【問題】「お名前を伺ってもよろしいでしょうか？」と、相手のプライベートなナワバリに土足で踏み込まず、大人の敬意を込めて質問するときの、資格試験でも超定番の形はどちらでしょう？",
+                choices: [
+                    { text: "May I have your name?", correct: true, feedback: "<strong>【解説】</strong>その通り！ “May I...?” は、相手が持つ社会的な決定権（権限）を100%尊重しながら、許可の門を開けてもらうための大人のパスポートです。これを聞いた相手はとても気分よく「いいですよ」と答えてくれます。<div class='academic-bridge-content'>💡 **学問への架け橋**：人間関係の摩擦を減らすための、言葉によるクッションの技術を社会言語学で**「ポライトネス（Politeness）」**と呼びます。mayは、相手の社会的な立場を上に立てる強力な緩衝材なのです。</div>" },
+                    { text: "Must I tell your name quickly?", correct: false, feedback: "<strong>【解説】</strong>これだと「私があなたの名前を大急ぎで言わなければならないのですか！？」という、なぜか自分が猛烈なプレッシャーで怒られているような、めちゃくちゃで不自然な絵になってしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l11", title: "禁止の世界", grammar: "may not", cognitive: "境界線・立ち入り禁止", social: "公式な制約",
+                text: [
+                    "美術館の国宝の絵画の前に、太い赤いロープが張られ、「立ち入り禁止」の看板が厳格に掲げられている光景を想像してください。そこを一歩でも越えたら、社会的なルール違反として厳しくブザーが鳴り響きます。",
+                    "これが『may not』のカメラワークです。公式に与えられていた許可のルートが、ここでスパッと切断され、「ここから先は絶対に超えてはならない、公式なナワバリの境界線（デッドライン）」として脳内にクッキリとマッピングされるのです。"
+                ],
+                question: "【問題】「（学校や法律の公式な規則により）ここでタバコを吸ってはならない」と、禁止の境界線をピシッと引くときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "You may not smoke here.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “may not” は、オフィシャルな力によって可能性のルートが完全に消去され、固い境界線が敷かれた状態を示します。公共のポスターや大人の注意書きで大活躍する形です。<div class='academic-bridge-content'>💡 **学問への架け橋**：社会的なルールによって特定の行為を禁止することを**「公的禁止（Official Prohibition）」**と呼びます。mayの持つ「上からの力」が否定されることで、逃げ道のないシャッターが下りるのです。</div>" },
+                    { text: "You will smoke here tomorrow maybe.", correct: false, feedback: "<strong>【解説】</strong>これだと「あなたは明日ここでタバコを吸うだろう、たぶん」という、禁止するどころか未来の行動をのんびり予測するチグハグな話になってしまい、厳格なルールが霧散してしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l12", title: "社会規範", grammar: "must", cognitive: "圧力・逃げ道ゼロ", social: "強制",
+                text: [
+                    "あなたの背中を、社会や法律という目に見えない巨大な「見えない巨大な手」が、ものすごい力でグイグイと前方に押し込んでいる場面を想像してください。左右は頑丈な壁で囲まれていて、あなたには脇道にそれる自由は1ミリも残されていません。",
+                    "これが『must』の本質、すなわち【逃げ道無しの強烈な社会的圧力（強制）】です。英語話者の脳内では、mustが起動した瞬間、周囲の可能性のルートがすべてガシャーンと閉鎖され、目の前にある「たった１つのやるべき道」だけが真っ赤に光るレーンとして強制的に固定されます。"
+                ],
+                question: "【問題】「車を運転するときは、すべての人がシートベルトを着用しなければならない」と、法律の絶対的な力で逃げ道ゼロの義務を課すときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "You must wear a seatbelt.", correct: true, feedback: "<strong>【解説】</strong>完璧です！ “must” は、背中を押す圧倒的な社会的圧力を示し、例外を一切認めない「やるしかない一本道」に話し手や聞き手をロックします。法律や絶対に譲れないルールに最適なカメラワークです。<div class='academic-bridge-content'>💡 **学問への架け橋**：認知言語学では、このような力と力のぶつかり合いを**「フォース・ダイナミクス（力学特性）」**という理論で説明します。mustは、外からの圧倒的な力が人を力づくで行動させる認知モデルです。</div>" },
+                    { text: "You can wear a seatbelt if you like.", correct: false, feedback: "<strong>【解説】</strong>これだと「お好きならシートベルトを締めてもいいよ（自由だよ）」という、のんきな許可のルートになってしまい、法律で定められた絶対的な義務の緊迫感が完全に消え去ってしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l13", title: "外からの義務", grammar: "have to", cognitive: "環境制約・客観的な壁", social: "日常の妥協",
+                text: [
+                    "学校のチャイムが鳴る直前、土砂降りの雨の中をカサを差して必死に走っているあなたを想像してください。「あぁ、本当は家でゲームをしていたかったけれど、学校のルール（始業時間）があるから行かないと怒られちゃうな……」",
+                    "must が主観的な強い圧力を伴うのに対し、こちらの『have to』は【周りの環境や客観的なルールの壁（環境制約）】を目の前に突きつけられている感覚です。「自分の気持ちはさておき、現実問題としてそういう状況を『持っている（have）』から、やるしかないよね」という、一歩引いた大人の認知なのです。"
+                ],
+                question: "【問題】「（自分のワガママではなく、会社の規則や電車の時間のせいで）私は明日、早起きしなければならないんだ」と、客観的な状況を冷静に語るときの正しい形はどちらでしょう？",
+                choices: [
+                    { text: "I have to get up early tomorrow.", correct: true, feedback: "<strong>【解説】</strong>その通り！ “have to” は、「明日早起きしなければならないという【状況のパッケージ】を、今の私がカバンの中に持っている（haveしている）」という客観的なカメラワークです。日常会話でmustより圧倒的によく使われる理由がこれです。<div class='academic-bridge-content'>💡 **学問への架け橋**：客観的な事実や周囲の状況から発生する外的な義務を**「客観的義務（Objective Obligation）」**と呼びます。have toは、現実のインフラと折り合いをつける人間の知恵が詰まった言葉です。</div>" },
+                    { text: "I used to get up early inside yesterday.", correct: false, feedback: "<strong>【解説】</strong>これだと、第2章の「昔は早起きしたものだ（過去の習慣の消失）」が昨日（yesterday）と合体した怪奇現象になってしまい、明日（tomorrow）の客観的な予定や義務を伝えることができません。" }
+                ]
+            },
+            {
+                id: "q3_l14", title: "内なる義務", grammar: "must", cognitive: "自己規制・心のマグマ", social: "強い決意",
+                text: [
+                    "お世話になった大切な先輩が、今度遠くの街へ引っ越してしまうというニュースを聞いた瞬間を想像してください。あなたの胸の奥から「あぁ、絶対に最後に直接会ってお礼を言いたい！誰に強制されたわけでもない、これは私の心がそう叫んでいるんだ！」という熱いエネルギーが湧き上がってきます。",
+                    "社会のルール（have to）を飛び越えて、自分の心の内側から「どうしてもこれをやらないと自分が許せない！」と強烈なブレーキを踏む（あるいはアクセルを全開にする）とき、英語話者は再び『must』を召喚します。これは『内なる義務（自己規制）』という、パッションのカメラワークなのです。"
+                ],
+                question: "【問題】「私は彼に絶対に電話をかけなきゃ（法律ではなく、私の熱いハートがそう決めたんだ！）」と、強い内なる決意を爆発させるときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "I must call him.", correct: true, feedback: "<strong>【解説】</strong>正解です！ この “I must” は、外の法律ではなく、自分の内なる感情のマグマが自分自身の背中を「やるんだ！」と猛烈に押し込んでいる状態を示します。熱い友情や決意を伝える最高のカメラワークです。<div class='academic-bridge-content'>💡 **学問への架け橋**：話し手自身の主観的な価値観や強い感情から生まれる義務の認知を**「主観的義務（Subjective Obligation）」**と呼びます。mustは、人間の心が放つ最も強いこだわりやパッションを宿す言葉なのです。</div>" },
+                    { text: "I am calling him maybe automatically.", correct: false, feedback: "<strong>【解説】</strong>これだと「私はたぶん自動的に彼に電話している最中だ」という、自分の意志があるのか無いのか全く分からない幽体離脱のような不自然な文になってしまい、熱い決意が霧散してしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l15", title: "助言の世界", grammar: "should", cognitive: "理想世界・バランスの提案", social: "アドバイス",
+                text: [
+                    "友達が「最近、全然眠れなくて体がだるいんだよね……」と悩んでいる姿を想像してください。あなたは「絶対にこうしろ！」と無理に押し付ける（must）のではなく、頭の中にある『体が元気になるための理想のバランスシート』を優しく広げて見せてあげます。",
+                    "これが『should』の世界です。無理やり背中を押す圧力ではなく、「頭の中の理想的な世界（あるべき姿）と現実を比べたとき、こっちのルートに進むのが一番綺麗でみんながハッピーになると思うよ」と、進むべきベストな方向を指差しで優しく教えてあげるアドバイスのカメラワークなのです。"
+                ],
+                question: "【問題】「（無理にとは言わないけれど、あなたの健康のために）もっと野菜を食べたほうがいいよ」と、理想のバランスを優しくアドバイスしてあげるときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "You should eat more vegetables.", correct: true, feedback: "<strong>【解説】</strong>完璧です！ “should” は、頭の中の「理想の絵」を相手にそっと提示し、「こっちの道がおすすめだよ」と促す優しい光です。聞いた相手もプレッシャーを感じずに、素直にアドバイスを受け入れることができます。<div class='academic-bridge-content'>💡 **学問への架け橋**：現実とは別の「こうあるべきだ」という理想の青写真を脳内に立ち上げる認知を**「理想世界の構築（Idealized Cognitive Model）」**と呼びます。shouldは、現実をより良くするためのデザイン図なのです。</div>" },
+                    { text: "You must eat more vegetables or die.", correct: false, feedback: "<strong>【解説】</strong>これだと must を使った上に「さもなくば死ぬ」という恐ろしい脅迫になってしまい、優しいアドバイスどころか、相手を恐怖のどん底に叩き落とす暴力的な絵になってしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l16", title: "第2章ボス", grammar: "人間はルールで生きる", cognitive: "社会が作る可能性の総括", social: "共有認識",
+                text: [
+                    "素晴らしい、第2章のボスが目の前に現れました！ 私たちは、人と人とが社会を作って生きていく中で生まれる、様々な「心の壁やルール」を言葉でコントロールする方法を学んできました。人間はルールを生きる生き物です。",
+                    "公式な門を開くmay（Lv9）。敬意のMay I?（Lv10）。立ち入り禁止のmay not（Lv11）。逃げ道ゼロの圧力must（Lv12）。環境と妥協するhave to（Lv13）。内なるパッションのmust（Lv14）。そして理想を示すshould（Lv15）。この社会的なルールのグラデーションを総動員して、ボスを撃破しましょう！"
+                ],
+                question: "【第2章ボス問題】「（会社の規則だから）私はここで制服を着なければならない」という客観的な義務と、「（私の理想として）あなたはあの素晴らしい映画を見るべきだ！」という情熱的なおすすめを、どちらも完璧に表現しているペアはどちらでしょう？",
+                choices: [
+                    { text: "I have to wear a uniform here. You should watch that movie!", correct: true, feedback: "<strong>【解説】</strong>ウルトラみごと！ボスを完全に圧倒しました！ 社会の客観的な制約（have to）と、頭の中の理想世界から生まれる優しいおすすめ（should）のカメラワークが、100%完璧に使い分けられています。第2章クリアです！<div class='academic-bridge-content'>💡 **学問への架け橋**：人間が社会生活を円滑にするために、ルールの強さを「強制（must）」「環境（have to）」「理想（should）」へと脳内で細かくパラメータ調整するこの仕組みこそが、社会言語学の中核（OS 2.0）なのです。</div>" },
+                    { text: "I may not wear a uniform here. You cannot watch that movie!", correct: false, feedback: "<strong>【解説】</strong>これだと「ここで制服を着てはならない（禁止）」になり、後半は「あの映画を見ることはできない（能力・状況の遮断）」となってしまい、義務とおすすめを伝えるボスの問いに答えることができません。引き出しを開け直しましょう！" }
+                ]
+            },
+
+            // --- 第3章 ---
+            {
+                id: "q3_l17", title: "たぶん起こる", grammar: "will", cognitive: "予測・100%の確信", social: "英語観",
+                text: [
+                    "あなたが夕方、西の空を見上げたとき、雲一つない真っ赤な夕焼けが地平線の向こうまで美しく広がっている光景を想像してください。あなたは「よし、これなら明日は絶対に晴れるぞ」と、頭の中で100%の確信を持っています。",
+                    "Quest 2でも少し触れた『will』の本当の正体は、未来の記号ではなく、話し手の頭の中における【100%そうなるという強い予測（確信）】のスイッチです。まだ現実は起きていないけれど、私の脳内シミュレーションでは、その未来のルートへ向かって迷わず一直線に矢印が伸びている状態を意味します。"
+                ],
+                question: "【問題】「（夕焼けや天気図から考えて、私の頭の中では100%間違いないと予測するが）明日は晴れるだろう」と、確信を込めて未来を語るときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "It will be sunny tomorrow.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “will” は、自分の知識や確信に基づいて、まだ見ぬ世界へ「必ずこうなる！」と力強く矢印を飛ばす予測のカメラワークです。事実ではなく、頭の中の100%のモードなのです。<div class='academic-bridge-content'>💡 **学問への架け橋**：言語学において、話し手がその出来事の確実性をどれくらい信じているかを示す心の度合いを**「認識的モダリティ（Epistemic Modality）」**と呼びます。willはそのメーターが最高潮に達した確信のサインです。</div>" },
+                    { text: "It is being sunny tomorrow without thinking.", correct: false, feedback: "<strong>【解説】</strong>これだと進行形（being）が混ざってしまい、「今まさに明日が晴れている最中だ」という、時間の認知が完全にねじ曲がった不自然な絵になってしまいます。頭の中の予測の will を選びましょう。" }
+                ]
+            },
+            {
+                id: "q3_l18", title: "かもしれない", grammar: "may", cognitive: "不確実性・50%のバランス", social: "英語観",
+                text: [
+                    "コインを親指でポーンと空高く投げ上げる場面を想像してください。手の甲に落ちたコイン。表が出るか、裏が出るか。確率はちょうど半々（50%）です。あなたの心は、どちらの未来のルートにも同じくらい開かれています。",
+                    "これが、推量の『may』のカメラワークです。第2章では「上からの許可」でしたが、この確率の世界では【起きるかもしれないし、起きないかもしれない（五分五分の不確実性）】という、天秤がちょうど真ん中でユラユラと揺れている、デリケートな脳内バランスを表現しているのです。"
+                ],
+                question: "【問題】「明日は（晴れる確率も半分、雨の確率も半分で、どっちに転ぶか分からないけれど）雨が降るかもしれない」と、慎重に推測するときの自然な英文はどちらでしょう？",
+                choices: [
+                    { text: "It may rain tomorrow.", correct: true, feedback: "<strong>【解説】</strong>その通り！ “may rain” は、「雨のルートが開く可能性が50%くらいあるよ」という、天秤の揺れを完璧に捉えています。will（100%の確信）から一歩引いた、大人の思慮深いカメラワークです。<div class='academic-bridge-content'>💡 **学問への架け橋**：認知言語学では、このように可能性のルートが複数開いていて、どちらに進むか脳が断定を避けている状態を**「不確実性（Uncertainty）の認知モデル」**と呼びます。mayは天秤の言葉なのです。</div>" },
+                    { text: "It must rain tomorrow 100%.", correct: false, feedback: "<strong>【解説】</strong>これだと must（絶対に雨が降るに違いない）と100%が合体してしまい、「半分半分で分からない」という慎重なニュアンスとは真逆の、猛烈に強気な断定になってしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l19", title: "もっと弱い可能性", grammar: "might", cognitive: "低確率・ひかえめな光", social: "気配り",
+                text: [
+                    "霧が深く立ち込めた森の奥を想像してください。遠くの方で、何かが一瞬だけピカッと光ったような、あるいは気のせいだったような……。起きる確率はせいぜい20〜30%程度。ほとんど奇跡に近いレベルです。",
+                    "このように、may（50%）よりもさらに確率のメーターをググッと下げて、「本当にただの思いつきなんだけど、もしかしたら、万が一にもそういうルートがある『かもなぁ……』」と、極限までひかえめに、自信なさげに呟くときに大活躍する魔法の言葉が『might』です。"
+                ],
+                question: "【問題】「（確率はかなり低いし、自信は全然ないけれど）彼はひょっとしたらパーティーに来るかもしれないなぁ」と、弱々しい可能性の光を灯すときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "He might come to the party.", correct: true, feedback: "<strong>【解説】</strong>完璧です！ “might” は、可能性のボリュームを20%くらいにまで絞り込み、相手に「間違ってたらごめんね」というニュアンスをあらかじめ伝える、非常に繊細で優しいカメラワークなのです。<div class='academic-bridge-content'>💡 **学問への架け橋**：言語学では、助動詞をあえて『過去形（might）』にすることで、現実世界からの時間的・心理的な距離を遠ざけ、確率を低く見せる認知の仕組みを**「遠隔化による低確率化」**と呼びます。文法の形が心の距離と連動している面白い例です。</div>" },
+                    { text: "He will definitely come to the party now.", correct: false, feedback: "<strong>【解説】</strong>これだと will と definitely（絶対に）が火花を散らしてしまい、「確率はかなり低くて自信がない」というひかえめな気配りが完全に消滅し、100%来るという大合唱になってしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l20", title: "過去形の距離", grammar: "could", cognitive: "心理的距離・ひかえめな提案", social: "対人関係",
+                text: [
+                    "目の前にいる大切な先輩に、自分のアイデアを提案する場面を想像してください。いきなり「これできますよ！（can）」と自信満々に胸を張ると、ちょっと生意気に見えるか、相手にプレッシャーを与えてしまうかもしれません。",
+                    "そこで、can（できる）のネジをあえて過去形の『could』にカチッと回します。すると、脳内カメラが現実から一歩後ろにスーッと下がり、「（もし状況が許すのであれば）こんなルートも理論上は可能『かも・しれませんが……』」という、最高にエレガントで心理的距離を保った『ひかえめな提案』に変身するのです。"
+                ],
+                question: "【問題】「（自信満々に言い切るのではなく、一歩引いて）私たちはその問題を解決できるかもしれません」と、大人の丁寧さで可能性をポツリと提示するときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "We could solve the problem.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “could” を使うことで、canの持つ生々しい現実感がフッと消え、心理的なクッション（距離）が挟まれます。ビジネスや大人の会議で抜群の威力を発揮するカメラワークです。<div class='academic-bridge-content'>💡 **学問への架け橋**：過去形が持つ「現在からの断絶・離反性」という性質を、時間の昔ではなく、心の丁寧さや不確実さへと応用する働きを認知言語学で**「心理的遠隔化（Psychological Distancing）」**と呼びます。過去形は心のブレーキ液なのです。</div>" },
+                    { text: "We can raw solve the problem past.", correct: false, feedback: "<strong>【解説】</strong>英語のOSとして完全に文法が崩壊してしまっています。canをそのまま使って後ろにpastを並べても、大人の洗練された「一歩引いた心地よい距離感」は相手の脳内に届きません。" }
+                ]
+            },
+            {
+                id: "q3_l21", title: "推測の must", grammar: "He must be tired.", cognitive: "推論・パズルの完成", social: "共感",
+                text: [
+                    "目の前にいる友達が、大きなため息をつき、目の下にクマを作り、肩をガックリと落としてトボトボ歩いている姿を想像してください。あなたは頭の中で、それらのバラバラの証拠（パズルのピース）を急いで組み立てます。",
+                    "「これだけの証拠が揃っているんだから、答えは１つしかない。他のルートはあり得ない！」と、頭の中で100%の核心にカチッとロックがかかる推測、それが『must（〜に違いない）』です。第2章の「強制の圧力」と同じように、脳内で他の可能性の脇道がすべてガシャーンと閉鎖されるカメラワークなのです。"
+                ],
+                question: "【問題】「（あれだけ激しい運動をしたのだから）彼は絶対に疲れているに違いない」と、確信に満ちたパズルを脳内で完成させて言い切るときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "He must be tired.", correct: true, feedback: "<strong>【解説】</strong>その通り！ ここでの “must” は、外からの法律ではなく、目の前の証拠から導き出された「これ以外の結論は脳の論理としてあり得ない！」という100%の強い推論ロックを示します。<div class='academic-bridge-content'>💡 **学問への架け橋**：手持ちの証拠を脳内で組み合わせて、必然の結論へと一方向へ思考を絞り込む認知のプロセスを**「論理的推論（Logical Inference）」**と呼びます。mustは、脳のパズルが完成した瞬間にピカッと光るランプです。</div>" },
+                    { text: "He may not be tired perhaps.", correct: false, feedback: "<strong>【解説】</strong>これだと「彼はたぶん疲れていないかもしれない」という、天秤がユラユラ揺れる頼りない絵になってしまい、集まったたくさんの証拠から「絶対にそうだ！」と確信するmustの力強いカメラワークになりません。" }
+                ]
+            },
+            {
+                id: "q3_l22", title: "否定推測", grammar: "can’t be", cognitive: "論理排除・100%の否定", social: "英語観",
+                text: [
+                    "さっきまで目の前で一緒に楽しくおしゃべりをしていた友達のスマホに、「彼は今、アメリカのニューヨークの自由の女神の前にいるよ」という写真が送られてきた場面を想像してください。あなたは即座に「そんなの100%嘘だ！あり得ない！」と叫びますよね。",
+                    "must be（〜に違いない）の真逆の双子、それが『can't be（〜のはずがない）』です。英語話者の頭の中で、その可能性のルートが1ミリの隙間もなく完全にコンクリートで埋め立てられ、「確率ゼロ！論理的に100%あり得ない！」と、その世界を全力でパシャリとシャットアウトするカメラワークです。"
+                ],
+                question: "【問題】「その噂が本当のはずがない（本当である可能性のルートは地球上に1%も存在しない！）」と、自信を持って全力で否定するときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "The rumor can't be true.", correct: true, feedback: "<strong>【解説】</strong>完璧です！ “can't be” は、可能性のドア（can）を力いっぱい閉めて鍵をかける（not）感覚です。「絶対にあり得ない！」という強い論理的排除の認知が、この美しい形に凝縮されています。<div class='academic-bridge-content'>💡 **学問への架け橋**：ある可能性を脳内の論理から完全に締め出す働きを**「論理的排除（Logical Exclusion）」**と呼びます。must の否定が must not（禁止）になるのに対し、推量の否定が can't になるのは、可能性のルートそのものを消去するからです。</div>" },
+                    { text: "The rumor must not be true perhaps.", correct: false, feedback: "<strong>【解説】</strong>推量の世界で “must not” を使って後ろに perhaps（たぶん）を並べると、英語のOSでは「本当であってはならない、たぶん？」という、禁止なのか推測なのか大混乱したエラーの絵になってしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l23", title: "証拠から考える", grammar: "推量のまとめ", cognitive: "Inference・パズル解き", social: "共有認識",
+                text: [
+                    "素晴らしい！ 確実ではない世界を司る、様々な確率の言葉たち（will, may, might, could, must, can't）を旅してきました。私たちは、神様ではないので、未来や他人の心を100%見ることはできません。",
+                    "だからこそ、手持ちの「証拠」をもとに、頭の中で確率のメーターを100%（will, must）から、50%（may）、20%（might, could）、そして0%（can't）へと柔軟にスライドさせているのです。文法とは、あなたの脳内にある確率のボリュームつまみそのものなのです。"
+                ],
+                question: "【問題】「彼はきっと来る（100%確信）」➔「来るかも（50%）」➔「万が一なら（20%）」➔「来るはずがない（0%）」という確率のグラデーションの並び順として、英語のOSに最も美しく沿っているものはどちらでしょう？",
+                choices: [
+                    { text: "will ➔ may ➔ might ➔ can't", correct: true, feedback: "<strong>【解説】</strong>大正解！ 脳内の確率メーターが 100 ➔ 50 ➔ 20 ➔ 0 へと綺麗になだらかな坂道を下っていくカメラワークが、見事に言葉の形として整頓されています。これぞまさに確率の認知マップですね！<div class='academic-bridge-content'>💡 **学問への架け橋**：人間が不確実な世界を言葉で把握するこのシステムを、認知科学では**「プロバビリティ（確率）の言語的マッピング」**と呼びます。助動詞を学ぶことは、世界の不確実さと折り合いをつける脳のレッスンなのです。</div>" },
+                    { text: "can't ➔ might ➔ will ➔ may", correct: false, feedback: "<strong>【解説】</strong>これだと 0% ➔ 20% ➔ 100% ➔ 50% というように、ボリュームのつまみが右へ左へとめちゃくちゃに暴れてしまい、英語話者の滑らかな確率のグラデーションが完全に壊れてしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l24", title: "第3章ボス", grammar: "人間は確率で考える", cognitive: "不確実な世界の総括", social: "共有認識",
+                text: [
+                    "ついに第3章のボス戦です！ 私たちは、1ミリも狂わない絶対の現実ではなく、「頭の中で確率を計算しながら、不確実な世界をサバイバルする」ための最強の武器を揃えてきました。人間は確率を生きる生き物です。",
+                    "確信のwill（Lv17）。五分五分の天秤may（Lv18）。弱々しい光might（Lv19）。一歩引いた心地よい距離could（Lv20）。パズル完成のmust（Lv21）。そしてシャッター完全閉鎖のcan't（Lv22）。この確率のダイアモンドを胸に、ボスに最後のトドメを刺しましょう！"
+                ],
+                question: "【第3章ボス問題】「（空模様からして）間違いなく雨が降るだろう（確信）」という予測と、「（カギが閉まっているから）彼女は家にいるに違いない（強い推論）」という２つの脳内ジャンプを正しく表現しているペアはどちらでしょう？",
+                choices: [
+                    { text: "It will rain. She must be at home.", correct: true, feedback: "<strong>【解説】</strong>ブラボー！！！ボスを完全に粉砕しました！ 未来へ向かう100%の予測矢印（will）と、目の前の証拠から導き出された結論ロック（must）のカメラワークが、寸分の狂いもなく美しくシンクロしています。第3章、見事にクリアです！<div class='academic-bridge-content'>💡 **学問への架け橋**：不確実な世界の霧を晴らすために、脳が「時間への予測（will）」と「論理への推量（must）」をどのように使い分けているかというこの構造こそが、認知言語学の大きな宝（OS 2.0）なのです。</div>" },
+                    { text: "It can't rain. She might be at home tomorrow.", correct: false, feedback: "<strong>【解説】</strong>これだと「雨が降るはずがない（0%）」になり、後半は「彼女は明日家にいるかもしれない（20%）」となってしまい、ボスの要求する「確信」と「〜に違いない」の熱いパワーを表現しきれません。もう一度狙いを定めましょう！" }
+                ]
+            },
+
+            // --- 第4章 ---
+            {
+                id: "q3_l25", title: "Can you…?", grammar: "Can you…?", cognitive: "直接性・むき出しの距離", social: "親しい間柄",
+                text: [
+                    "あなたの家のリビングのソファで、隣に座っている弟や妹、あるいは大親友の肩をポンと叩く場面を想像してください。「ねえ、ちょっとそこにあるリモコン取って！」",
+                    "これが『Can you...?』のカメラワークです。相手との間に、邪魔な壁も気遣いの生垣も何もない、距離ゼロの『直接的な世界』です。相手の「能力（can）」をストレートにノックして、「できるよね？じゃあやって！」とダイレクトに飛び込む、親しい間柄ならではのスピード感あふれる言葉です。"
+                ],
+                question: "【問題】「（気まずい壁など一切ない、大親友に向かって）塩を取ってくれる？」と、カジュアルに頼むときの最も自然な英文はどちらでしょう？",
+                choices: [
+                    { text: "Can you pass me the salt?", correct: true, feedback: "<strong>【解説】</strong>正解です！ 親しい仲間うちでは、余計なクッションを挟まない “Can you...?” が一番暖かくて自然です。距離が近いからこそ、むき出しのストレートなカメラワークが最高の笑顔を生み出します。<div class='academic-bridge-content'>💡 **学問への架け橋**：社会言語学では、親しい仲間同士で心の距離をゼロにして団結力を高める言葉のあり方を**「連帯のポライトネス」**や**「直接的発話」**と呼びます。canは、心の距離が一番近いホームグラウンドの言葉です。</div>" },
+                    { text: "May you pass me the salt officially.", correct: false, feedback: "<strong>【解説】</strong>これだと「あなたは公式に私に塩をパスする上からの許可を持っていますか？」という、日常の食卓が突然オフィシャルな裁判所に変わったかのような、おそろしくちぐはぐで不自然な絵になってしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l26", title: "Could you…?", grammar: "Could you…?", cognitive: "距離・一歩下がる気配り", social: "大人のマナー",
+                text: [
+                    "学校の職員室で、初めてお話しする他の中学校の先生や、少し緊張する目上の先輩にお願いごとをする場面を想像してください。いきなり距離ゼロで突っ込んでいくと、「失礼な人だな」と思われてしまうかもしれません。",
+                    "そこで、canのネジを過去形の『could』にカチッと回します。すると、目の前に魔法の「透明な気配りの生垣」がスーッと現れ、相手との間に心地よいマナーの距離が生まれます。「（もしできたらで結構なのですが）やっていただくことは理論上、可能でしょうか……？」と、一歩引いて頭を下げる、大人のカメラワークです。"
+                ],
+                question: "【問題】「（少し緊張する目上の人に対して）手伝っていただけますでしょうか？」と、大人のマナーに溢れた美しい距離感でお願いするときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "Could you help me?", correct: true, feedback: "<strong>【解説】</strong>その通り！ “Could you...?” は、過去形が持つ「現在からの距離感」を応用して、相手のナワバリをパッと敬う最高にスマートな表現です。これを聞いた大人や先生は、「丁寧な生徒だな」と嬉しくなって手を貸してくれます。<div class='academic-bridge-content'>💡 **学問への架け橋**：相手への心理的・社会的な境界線をクッキリと引き、相手の自由（断る権利）を尊重する気配りを**「消極的ポライトネス（Negative Politeness）」**と呼びます。couldは、相手を大切に思う大人のディスタンスなのです。</div>" },
+                    { text: "Can you help me now quickly!", correct: false, feedback: "<strong>【解説】</strong>これだと「今すぐ大急ぎで俺を助けろ！」という強引な直接の矢印になってしまい、少し緊張する目上の人に対して使うには、あまりにも距離感が近すぎて失礼な絵になってしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l27", title: "Will you…?", grammar: "Will you…?", cognitive: "意思確認・熱意のチェック", social: "直球の依頼",
+                text: [
+                    "文化祭の出し物で、クラスのみんなに向かって「ねえ、みんな！一緒にこの看板を作ってくれるよね！？」と、相手の胸の奥にある『やる気（意志）』の炎を真っ直ぐの目で見つめて確かめる場面を想像してください。",
+                    "これが『Will you...?』のカメラワークです。canが「能力や物理的なルート」を尋ねるのに対し、willは語源である「鉄の意志」をストレートにノックします。「あなたにその未来をやる【意志】がありますか？」と、相手のハートに直球の熱い矢印をストレートに突き刺す言葉なのです。"
+                ],
+                question: "【問題】「（できるかどうかではなく、君の意志として）私の手紙を読んでくれるかい？」と、相手の気持ちをストレートに確かめながら依頼するときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "Will you read my letter?", correct: true, feedback: "<strong>【解説】</strong>正解です！ “Will you...?” は相手の「心の内なるやる気・意志」をダイレクトに尋ねるため、少し情熱的で、強い推進力を持ったカメラワークになります。信頼関係がある中での力強い依頼にぴったりです。<div class='academic-bridge-content'>💡 **学問への架け橋**：これを言語学では**「志向性の確認」**と呼びます。能力（can）という客観的な枠組みではなく、相手の主観的な「内なるハート（will）」にダイレクトにアクセスする、人間味溢れるコミュニケーションの手法です。</div>" },
+                    { text: "Must you read my letter hard yesterday?", correct: false, feedback: "<strong>【解説】</strong>これだと「あなたは昨日、私の手紙を必死に読まなければならなかったのですか？」という、過去の義務の不自然な尋問になってしまい、相手のこれからの優しい意志を確かめることができません。" }
+                ]
+            },
+            {
+                id: "q3_l28", title: "Would you…?", grammar: "Would you…?", cognitive: "仮想距離・雲の上の丁寧さ", social: "最上級の敬意",
+                text: [
+                    "格調高いレストランのウェイターが、目の前に座っている王様やVIPのお客様に向かって、深々と頭を下げて極上のスープを差し出す場面を想像してください。空気は凛と張り詰め、言葉の一つ一つが最高級のシルクで包まれているかのような世界です。",
+                    "意志の will のネジを、過去形の『would』へカチカチッと回します。すると、現実世界のはるか雲の上の「仮想の別世界」にカメラがワープし、「（もし万が一、そんな夢のような世界があるのであれば）そのお気持ちをお持ちになっていただけたりしますでしょうか……？」という、最上級の優雅な敬意の絵が完成します。"
+                ],
+                question: "【問題】高級ホテルの受付で、お客様に向かって「（最上級の丁寧さで）こちらにサインをいただけますでしょうか？」と案内するときの最もふさわしい英文はどちらでしょう？",
+                choices: [
+                    { text: "Would you sign here, please?", correct: true, feedback: "<strong>【解説】</strong>完璧です！ “Would you...?” は、willの熱い意志の角を過去形の距離感でふんわりと丸め、雲の上の優雅な空間を演出する最高峰のカメラワークです。資格試験のリスニングでも、大人の丁寧な会話として100%登場します。<div class='academic-bridge-content'>💡 **学問への架け橋**：現実から遠く離れた仮想の引き出し（仮定法世界）の入り口を会話にそっと混ぜることで、相手への最大の敬意を演出する認知の高等技術を**「仮想的遠隔化」**と呼びます。大人の英語の心臓部（OS 2.0）です。</div>" },
+                    { text: "Will you sign here right now automatically!", correct: false, feedback: "<strong>【解説】</strong>これだと will を使った上に「今すぐ自動的にサインしろ！」という直球の命令に近くなってしまい、高級ホテルの一流の受付が、まるでロボットの強制収容所のような怖い絵になってしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l29", title: "丁寧さとは何か", grammar: "助動詞と対人マナー", cognitive: "社会的緩衝材・クッション", social: "対人関係",
+                text: [
+                    "あなたの車のフロントガラスの前に、頑丈な「特製の大きなふんわりクッション」が取り付けられている場面を想像してください。スピードを出して走っていても、このクッション（社会的緩衝材）があるおかげで、街の人々とガツンとぶつかるのを優しく防いでくれます。",
+                    "英語話者にとって、言葉の丁寧さとは、単に決まったお決まりのセリフを呪文のように唱えることではありません。過去形（could, would）という道具を上手に使って、相手との間に『心地よい心のクッション（距離）』をどれだけ綺麗に挟めるか、という社会的なおもてなしの設計図なのです。"
+                ],
+                question: "【問題】英語のOSにおいて、相手に何かをお願いするときに「過去形（could, would）」を使うと、どうして急に言葉が丁寧で優しくなるのでしょう？その本質を突いた正しい理由はどちらでしょう？",
+                choices: [
+                    { text: "過去形にすることで「今の生々しい現実」からカメラが後ろにスッと下がり、相手のナワバリを侵さない優しい『心の距離感（クッション）』が生まれるから。", correct: true, feedback: "<strong><strong>【解説】</strong>正解です！ 素晴らしい！ 時間の昔を表す過去形のパワーを、人間関係の「心地よいディスタンス」へと頭の中で応用しているからこそ、could や would は最高に優しいクッションになるのです。<div class='academic-bridge-content'>💡 **学問への架け橋**：社会言語学では、人間関係の摩擦を未然に防ぐための言葉のクッションを**「社会的緩衝材（Social Buffer）」**と呼びます。文法は、人と人が心地よく繋がるための、心の距離のコントロールシステムなのです。</div>" },
+                    { text: "英語の過去形には「昔の王様の法律」という意味が100%含まれており、その法律の恐怖で相手を無理やり従わせることができるから。", correct: false, feedback: "<strong>【解説】</strong>残念！これだと丁寧にするどころか、昔の王様の暴力で相手を脅迫する恐怖政治の絵になってしまいます。丁寧さの本質は、相手を思いやる「心地よい距離感」であることを思い出しましょう。" }
+                ]
+            },
+            {
+                id: "q3_l30", title: "断定を避ける", grammar: "might / could", cognitive: "フェイス配慮・やわらかいバリア", social: "大人のマナー",
+                text: [
+                    "会議の中で、自分の意見を言う場面を想像してください。確信が持てないのに「絶対にこうだ！（must）」と言い切ってしまうと、もし間違っていたときに恥ずかしいですし、他の人の意見をガツンと否定してしまうことになりますよね。",
+                    "大人の英語話者は、あえて might や could などの弱い距離のある言葉を混ぜて、「〜かもしれないです、そういうルートもあるかもです」と言葉の輪郭をふんわりとボカします。これは、自分と相手の『心のプライド（メンツ）』を優しく守るための、スマートな大人のカメラワークなのです。"
+                ],
+                question: "【問題】「（私の勘違いだったら本当に申し訳ないのだけれど、一歩引いてやわらかく言うと）それは間違っているかもしれません」と、相手のメンツを傷つけないように優しく指摘するときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "That might be wrong.", correct: true, feedback: "<strong>【解説】</strong>その通り！ “might” を使うことで、可能性の光を限界まで弱め、「間違っているかも……」と言葉のトゲを丸めることができます。これによって、相手のプライドを優しく守る大人の気配りの絵が完成します。<div class='academic-bridge-content'>💡 **学問への架け橋**：人間が会話の中で相手や自分のメンツ（誇り・尊厳）を傷つけないように守り合う認知の働きを**「フェイス配慮（Face Threatening Actの回避）」**と呼びます。mightやcouldは、心のトゲを抜く魔法のやすりなのです。</div>" },
+                    { text: "That is wrong 100% naturally!", correct: false, feedback: "<strong>【解説】</strong>これだと「お前は100%間違っている！」という、切れ味の鋭いナイフで相手のメンツを正面からザックリと切り裂くような、おそろしく攻撃的でマナーのない絵になってしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l31", title: "婉曲表現", grammar: "助動詞のまとめ", cognitive: "Politeness・心のディスタンス", social: "共有認識",
+                text: [
+                    "素晴らしい、心の距離の世界の全レベルを駆け抜けました！ 「直接（Can/Will）」と「距離（Could/Would）」。英語の助動詞が持つこのダイナミックな２つのギアの使い分けが、あなたの中ではっきりと見えてきたはずです。",
+                    "学校のテスト（OS 1.0）ではただの「丁寧な書き換え」と教えられますが、本当の正体は『相手との心の距離を、カメラのズームを使って何センチにセットするか』という、生々しい人間関係のドラマそのもの（OS 2.0）なのです。"
+                ],
+                question: "【問題】「親友へのカジュアルな依頼（距離ゼロ）」から「初対面の人への最上級の敬意（距離最大）」へと、心のディスタンスのメーターを正しく並べ替えている美しいグラデーションはどちらでしょう？",
+                choices: [
+                    { text: "Can you...? ➔ Could you...? ➔ Would you...?", correct: true, feedback: "<strong>【解説】</strong>正解です！ 完璧です！ ストレートな can から、一歩引いた could、そして仮想世界へワープする最高峰の would へと、心のディスタンスのクッションがどんどん厚くなっていくカメラワークが見事に再現されています！<div class='academic-bridge-content'>💡 **学問への架け橋**：言葉の輪郭をあえて遠回しにしてボカす大人の気配りの技術を言語学で**「婉曲表現（Hedge / Indirectness）」**と呼びます。助動詞の過去形は、人間関係の摩擦をゼロにするための最強のディスタンス調整レバーなのです。</div>" },
+                    { text: "Would you...? ➔ Can you...? ➔ Could you...?", correct: false, feedback: "<strong>【解説】</strong>これだと、高級ホテルの最上級の丁寧さから、いきなり距離ゼロの親友のタメ口にワープし、また丁寧に戻るという、人間関係のカメラが前後に激しくぶっ壊れて相手を大混乱させてしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l32", title: "第4章ボス", grammar: "人間関係は距離でできている", cognitive: "心の距離の総括", social: "共有認識",
+                text: [
+                    "さあ、第4章のボス戦です！ 私たちは、言葉の形（過去形）を上手に使いこなして、目の前にいる他者との間に「心地よい大人のディスタンス」をミリ単位で美しくデザインする最強のテクニックをマスターしてきました。人間関係は距離でできています。",
+                    "親友へのCan you?（Lv25）。大人のマナーのCould you?（Lv26）。熱意のWill you?（Lv27）。最上級のドレスを纏ったWould you?（Lv28）。そしてプライベートを守るフェイス配慮のmight（Lv30）。この人間関係のタペストリーを広げて、ボスを華麗に撃破しましょう！"
+                ],
+                question: "【第4章ボス問題】「（親しい友達に）ペンを貸してよ（距離ゼロ）」という直接の光景と、「（緊張する目上の人に）お時間をいただけますでしょうか（心地よいディスタンス）」という２つの対人カメラワークを正しく表現しているペアはどちらでしょう？",
+                choices: [
+                    { text: "Can you lend me your pen? Could you give me some time?", correct: true, feedback: "<strong>【解説】</strong>お見事！！！ボスを完全にノックアウトです！ 距離ゼロの信頼の can と、一歩引いて相手を優しく敬うマナーの could の使い分けが、100%完璧に表現されています。第4章、堂々のクリアです！<div class='academic-bridge-content'>💡 **学問への架け橋**：英語の助動詞の本質は、冷たい事実の報告ではなく、目の前にいる他者とどう心地よく繋がり、どう自分を表現するかという、人間の社会性の鏡（OS 2.0）なのです。さあ、いよいよ最終章への門が拓かれました！</div>" },
+                    { text: "Must you lend me your pen? You may not give me some time!", correct: false, feedback: "<strong>【解説】</strong>これだと「お前は俺にペンを貸さなければならない（強制）」になり、後半は「お前は俺に時間をあたえてはならない（禁止）」となってしまい、優しいお願いごとの対人マナーが完全に大爆発してしまいます。カメラの距離感を思い出して！" }
+                ]
+            },
+
+            // --- 第5章 ---
+            {
+                id: "q3_l33", title: "もし〜なら", grammar: "if", cognitive: "条件世界・頭の中のスタジオ", social: "英語観",
+                text: [
+                    "あなたの頭の中に、真っ白でピカピカな「最新の映画撮影スタジオ（仮想空間）」が新しく建設される場面を想像してください。現実世界とは一切繋がっていない、独立した心のスタジオです。",
+                    "英語の『if』の本当の正体は、単なる接続詞ではなく、この【頭の中に「もしもの別世界」のスタジオを丸ごと１つ立ち上げる】ための起動スイッチです。このスイッチをパチッと押すことで、人間は現実の重力から完全に自由になり、頭の中で無限のシミュレーションを開始できるのです。"
+                ],
+                question: "【問題】「もし明日、雨が降ったら（という『もしもの別世界スタジオ』を今から頭の中に1つ立ち上げるなら）」と、仮想の条件世界を綺麗にスタートさせるときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "If it rains tomorrow,", correct: true, feedback: "<strong>【解説】</strong>正解です！ “If” というレバーを引いた瞬間、あなたの脳内には「雨が降る明日」という仮想のスタジオ（条件世界）がスタンバイされます。ここから、もしもの物語が生き生きと動き出します。<div class='academic-bridge-content'>💡 **学問への架け橋**：認知言語学において、人間が言葉を使って脳内に立ち上げる一時的な思考の部屋を**「メンタルスペース（Mental Space）」**と呼びます。ifは、現実の外側に「もしもスペース」を作るための建築開始のサインなのです。</div>" },
+                    { text: "If it rained yesterday heavily,", correct: false, feedback: "<strong>【解説】</strong>これだと昨日（yesterday）の過去の話になってしまい、「もし明日〜なら」という、これからの未来のもしものシミュレーションスタジオを綺麗に立ち上げることができなくなってしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l34", title: "現実とは違う世界", grammar: "If I were…", cognitive: "Counterfactual・反事実", social: "英語観",
+                text: [
+                    "背中に真っ白な大きな翼が生えていて、青い大空を風を切って気持ちよくビュンビュンと飛び回っている自分の姿を想像してください。……ハッと目を覚ますと、あなたは今、教室や部屋の椅子に座っています。あなたは鳥ではなく、人間です。",
+                    "このように、【今の現実世界（私は人間である）】とは180度パタンとひっくり返った【100%あり得ない非現実の世界（もし私が鳥だったら）】を頭の中で映画として上映するとき、英語話者はなんと動詞を『過去形（were / lived）』に変形させます。第2章や第4章でやった「現在からの圧倒的な断絶・心理的ディスタンス」の究極のカメラワーク、それこそが学校文法の最大の難所『仮定法過去』の本当の正体なのです！"
+                ],
+                question: "【問題】「もし私が（現実には100%違うけれど、今の現実から無限に遠く離れた非現実世界において）鳥だったら、君のもとへ飛んでいくのに」という、切ない非現実の絵を正しく表現している英文はどちらでしょう？",
+                choices: [
+                    { text: "If I were a bird, I would fly to you.", correct: true, feedback: "<strong>【解説】</strong>完璧です！ “I were” とあえて過去形にすることで、脳内カメラは「今の現実」から一瞬で100万光年離れた「非現実スペース（Counterfactual）」へとワープします。そして後ろの意志も、ディスタンスの “would” で美しくシンクロします。<div class='academic-bridge-content'>💡 **学問への架け橋**：現在の事実と180度異なる仮定を脳内で処理する働きを**「反事実（Counterfactual）認知」**と呼びます。英語話者は、時間の昔を表す『過去形』の持つ「断絶パワー」を、今度は「現実からの断絶（非現実）」へと見事に応用しているのです。素晴らしいOSの繋がり（OS 2.0）ですね！</div>" },
+                    { text: "If I am a bird, I will fly to you naturally.", correct: false, feedback: "<strong>【解説】</strong>現在形（am / will）を使ってしまうと、第1章の「確実な確定世界」になってしまうため、脳内カメラが「私は今、現実に本物の鳥である（人間ではない）」という、狂ったSFの怪奇現象を撮影することになってしまい、ネイティブの脳がパニックを起こします。" }
+                ]
+            },
+            {
+                id: "q3_l35", title: "願望の世界", grammar: "I wish…", cognitive: "理想自己・切ないディスタンス", social: "共感",
+                text: [
+                    "きらびやかなステージの上で、何万人もの観客の大歓声を浴びながら、スポットライトの中でギターをかき鳴らして歌っている大スターの姿を想像してください。……ふと我に返ると、手元には解けない数学のワークと静かな部屋。現実とのギャップに、胸がちょっぴりチクリと痛みます。",
+                    "『I wish...』のカメラワークは、この【現実（できない）】と【理想（できたらいいなぁ）】の間の深い谷底を見つめて、切なくため息をつく感覚です。ここでも後ろの動詞には『過去形』の魔法がかけられ、「現実からはるか遠く離れた理想の星」を望遠鏡でそっと見上げるような絵になるのです。"
+                ],
+                question: "【問題】「（現実には持っていなくて本当に残念だけれど）もっとたくさんのお金があればなぁ……！」と、愛おしい理想の世界を夢見てため息をつくときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "I wish I had more money.", correct: true, feedback: "<strong>【解説】</strong>その通り！ “I wish” の後ろに “I had” と過去形をドッキングさせることで、「現実には持っていない（断断）」という切ないディスタンスがクッキリと浮かび上がります。人間の豊かな感情を映し出す素晴らしい形です。<div class='academic-bridge-content'>💡 **学問への架け橋**：自分の現在の状態と、頭の中の理想の姿を比較してギャップを感じる認知を**「理想自己（Ideal Self）の投影」**モデルと呼びます。仮定法は、ただの文法パズルではなく、人間の「憧れ」を表現する心の器なのです。</div>" },
+                    { text: "I wish I have more money always tomorrow.", correct: false, feedback: "<strong>【解説】</strong>これだと現在形（have）の現実世界が混ざってしまい、今お金をたっぷり持っているのか、持っていなくて困っているのか、脳内カメラの焦点が完全にボヤけてエラーになってしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l36", title: "起こらなかった過去", grammar: "If I had studied…", cognitive: "後悔・過去のやり直し", social: "ナラティブ",
+                text: [
+                    "昨日のテストが返ってきた瞬間を想像してください。点数はボロボロ。あなたは机に突っ伏して、「あぁ、一昨日の夜、ゲームをしないで大人しく勉強していれば、今頃ヒーローになれたのに……！」と、激しいタイムラインの後悔の念に駆られています。",
+                    "すでに終わってしまった【過去の事実（勉強しなかった）】を、頭の中のタイムマシンで強引に書き換えて、【起きなかったもう１つの過去（もし勉強していたら）】というパラレルワールドを上映する、これこそが学校文法の最難関『仮定法過去完了』です。過去形（断絶）を２つ重ねた「過去完了（had + 過去分詞）」を使うことで、現在からも、過去の事実からも、ダブルで完全に隔離された『究極のやり直しスペース』を脳内に新しく建設するカメラワークなのです。"
+                ],
+                question: "【問題】「（あの時現実に勉強しなかった過去をひっくり返して）もしあの時もっと勉強していたら、テストに合格していたのになぁ」という、涙の後悔パラレルワールドを正しく表現している英文はどちらでしょう？",
+                choices: [
+                    { text: "If I had studied harder, I would have passed the exam.", correct: true, feedback: "<strong>【解説】</strong>ブラボー！大正解です！ “had studied” というダブルの過去の断絶を使って、終わった歴史のタイムラインを頭の中で見事にひっくり返しています。後ろの “would have passed” も、過去の幻のゴールインに綺麗にリンクしています。完璧です！<div class='academic-bridge-content'>💡 **学問への架け橋**：過去の出来事を頭の中で巻き戻し、別の選択肢を選んだ場合のシュミレーションを行う高度な脳の働きを**「反事実的思考（Counterfactual Thinking / 後悔の認知）」**と呼びます。文法は、人間が過去の失敗から学び、心を整えるための精神的なタイムマシンなのです。</div>" },
+                    { text: "If I study harder, I will pass the exam yesterday.", correct: false, feedback: "<strong>【解説】</strong>これだと現在形と未来の will が、終わった過去の昨日（yesterday）と正面衝突して大爆発を起こしてしまいます。終わった歴史を書き換えるダブルの断絶（had + 過去分詞）のカメラワークを思い出してください。" }
+                ]
+            },
+            {
+                id: "q3_l37", title: "過去改変", grammar: "仮定法過去完了", cognitive: "別歴史・パラレルワールド", social: "ナラティブ",
+                text: [
+                    "SF映画のスクリーンを想像してください。主人公が過去へタイムワープして、絶体絶命のピンチだった歴史の１ページを間一髪でガラリと変え、見事に世界を救い出しました。歴史のレールが、別の輝かしいルートへとパチッと切り替わった瞬間です。",
+                    "仮定法過去完了（had + 過去分詞）は、悲しい後悔だけでなく、このように「もしあの時、彼らが出会っていなければ、今のこの街は存在しなかっただろう」という、壮大な『歴史のIF（別歴史・パラレルワールド）』を他者と共有し、物語をダイナミックにドライブさせるための社会的なナラティブOSでもあるのです。"
+                ],
+                question: "【問題】「もしあの時、雨が降っていなかったら、私たちは野球の試合を楽しめただろうに（実際は雨が降って中止になり、本当に残念だった）」という別歴史の絵を綺麗に描いている英文はどちらでしょう？",
+                choices: [
+                    { text: "If it had not rained, we could have enjoyed the baseball game.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “had not rained” で「雨が降った」という動かない過去の歴史の石碑を頭の中で優しくどかし、「楽しめたはずの幻の試合」のスクリーン（could have enjoyed）を上映しています。映画のような素晴らしいカメラワークです！<div class='academic-bridge-content'>💡 **学問への架け橋**：物語の中で実際のタイムラインとは異なるもう１つの歴史の分岐点を構築する働きを**「別歴史（Alternative History）の概念化」**と呼びます。人間は言葉を使って、起きなかった過去の美しさを分かち合えるのです。</div>" },
+                    { text: "If it is not raining, we can enjoy the baseball game yesterday.", correct: false, feedback: "<strong>【解説】</strong>これだと現在の進行形（is not raining）のナワバリが、過去の昨日（yesterday）のデータとぶつかってしまい、カメラの三脚が激しく揺れて、いつの時代の話をしているのか全く分からなくなってしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l38", title: "未来想像", grammar: "If it should rain…", cognitive: "シミュレーション・万が一の備え", social: "英語観",
+                text: [
+                    "あなたが大切に準備してきた、明日の大好きな野外フェスのイベントを想像してください。準備は100%完璧。天気予報も晴れ。まず間違いなく大成功するはずですが、あなたは万が一の備えとして「うーん、でも、万が一、奇跡の確率で明日雨が降るようなことがあったら、テントはどうしようかな……」と頭の隅っこでシミュレーションします。",
+                    "このように、【まず起きないとは思うけれど、万が一にもそんな奇跡のバグのような未来が起きたとしたら】という、超低確率の未来のもしも世界をスタジオにセットするとき、英語話者は should を if の中に滑り込ませます（If it should rain...）。理想の should がここに登場するのは、「神様の頭の中の万が一の設計図」を覗き込むような、高度な『未来シミュレーション』のカメラワークだからなのです。"
+                ],
+                question: "【問題】「万が一、明日雨が降るようなことがあれば（確率はほぼゼロだと思うけれど）、イベントは中止にします」と、万全の備えのシミュレーションを語るときの正しい英文はどちらでしょう？",
+                choices: [
+                    { text: "If it should rain tomorrow, the event will be canceled.", correct: true, feedback: "<strong>【解説】</strong>その通り！ “If ... should” は、頭の中の未来の確率をあらかじめ「万が一の奇跡のルート」にセットし、何が起きても慌てない大人のリスク管理の絵を描きます。ビジネスの契約書や大人の約束で大活躍する形です。<div class='academic-bridge-content'>💡 **学問への架け橋**：起きる確率が極めて低い未来の出来事を脳内でシミュレーションし、あらかじめ対策を練る認知の働きを**「未来想像（Epistemic Simulation）」**と呼びます。shouldは、万が一の未来のバグに備えるための安全弁なのです。</div>" },
+                    { text: "If it always rains tomorrow, the event was canceled long ago.", correct: false, feedback: "<strong>【解説】</strong>これだと「もし明日いつも雨が降るなら、イベントはずっと昔に中止された」という、時間の因果関係と確率の認知が完全に崩壊したパニック映画のようなおかしな文になってしまいます。" }
+                ]
+            },
+            {
+                id: "q3_l39", title: "人間はなぜ仮定するのか", grammar: "仮定法のまとめ", cognitive: "Mental Simulation・心の自由", social: "共有認識",
+                text: [
+                    "ついに仮定法の全ての秘密を暴きました！おめでとうございます！ 学校の黒板（OS 1.0）では「公式の丸暗記」として、ただひたすら形を合わせるパズルとして教えられ、多くの人が英語を嫌いになる原因になってきました。",
+                    "しかし、本当の正体は違いましたね。人間は、目の前の現実の檻に閉じ込められて生きるロボットではありません。過去を書き換え（Lv36）、現在の非現実を飛び回り（Lv34）、万が一の未来を想定する（Lv38）。この【頭の中に無限の別世界を創り出す自由の翼（OS 2.0）】こそが、仮定法というシステムの美しい真実なのです。"
+                ],
+                question: "【問題】英語のOSにおいて、どうして「現在のあり得ない話」には『過去形』を使い、「過去のやり直しの話」には『過去完了形』を使うのでしょう？共通する最も美しい理由はどちらでしょう？",
+                choices: [
+                    { text: "動詞の形を『過去（＝ここではない、遠く離れた別の場所）』へとカチッと回すことで、脳内カメラを【生々しい現実空間】から一瞬で綺麗に遠ざけることができるから。", correct: true, feedback: "<strong>【解説】</strong>100%大正解！！！ 素晴らしい、拍手喝采です！ 時間の「昔」を表していた過去形の持つ断絶パワー（ディスタンス）を、今度は「現実からの距離（＝非現実）」へとそのまま応用しているからこそ、すべての形が美しく繋がるのです。これぞ文法の真のOS（OS 2.0）です！<div class='academic-bridge-content'>💡 **学問への架け橋**：これを認知言語学の最高峰の理論で**「遠隔性のメタファー（Distance Metaphor）」**と呼びます。人間の脳は、時間的な遠さと、現実からの遠さを、全く同じ『過去形』という引き出しを使って見事に整理整頓しているのです。</div>" },
+                    { text: "単なる英語の神様が作った気まぐれなパズルのルールであり、人間の心の動きや理由などは一切存在しないから。", correct: false, feedback: "<strong>【解説】</strong>残念！それは古い化石のような暗記文法（OS 1.0）の冷たい考え方です。私たちは、形の裏側にある「現実からの心の距離のドラマ」をずっと体感してきたはずです。あなたの手に入れた最強のOSを思い出して、最高の答えを選び直してください！" }
+                ]
+            },
+            {
+                id: "q3_l40", title: "Quest III 最終章", grammar: "可能性世界の統合", cognitive: "メタ認知の完成", social: "多層的英語観の獲得",
+                text: [
+                    "おめでとうございます！！！！！！！ ついに、全40レベルに及ぶ壮大なる『Quest III：可能性の世界』の頂点へと完全登頂いたしました！ 本当に、本当にお見事です！",
+                    "終わってみれば、英語話者の心の中の別世界システムは、極めてシンプルな人間の脳のイマジネーションの力（OS 2.0）の現れに過ぎなかったことが理解できたはずです。「できるか考え（can）」「許されるか考え（may/must/should）」「起こるか確率を計算し（will/might/could）」「相手との心地よい心のクッションをデザインし（丁寧さ）」「現実ではないパラレルワールドまで自由自在に想像する（仮定法）」。この5つのコアを完全にマスターしたあなたの脳内には、世界の言語学者たちが到達した『多層的英語観』の美しいピラミッドが堂々と完成しました。さあ、冒険の書に最後の、そして最も輝かしいスタンプを押し、このQuest IIIを完全完結させましょう！👍"
+                ],
+                question: "【最終総合問題】Quest IIIのすべてをここに総括します。英語話者が現実だけでなく、頭の中の可能性や心の中の世界を理解し、他者と社会的に共有する際に行っていることの本質を、最も完璧に集約している文はどちらでしょう？",
+                choices: [
+                    { text: "人間は目の前の現実だけを生きているのではない。英語話者は、助動詞と仮定法という美しい装置をフルに使いこなし、できるか考え、許されるか考え、起こるか考え、相手との距離を考え、現実でない世界まで自由に想像することで、世界を多層的に理解している。", correct: true, feedback: "<strong>✨🎉👑【QUEST III 完全制覇！！！】👑🎉✨</strong> 素晴らしい、本当に、本当に、言葉にならないほどお見事です！ canのルート開通、may/mustの社会的ルール、推量の確率グラデーション、could/wouldの対人マナー、そして過去形を使った仮定法の美しい距離感。学校文法の死んだ冷たいパズルだったすべての助動詞・仮定法が、あなたの頭の中で「生き生きとした人間特有の心のカメラワーク（OS 2.0）」として完全に1つの美しい思想へと統合されました！この深い多層的英語観の獲得は、これからのあなたの英語の習得（使用基盤モデル）の歩みを、何倍にも加速させる最強の羅針盤となるでしょう。偉大な旅のクリア、心からお祝い申し上げます！！！<div class='academic-bridge-content'>🎓 **Navigatorからの最終メッセージ**：文法とは、暗記して従うべき法律ではなく、人間が現実を超えて、未来を夢見、過去を愛おしみ、他者と優しく繋がり合うために紡ぎ出した『心のアート』です。これにてQuest III、完全完結です。最高の冒険をありがとう！お疲れ様でした！👍</div>" },
+                    { text: "英語の助動詞や仮定法とは、単に日本語の「〜できる」「〜かもしれない」「もし〜なら」を機械的に英語の記号へ置き換えるだけのパズルであり、話し手の視点や世界観の違いなどは一切存在しない単一の記号処理である。", correct: false, feedback: "<strong>【解説】</strong>最後の最後でOS 1.0の罠にかかってしまうわけにはいきません！私たちは、形（Form）の裏側にある、英語話者の生々しい世界の捉え方のドラマ（Meaning/Use）を40レベルにわたって体感してきたはずです。あなたの獲得した「OS 2.0」の最高の誇りにかけて、栄光の正解を撃ち抜いてください！" }
+                ]
+            }
+        ]
+    };
+
+    let playerProgress = { clearedLevelIds: [] };
+
+    function loadGame() {
+        const saved = localStorage.getItem('english_quest_q3_save');
+        if (saved) {
+            try { playerProgress = JSON.parse(saved); } catch(e) { console.error(e); }
+        }
+    }
+
+    function saveGame() {
+        localStorage.setItem('english_quest_q3_save', JSON.stringify(playerProgress));
+    }
+
+    function resetSaveData() {
+        if (confirm("これまでのQuest 3の冒険の書をリセットします。よろしいですか？")) {
+            localStorage.removeItem('english_quest_q3_save');
+            playerProgress = { clearedLevelIds: [] };
+            alert("リセットしました。新たな心と可能性の旅へ出発しましょう！");
+            renderMainScreen();
+        }
+    }
+
+    function switchScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        if (screenId === 'screen-main') {
+            document.getElementById('global-nav').style.display = 'none';
+        } else {
+            document.getElementById('global-nav').style.display = 'block';
+        }
+    }
+
+    function saveAndExit() {
+        saveGame();
+        renderMainScreen();
+        switchScreen('screen-main');
+    }
+
+    function renderMainScreen() {
+        loadGame();
+        const container = document.getElementById('worlds-container');
+        container.innerHTML = '';
+
+        const worldCard = document.createElement('div');
+        worldCard.className = 'quest-world-card';
+
+        const header = document.createElement('div');
+        header.className = 'quest-world-header';
+        
+        const totalLevels = questData.levels.length;
+        const clearedCount = questData.levels.filter(l => playerProgress.clearedLevelIds.includes(l.id)).length;
+        
+        header.innerHTML = `
+            <h3>${questData.title}</h3>
+            <span style="font-size:0.9rem; color:#475569; font-weight:bold;">獲得スタンプ: ${clearedCount} / ${totalLevels}</span>
+        `;
+        worldCard.appendChild(header);
+
+        const stampsGrid = document.createElement('div');
+        stampsGrid.className = 'stamps-grid';
+        questData.levels.forEach((lvl, idx) => {
+            const isLvlCleared = playerProgress.clearedLevelIds.includes(lvl.id);
+            const stampDot = document.createElement('div');
+            stampDot.className = `stamp-dot ${isLvlCleared ? 'cleared' : ''}`;
+            stampDot.innerHTML = isLvlCleared ? '👍' : (idx + 1);
+            stampsGrid.appendChild(stampDot);
+        });
+        worldCard.appendChild(stampsGrid);
+
+        questData.chapters.forEach(ch => {
+            const chHeader = document.createElement('h3');
+            chHeader.className = 'chapter-title';
+            chHeader.innerText = ch.title;
+            worldCard.appendChild(chHeader);
+
+            const nodesDiv = document.createElement('div');
+            nodesDiv.className = 'level-nodes';
+
+            for (let i = ch.startIdx; i <= ch.endIdx; i++) {
+                const lvl = questData.levels[i];
+                const isLvlCleared = playerProgress.clearedLevelIds.includes(lvl.id);
+                
+                let isLocked = false;
+                if (i > 0) {
+                    const prevLvlId = questData.levels[i - 1].id;
+                    if (!playerProgress.clearedLevelIds.includes(prevLvlId)) {
+                        isLocked = true;
+                    }
+                }
+
+                const nodeBtn = document.createElement('button');
+                nodeBtn.className = `level-node-btn ${isLvlCleared ? 'cleared' : ''}`;
+                
+                if (isLocked) {
+                    nodeBtn.innerText = `🔒 Lv ${i + 1}`;
+                    nodeBtn.disabled = true;
+                } else {
+                    nodeBtn.innerText = `${isLvlCleared ? '✓ ' : ''}Level ${i + 1}`;
+                    nodeBtn.onclick = () => startQuest(i);
+                }
+                nodesDiv.appendChild(nodeBtn);
+            }
+            worldCard.appendChild(nodesDiv);
+        });
+
+        container.appendChild(worldCard);
+    }
+
+    let activeLevelIndex = 0;
+
+    function shuffleArray(array) {
+        const clone = [...array];
+        for (let i = clone.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const temp = clone[i];
+            clone[i] = clone[j];
+            clone[j] = temp;
+        }
+        return clone;
+    }
+
+    function startQuest(levelIndex) {
+        activeLevelIndex = levelIndex;
+        switchScreen('screen-quest');
+
+        const lvlData = questData.levels[levelIndex];
+        document.getElementById('quest-header-title').innerText = `Level ${levelIndex + 1} : ${lvlData.title}`;
+        
+        const storyBox = document.getElementById('story-container');
+        storyBox.innerHTML = `
+            <div class="academic-badge-zone">
+                <span class="academic-badge">中心文法: ${lvlData.grammar}</span>
+                <span class="academic-badge">認知言語学: ${lvlData.cognitive}</span>
+                <span class="academic-badge social">社会言語学・英語観: ${lvlData.social}</span>
+            </div>
+        `;
+        lvlData.text.forEach(para => {
+            const p = document.createElement('p');
+            p.innerText = para;
+            storyBox.appendChild(p);
+        });
+
+        document.getElementById('question-container').innerHTML = lvlData.question;
+        
+        const choicesBox = document.getElementById('choices-container');
+        choicesBox.innerHTML = '';
+        document.getElementById('feedback-container').style.display = 'none';
+
+        const indexedChoices = lvlData.choices.map((c, i) => ({ ...c, originalIndex: i }));
+        const shuffledChoices = shuffleArray(indexedChoices);
+
+        shuffledChoices.forEach((choice) => {
+            const btn = document.createElement('button');
+            btn.className = 'choice-item-btn';
+            btn.innerHTML = choice.text;
+            btn.onclick = () => selectChoice(choice.originalIndex, btn);
+            choicesBox.appendChild(btn);
+        });
+    }
+
+    function selectChoice(originalIndex, clickedBtn) {
+        const lvlData = questData.levels[activeLevelIndex];
+        const selectedChoice = lvlData.choices[originalIndex];
+
+        const buttons = document.querySelectorAll('.choice-item-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        const feedbackContainer = document.getElementById('feedback-container');
+        const statusText = document.getElementById('feedback-status');
+        const fbText = document.getElementById('feedback-text');
+        const nextBtn = document.getElementById('next-action-btn');
+
+        feedbackContainer.style.display = 'block';
+
+        if (selectedChoice.correct) {
+            clickedBtn.classList.add('correct');
+            feedbackContainer.className = "feedback-zone correct-zone";
+            statusText.innerText = "👍 大正解！そのカメラワークです。";
+            fbText.innerHTML = selectedChoice.feedback;
+            nextBtn.style.display = 'inline-block';
+
+            if (!playerProgress.clearedLevelIds.includes(lvlData.id)) {
+                playerProgress.clearedLevelIds.push(lvlData.id);
+                saveGame();
+            }
+        } else {
+            clickedBtn.classList.add('wrong');
+            feedbackContainer.className = "feedback-zone wrong-zone";
+            statusText.innerText = "🔍 英語話者の心の中の見方を、もう一度イメージしてみよう";
+            fbText.innerHTML = selectedChoice.feedback;
+            nextBtn.style.display = 'none';
+
+            setTimeout(() => {
+                buttons.forEach(b => {
+                    if (!b.classList.contains('wrong')) b.disabled = false;
+                });
+            }, 1500);
+        }
+    }
+
+    function advanceQuest() {
+        alert(`可能性世界のスタンプを獲得しました！`);
+        saveAndExit();
+    }
+
+    window.onload = () => {
+        renderMainScreen();
+    };
+</script>
+
+</body>
+</html>
