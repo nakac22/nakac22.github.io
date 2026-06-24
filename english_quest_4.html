@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Quest 4 - 人間関係の認知と社会行為</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --text-color: #1e293b;
+            --primary-color: #1e3a8a;
+            --accent-color: #3b82f6;
+            --border-color: #cbd5e1;
+            --card-bg: #ffffff;
+            --stamp-active: #3f6b5a;
+            --stamp-empty: #94a3b8;
+            --success-bg: #f0fdf4;
+            --success-border: #3f6b5a;
+            --error-bg: #fef2f2;
+            --error-border: #dc2626;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); line-height: 1.8; padding: 30px 20px; display: flex; justify-content: center; }
+        
+        #app {
+            width: 100%;
+            max-width: 850px;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            position: relative;
+            min-height: 650px;
+        }
+
+        .avatar-container { text-align: center; margin-bottom: 15px; }
+        .avatar-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #eff6ff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+
+        h1 { font-size: 2.4rem; text-align: center; color: var(--primary-color); margin-bottom: 8px; font-weight: 800; }
+        .subtitle { text-align: center; font-size: 1.2rem; color: #64748b; margin-bottom: 35px; }
+        h2 { font-size: 1.5rem; margin-top: 30px; margin-bottom: 15px; color: var(--primary-color); border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+        h3.chapter-title { font-size: 1.15rem; color: #475569; margin-top: 25px; margin-bottom: 10px; padding-left: 8px; border-left: 4px solid var(--accent-color); font-weight: 700; }
+        p { margin-bottom: 18px; }
+
+        .btn {
+            background-color: var(--primary-color); color: white; border: none; padding: 14px 28px; font-size: 1rem;
+            border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.2s, transform 0.1s; display: inline-block;
+        }
+        .btn:hover { background-color: #1d4ed8; }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { background-color: #cbd5e1; cursor: not-allowed; transform: none; }
+
+        .nav-menu { position: absolute; top: 35px; right: 40px; }
+        .nav-menu .btn-nav { padding: 8px 16px; font-size: 0.85rem; background: transparent; color: #64748b; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; }
+        .nav-menu .btn-nav:hover { background: #f1f5f9; color: var(--primary-color); }
+
+        .screen { display: none; margin-top: 20px; }
+        .screen.active { display: block; }
+
+        .intro-box { background: #f1f5f9; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 4px solid var(--primary-color); }
+
+        .quest-world-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; margin-bottom: 25px; }
+        .quest-world-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px dashed var(--border-color); }
+        .quest-world-header h3 { color: var(--primary-color); font-size: 1.3rem; font-weight: 700; }
+
+        .stamps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 8px; padding: 10px 0; margin-bottom: 20px; background: #f8fafc; padding: 12px; border-radius: 8px; }
+        .stamp-dot { width: 32px; height: 32px; border-radius: 50%; border: 2px dashed var(--stamp-empty); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: var(--stamp-empty); background: #fff; transition: all 0.3s; }
+        .stamp-dot.cleared { border: 2px solid var(--stamp-active); color: var(--stamp-active); background: #e8f5e9; transform: scale(1.05); }
+
+        .level-nodes { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .level-node-btn { padding: 10px; font-size: 0.85rem; background-color: #f8fafc; color: var(--text-color); border: 1px solid #e2e8f0; border-radius: 6px; font-weight: 600; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .level-node-btn:hover:not(:disabled) { background-color: #f1f5f9; border-color: #cbd5e1; }
+        .level-node-btn.cleared { background-color: #edfdf2; border-color: #bbf7d0; color: #15803d; }
+
+        .story-text-area { font-size: 1.05rem; background: #f8fafc; padding: 30px; border-radius: 10px; border-left: 6px solid var(--primary-color); margin-bottom: 30px; }
+        .story-text-area p { margin-bottom: 12px; }
+        .story-text-area p:last-child { margin-bottom: 0; }
+
+        .academic-badge-zone { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .academic-badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; font-weight: bold; background: #e0e7ff; color: #4338ca; }
+        .academic-badge.social { background: #fef3c7; color: #b45309; }
+
+        .question-zone { font-weight: 700; font-size: 1.15rem; margin-bottom: 20px; color: #0f172a; }
+        .choices-zone { display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px; }
+        .choice-item-btn { background: #fff; color: var(--text-color); border: 1px solid #e2e8f0; border-radius: 8px; text-align: left; padding: 15px; font-size: 1rem; width: 100%; cursor: pointer; font-weight: 500; transition: all 0.2s; line-height: 1.5; }
+        .choice-item-btn:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; }
+        .choice-item-btn.correct { background-color: #edfdf2 !important; border-color: var(--success-border) !important; font-weight: bold; color: #16a34a; }
+        .choice-item-btn.wrong { background-color: #fdf2f2 !important; border-color: var(--error-border) !important; color: #dc2626; opacity: 0.8; }
+
+        .feedback-zone { padding: 25px; border-radius: 10px; display: none; margin-top: 25px; line-height: 1.7; }
+        .feedback-zone.correct-zone { background: var(--success-bg); border: 1px solid var(--success-border); }
+        .feedback-zone.wrong-zone { background: var(--error-bg); border: 1px solid var(--error-border); }
+        .feedback-status { font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; }
+        .academic-bridge-content { margin-top: 15px; padding-top: 15px; border-top: 1px dashed #cbd5e1; font-size: 0.95rem; color: #334155; }
+
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            #app { padding: 20px; }
+            .nav-menu { position: static; text-align: right; margin-bottom: 20px; }
+            h1 { font-size: 1.8rem; }
+            .level-nodes { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div id="global-nav" class="nav-menu" style="display: none;">
+        <button class="btn-nav" onclick="saveAndExit()">セーブしてマップに戻る</button>
+    </div>
+
+    <div id="screen-main" class="screen active">
+        <div class="avatar-container">
+            <img src="ore.png" alt="Navigator" class="avatar-img" onerror="this.src='グッドをする俺.png'; this.onerror=function(){this.style.display='none';};">
+        </div>
+        
+        <h1>English Quest 4</h1>
+        <div class="subtitle">〜人間関係の世界〜</div>
+
+        <div class="intro-box">
+            <strong style="color:var(--primary-color); font-size:1.1rem; display:block; margin-bottom:6px;">【Quest IV: 人間関係の世界】テーマ</strong>
+            英語話者は単に情報を伝えているのではありません。相手との距離、立場、親しさ、配慮をいつも調整しながら話しています。言葉は情報伝達の道具ではなく、人間関係を作る道具です。頭の中の「認知」から、人と人がつながる「社会」の領域へ飛び込みましょう！
+        </div>
+
+        <h2>冒険の進捗（全40レベル）</h2>
+        <div id="worlds-container"></div>
+
+        <div style="text-align: center; margin-top: 40px;">
+            <button onclick="resetSaveData()" style="background:#dc2626; font-size:0.8rem; padding:8px 16px;" class="btn">冒険の書（セーブデータ）をリセット</button>
+        </div>
+    </div>
+
+    <div id="screen-quest" class="screen">
+        <h2 id="quest-header-title">Level X</h2>
+        <div class="story-text-area" id="story-container"></div>
+        <div class="question-zone" id="question-container"></div>
+        <div class="choices-zone" id="choices-container"></div>
+
+        <div class="feedback-zone" id="feedback-container">
+            <div class="feedback-status" id="feedback-status"></div>
+            <div id="feedback-text"></div>
+            <div style="text-align: right; margin-top: 25px;">
+                <button id="next-action-btn" class="btn" onclick="advanceQuest()">スタンプを獲得してマップに戻る</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const questData = {
+        id: "quest4",
+        title: "Quest IV: 人間関係の世界",
+        chapters: [
+            { title: "第1章 人間は一人では話せない (Lv1〜8)", startIdx: 0, endIdx: 7 },
+            { title: "第2章 距離の世界 (Lv9〜16)", startIdx: 8, endIdx: 15 },
+            { title: "第3章 気持ちの世界 (Lv17〜24)", startIdx: 16, endIdx: 23 },
+            { title: "第4章 協力の世界 (Lv25〜32)", startIdx: 24, endIdx: 31 },
+            { title: "第5章 相手の心を読む (Lv33〜40)", startIdx: 32, endIdx: 39 }
+        ],
+        levels: [
+            // --- 第1章 ---
+            {
+                id: "q4_l1", title: "言葉のスタートライン", grammar: "I / You", cognitive: "視点取得", social: "相互行為",
+                text: ["無人島にぽつんと一人きりで立っている自分を想像してみてください。誰もいない島では、言葉を発する必要すらありません。言葉はいつも、目の前に「あなた」が現れた瞬間に始まります。", "英語を話すとき、私たちはただ頭の中の情報を出力しているのではありません。目の前にいる相手と、どのような関係で、どんなふうにつながるかをいつもリアルタイムで調整しています。言葉のカメラは、常に「自分と相手」の間にセットされているのです。"],
+                question: "【問題】会話のスタートラインとして、話している「自分」と、目の前にいる「相手」の存在を最もすっきりと表している文はどれでしょう？",
+                choices: [
+                    { text: "I speak to you.", correct: false, feedback: "惜しいですが、もう少し現在の進行感を表す表現の方が、「今まさに相手に向き合っている」という相互行為のダイナミズムを捉えられます。" },
+                    { text: "I am talking to you.", correct: true, feedback: "<strong>【解説】</strong>大正解！自分が発した言葉が、目の前の「あなた（you）」に届いているという、もっとも基本的な人間のつながりを捉えた形です。<div class='academic-bridge-content'>💡 **学問への架け橋**：社会言語学では、言葉は単なる情報伝達の道具ではなく、人と人が関わり合う**「相互行為（Interaction）」**のための道具であると考えます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l2", title: "私の目から見える景色", grammar: "I", cognitive: "自己中心視点", social: "主観の表明",
+                text: ["あなたが自分の部屋の窓から、外の景色を眺めている場面を想像してください。あなたに見えているのは、あなたの目からまっすぐ伸びた直線の景色だけです。他人の目の後ろに回り込むことはできません。", "言葉も同じです。すべての人間関係は、まず「私（I）」というカメラのレンズからスタートします。英語話者は、自分がどう感じ、世界をどう捉えているかを、まずは「私」というカメラ位置をはっきりさせて相手に伝えます。これがすべてのコミュニケーションの土台になります。"],
+                question: "【問題】目の前のきれいな夕日を見て、他でもない「自分のカメラ」で捉えた主観的な感動を相手にまっすぐ伝える表現として、最も適切なものはどれでしょう？",
+                choices: [
+                    { text: "The sunset is beautiful.", correct: false, feedback: "これだと客観的な事実の報告のようになり、「私のカメラからどう見えているか」という主観的なつながりとしては、少し冷たい印象になります。" },
+                    { text: "I think the sunset is beautiful.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “I think” とカメラの主を明示することで、これが「私から見えている世界」であることをはっきりと表明しています。<div class='academic-bridge-content'>💡 **学問への架け橋**：認知言語学では、人間が身体や視点を中心に世界を理解する性質を**「自己中心視点」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l3", title: "相手のカメラにお引越し", grammar: "You", cognitive: "他者認知", social: "共感の基盤",
+                text: ["あなたが誰かと向かい合って座っているとき、相手の後ろにある壁の時計は、あなたの位置からは見えません。しかし、「相手の目からは見えているはずだ」と頭の中で想像することはできますよね。", "自分のカメラから一歩飛び出して、「あなた（You）」のカメラにお引越しすること。これを「他者認知」と呼びます。相手が何を見つめ、どう感じているかを想像し、言葉のピントを相手に合わせることで、初めて会話に温かい血が通い始めます。"],
+                question: "【問題】目の前の友達が、新しいスニーカーを履いているとき、相手の気持ちのカメラに寄り添って声をかける表現として最も適切なものはどれでしょう？",
+                choices: [
+                    { text: "I am happy with my shoes.", correct: false, feedback: "これだと「私は自分の靴に満足している」という自分語りになり、目の前の相手の嬉しそうな気持ちを無視した形になってしまいます。" },
+                    { text: "You look happy with your new shoes.", correct: true, feedback: "<strong>【解説】</strong>その通り！「あなた（You）」を主役にして、相手がどう見えるかをキャッチしてあげる表現です。<div class='academic-bridge-content'>💡 **学問への架け橋**：自分以外の人間が異なる視点を持っていることを理解する力を**「他者認知（Other-cognition）」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l4", title: "境界線のない「わたしたち」", grammar: "We (包括のwe)", cognitive: "共同体形成", social: "連帯感",
+                text: ["あなたと親友が、一本の大きなマフラーを一緒に首に巻いて、寒空の下を歩いている光景を想像してください。そこには「私」と「あなた」を分ける壁はなく、一つの温かい空間で包まれています。", "英語の “We” は、バラバラの個人をひとまとめにする魔法の言葉です。「私」と「あなた」を同じ丸いサークルの中にすっぽりと入れることで、お互いの間に強い仲間意識や、一緒に同じ世界を生きているという一体感を生み出すことができます。"],
+                question: "【問題】一緒にがんばってきたチームメイトに向かって、「私たちは最高のチームだ！」と、お互いの強い連帯感を共有するための表現として最も適切なものはどれでしょう？",
+                choices: [
+                    { text: "I and you are a good team.", correct: false, feedback: "これだと「私」と「あなた」がそれぞれ別の個人のまま並んでいるように聞こえ、一つのサークルに溶け込んだ一体感が薄れてしまいます。" },
+                    { text: "We are a great team.", correct: true, feedback: "<strong>【解説】</strong>完璧です！ “We” という一つの強力なサークルの中に全員を包み込むことで、個人の境界線を越えたチームワーク意識が形成されます。<div class='academic-bridge-content'>💡 **学問への架け橋**：話し手と聞き手を同じグループに巻き込む言葉の働きを**「共同体形成（Community Building）」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l5", title: "心のサークルに巻き込む", grammar: "we (包摂)", cognitive: "包摂", social: "巻き込みの心理",
+                text: ["あなたが複数人で楽しくおしゃべりをしている輪の中に、少し離れたところで寂しそうに立っている人が一人加わろうとしています。あなたは笑顔でその人を手招きし、サークルの輪を広げて中に迎え入れました。", "言葉の使い方ひとつで、相手を「私の仲間」としてサークルの中に巻き込むことができます。これを「包摂」と呼びます。あえて相手を同じ身内として扱うことで、心の距離を一気にゼロにする社会的なテクニックです。"],
+                question: "【問題】新しくクラスにやってきた転校生に対して、「ここでは、みんなお互いに助け合うんだよ」と、早く仲間として安心させてあげるために “we” を使って話しかける表現はどれでしょう？",
+                choices: [
+                    { text: "Students help each other here.", correct: false, feedback: "これだと客観的な説明になり、目の前の転校生を温かく自分のサークルに迎え入れるニュアンスが弱くなってしまいます。" },
+                    { text: "We help each other here.", correct: true, feedback: "<strong>【解説】</strong>正解です！あえて “We” を使うことで、「あなたもすでに私たちのサークルの一員だよ」という強いメッセージを伝えることができます。<div class='academic-bridge-content'>💡 **学問への架け橋**：聞き手を自分のグループに引き入れる言葉の働きを**「包摂（Inclusion）」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l6", title: "サークルの外側の世界", grammar: "they (境界形成)", cognitive: "境界形成", social: "他者化",
+                text: ["あなたの目の前に、頑丈なガラスの壁が立ちはだかっている光景を想像してください。壁の向こう側には、自分たちのルールや言葉を持った別のグループの人たちが集まっています。彼らは仲間ですが、「わたしたち」とは違う存在です。", "人間は、自分たちのグループ（身内）を大切にする一方で、それ以外の存在を “they（彼ら）” として心のサークルの外側にクッキリと切り離す認知を持っています。これを「境界形成」と呼び、自分たちの連帯感を裏返しで強める役割を果たします。"],
+                question: "【問題】「あっちのチームのプレースタイルは、僕たちのスタイルとは全然違うな」と、自分たちのサークルと外側のグループとの間に境界線を引いて区別するときの正しい表現はどれでしょう？",
+                choices: [
+                    { text: "We have the same style everywhere.", correct: false, feedback: "これだと「どこでも同じスタイルだ」という意味になり、外側の別のグループと自分たちを明確に区別する絵になりません。" },
+                    { text: "They have a different style from us.", correct: true, feedback: "<strong>【解説】</strong>その通り！ “They” と “us” を対比させることで、自分たちのナワバリと外の世界の間に明確な境界線を引くカメラワークが完成します。<div class='academic-bridge-content'>💡 **学問への架け橋**：内集団と外集団を区別することを**「境界形成（Boundary Marking）」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l7", title: "頭の中の引き出しに分ける", grammar: "名詞の複数形", cognitive: "カテゴリー化", social: "共通認識",
+                text: ["あなたがたくさんの果物を、リンゴの箱、バナナの箱、ブドウの箱へとテキパキと仕分けている場面を想像してください。人間は似たものを同じ「引き出し」にまとめて理解します。", "人間関係も同じです。目の前の人を「友達」「先生」「ライバル」といった共通の引き出し（カテゴリー）に入れることで、社会的な関係をすっきりと整理整頓します。英語話者は、そうしたグループのまとまりを言葉の形に反映させているのです。"],
+                question: "【問題】「僕たちはただのクラスメイトだよ」と、自分たちの関係性をすっきりとカテゴリーに当てはめて説明するときの正しい表現はどれでしょう？",
+                choices: [
+                    { text: "We are a classmate.", correct: false, feedback: "“We” なのに引き出しが単数になってしまっており、数のカメラのピントが合わずにエラーになります。" },
+                    { text: "We are classmates.", correct: true, feedback: "<strong>【解説】</strong>正解です！複数の人間が、 “classmates” という同じ共通の引き出しに収まっている状態をクッキリと表しています。<div class='academic-bridge-content'>💡 **学問への架け橋**：人間を共通の性質でグループ分けする脳の働きを**「カテゴリー化（Categorization）」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l8", title: "「つながり」の基礎の完成", grammar: "第1章 総復習", cognitive: "基準点設定の総括", social: "共有認識",
+                text: ["素晴らしい！第1章の最終レベルです。私たちは、英語のやり取りが単なる文字の羅列ではなく、自分と相手の間にカメラを置き、サークルを作ったり境界線を引いたりするダイナミックな営みであることを学んできました。", "自分の視点、相手への寄り添い、仲間を包み込む温かい “We”、そして外側を区別する “They”。これらすべてが、人間が社会の中で生きていくための「つながりの基礎OS」です。では、総復習問題に挑みましょう！"],
+                question: "【総合問題】「私たちは友達だ」という関係の宣言と、「彼らは違う意見を持っている」という境界線の区別を、正しく表現しているペアはどれでしょう？",
+                choices: [
+                    { text: "I am a friend. You have a different opinion.", correct: false, feedback: "これだと「私は友達だ。あなたは違う意見だ」とバラバラに並んでいるだけで、グループとしてのまとまりや対比が表現できません。" },
+                    { text: "We are friends. They have a different opinion.", correct: true, feedback: "<strong>【解説】</strong>パーフェクト！ “We” で自分たちを「友達」の引き出しに包み込み、 “They” で外側のグループとの間に境界線を引いています。<div class='academic-bridge-content'>💡 **学問への架け橋**：人間が「身内」と「他人」のネットワークを構築し、立ち位置を確認するプロセスを**「相互行為の構造化」**と呼びます。</div>" }
+                ]
+            },
+
+            // --- 第2章 ---
+            {
+                id: "q4_l9", title: "ストレートな距離感", grammar: "Can you...?", cognitive: "近距離", social: "直接的行為",
+                text: ["あなたが家族や気心の知れた幼馴染のすぐ隣に座ってテレビを見ている場面を想像してください。そこには緊張感や気遣いの壁はなく、手を伸ばせばすぐに届く「ゼロ距離」の空間です。", "“Can you...?” という表現は、この心理的な近距離の世界から発射されます。相手のナワバリに遠慮なくスッと入り込んで「これできる？」とストレートにお願いする形です。親しい間柄なら自然ですが、そうでない相手には少し強すぎる弾丸になります。"],
+                question: "【問題】いつも一緒にいる大親友に向かって、「ちょっとその消しゴム取ってくれる？」と、近い距離感で頼むときの最もふさわしい表現はどれでしょう？",
+                choices: [
+                    { text: "Is it possible for your body to move the eraser?", correct: false, feedback: "あまりにも回りくどすぎて不自然です。親しい相手にこのような話し方をすると、かえって冷たい距離感が生まれてしまいます。" },
+                    { text: "Can you pass me the eraser?", correct: true, feedback: "<strong>【解説】</strong>正解です！親しい関係だからこそ、回りくどい壁を作らずに “Can you...?” でストレートに要請します。<div class='academic-bridge-content'>💡 **学問への架け橋**：心理的距離を極限まで縮めた直接的なコミュニケーションを**「親密のモダリティ」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l10", title: "心のクッションを置く", grammar: "Could you...?", cognitive: "心理的距離", social: "丁寧さの起動",
+                text: ["あなたが職員室で、あまり話したことのない先生の机の前に背筋を伸ばして立っている場面を想像してください。一歩後ろに下がり、相手の個人的な空間（ナワバリ）を侵害しないように、少し「距離」を取っていますよね。", "なぜ過去形の “Could” にすると丁寧になるのでしょうか？ Quest IIで学んだ通り、過去形の本質は「今からの断絶」です。英語話者は、過去形を使って現実から一歩後ろへ下がることで、相手のナワバリに踏み込まないための『心のクッション』を作り出すのです。"],
+                question: "【問題】あまり親しくない先輩に対して、「時間を割いていただくことは可能でしょうか」と、丁寧な距離感でおねがいする表現はどれでしょう？",
+                choices: [
+                    { text: "Can you give me some time now?", correct: false, feedback: "これだとゼロ距離の弾丸になってしまうため、あまり親しくない人に対しては配慮が足りない響きになります。" },
+                    { text: "Could you give me some time?", correct: true, feedback: "<strong>【解説】</strong>完璧です！ “Could” と過去形にすることで、カメラを現実から遠ざけ、「もしよろしければ……」という柔らかい心理的なクッションを作ることができます。<div class='academic-bridge-content'>💡 **学問への架け橋**：物理的な距離の感覚を「丁寧さ」に翻訳して処理する仕組みを**「距離のメタファー」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l11", title: "ひかえめな「もしも」の世界", grammar: "Would you...?", cognitive: "仮想距離", social: "敬意の表明",
+                text: ["あなたが頭の中で「もしも、魔法が使えたらどうする？」と、現実にはあり得ない世界を思い描いている場面を想像してください。その世界は、現実の地面からはるか高く浮き上がっています。", "“Would you...?” も過去形（willの過去）の力を使っています。 “will” が持つ「強い意志」を、過去形によって「もしも仮の話ですが……」という浮いた仮想の世界へとワープさせるのです。「現実にお願いしているわけではないのですが、もしもそんな世界があったら、そうしていただけますか？」という究極に控えめなカメラワークです。"],
+                question: "【問題】お店のスタッフが、お客さまに対して「こちらにお名前を書いていただけますでしょうか」と、相手の意志を尊重した敬意を持ってお願いする形はどれでしょう？",
+                choices: [
+                    { text: "Will you write your name here clearly?", correct: false, feedback: "“Will you...?” だと「書く意志はありますか？」と相手の現実の意志を直接ノックしてしまうため、少し押しが強すぎます。" },
+                    { text: "Would you sign your name here?", correct: true, feedback: "<strong>【解説】</strong>お見事！ “Would” を使うことで、現実から切り離された「もしもの仮想空間」を立ち上げ、相手の意志のスイッチを上品にノックすることができます。<div class='academic-bridge-content'>💡 **学問への架け橋**：ひかえめな世界を脳内に立ち上げる働きを**「仮定の概念化」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l12", title: "白黒つけずに霧をかける", grammar: "might / perhaps", cognitive: "曖昧化", social: "衝突回避",
+                text: ["濃い霧が立ち込めて、数メートル先にある建物の形がぼんやりとしか見えない光景を想像してください。輪郭がはっきりしないため、それが何であるかを断定することはできません。", "言葉も、あまりにも白黒はっきり言い過ぎると、相手の心にドスンとぶつかってしまうことがあります。英語話者は “might（かもしれない）” や “perhaps（ひょっとすると）” という言葉の霧をわざとかけることで、あえて輪郭をぼかし、相手への精神的な衝撃を和らげるのです。"],
+                question: "【問題】友達の旅行の計画について、「それはちょっと難しいかもしれないね」と、相手の気分を害さないように言葉の霧をかけて伝える表現はどれでしょう？",
+                choices: [
+                    { text: "It is impossible.", correct: false, feedback: "これだと「それは不可能だ！」と100%断定して突き刺してしまうため、相手を深く傷つけ、人間関係にヒビを入れる恐れがあります。" },
+                    { text: "It might be a little difficult.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “might” という霧のスパイスを効かせることで、逃げ道（余白）を作り、相手のプライドを守ることができます。<div class='academic-bridge-content'>💡 **学問への架け橋**：断定を避け、当たりを柔らかくするために言葉をぼかす技術を**「ヘッジ（Hedge：生け垣）」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l13", title: "遠回りという名の気遣い", grammar: "遠回しな表現", cognitive: "フェイス配慮", social: "社会的マナー",
+                text: ["あなたが他人の家のきれいな芝生を踏まないように、わざわざ舗装された遠い回り道をぐるりと歩いている場面を想像してください。最短距離ではありませんが、そこには「相手の土地を荒らさない」というリスペクトがあります。", "人間には誰しも「他人から指図されたくない」という本能的な心の壁を持っています。これを「フェイス」と呼びます。あえて遠回りな言葉を選ぶのは、相手のフェイスを傷つけないための高度な社会的なマナーなのです。"],
+                question: "【問題】急いでいるときに、「ちょっとお伺いしてもよろしいでしょうか」と、相手の心の芝生を踏まないように遠回しにアプローチする美しい表現はどれでしょう？",
+                choices: [
+                    { text: "Answer my question now.", correct: false, feedback: "最短距離で相手のナワバリに押し入る形です。これでは周囲からすぐに孤立してしまいます。" },
+                    { text: "I wonder if I could ask you a question.", correct: true, feedback: "<strong>【解説】</strong>ブラボー！ “I wonder if...（〜かしらと思う）” や “could” を重ねることで、美しく大きな円を描くように遠回しにおねがいしています。<div class='academic-bridge-content'>💡 **学問への架け橋**：人間の「メンツやナワバリ」を守るための言葉遣いを分析する**「ポライトネス（Politeness）理論」**があります。</div>" }
+                ]
+            },
+            {
+                id: "q4_l14", title: "丁寧さの隠し味", grammar: "丁寧表現のメカニズム", cognitive: "距離のメタファー", social: "社会秩序の維持",
+                text: ["VIPを警護するSPたちが、大物の周りに広い警戒ラインを張っている光景を想像してください。特別な人の周りには、必ず物理的な「空間」が空けられます。", "私たちは、この空間の広さを、頭の中で自動的に「敬意の大きさ」へと翻訳しています。英語話者が過去形を好むのも、過去形が持つ『現在からの距離感』を、そのまま相手に対する『社会的・心理的なリスペクト』の空間として利用しているからなのです。"],
+                question: "【問題】なぜ過去形を使うと丁寧になるのか、その理由として正しいものはどれでしょう？",
+                choices: [
+                    { text: "過去形にすると、大昔のイベントになるため、相手に「もう時効だから言うことを聞け」と強制する力が生まれるから。", correct: false, feedback: "残念！それでは相手を脅迫することになってしまい、丁寧さとは真逆の恐ろしい関係性になってしまいます。" },
+                    { text: "過去形が持つ「現実からの距離感」を応用して、相手の個人的なナワバリに踏み込まないための「心理的なスペース」をプレゼントできるから。", correct: true, feedback: "<strong>【解説】</strong>その通り！時間をあっち側に引き離すカメラワークを、人間関係の距離を空けるためにスライドして使っているのです。<div class='academic-bridge-content'>💡 **学問への架け橋**：抽象的な概念を空間で理解する心の仕組みを**「概念的メタファー」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l15", title: "言葉のブレーキを踏む", grammar: "社会的摩擦回避", cognitive: "社会的摩擦回避", social: "対人トラブル管理",
+                text: ["自転車で前方に歩行者を見つけたとき、スピードを落とさずに突っ込んだら事故になります。あなたは手元のブレーキを握り、ゆっくりと安全な速度に落としてすれ違います。", "社会の中で言葉で行き交うときも、ノーブレーキの言葉は相手と正面衝突してトラブルを引き起こします。丁寧な言葉遣いとは、自分の要求のスピードを落とし、相手の安全を守るための「言葉のブレーキ」なのです。"],
+                question: "【問題】他のメンバーの意見に対して、「その考え方には賛成できない」と、摩擦を避けながら大人のブレーキを踏んで伝える表現はどれでしょう？",
+                choices: [
+                    { text: "Your idea is bad.", correct: false, feedback: "ブレーキが完全にぶっ壊れています。相手と正面衝突してしまい、関係は修復不可能に壊れてしまいます。" },
+                    { text: "I see your point, but I have a alternative view.", correct: true, feedback: "<strong>【解説】</strong>お見事！まず “I see your point” と相手のカメラを受け止めてクッションを引き、その上で “but” で自分の意見を提示しています。<div class='academic-bridge-content'>💡 **学問への架け橋**：人間関係のクラッシュを防ぐ戦略を**「摩擦回避（Mitigation）」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l16", title: "「距離」の世界の完成", grammar: "第2章 総復習", cognitive: "世界観の総括", social: "共有認識",
+                text: ["素晴らしい！私たちは、英語の「丁寧さ」が決して単なる単語の暗記ではなく、相手との心理的な【距離】をカメラでどうコントロールするかという思想そのものであることを学んできました。", "親しいゼロ距離の “Can”、一歩引いたクッションの “Could”、もしもの世界に逃がす “Would”、そして摩擦を防ぐブレーキ。これで「距離のインフラ」が完全にインストールされました。総括問題に挑みましょう！"],
+                question: "【総合問題】「ちょっと手伝って！」という光景と、「お手伝いをお願いできますでしょうか（丁寧な距離）」という２つの関係性を、正しい使い分けで表しているペアはどれでしょう？",
+                choices: [
+                    { text: "Would you help me? Can you help me today raw?", correct: false, feedback: "順番が逆転している上に、後半に奇妙な単語が混ざって意味が通じなくなっています。" },
+                    { text: "Can you help me? Would you be able to help me?", correct: true, feedback: "<strong>【解説】</strong>ビューティフル！ “Can you...?” で親密な近距離を表現し、 “Would you be able to...?” で現実から離れた美しい仮想の距離を空けています。<div class='academic-bridge-content'>💡 **学問への架け橋**：文法の選択は、身分や親しさを計算し、距離のグリッドの上にマッピングする作業です。</div>" }
+                ]
+            },
+
+            // --- 第3章 ---
+            {
+                id: "q4_l17", title: "心のメーターを動かす", grammar: "like", cognitive: "評価", social: "感情表現",
+                text: ["胸の中に感情の目盛りがついた「心のメーター」があると想像してください。モノに出会ったとき、針がプラスの方へ心地よく振れる感覚。それが “like” の正体です。", "言葉は、冷たいデータだけを運ぶものではありません。自分の心のメーターが今どちらに振れているかという「評価」を相手に開示することで、お互いの心の波形をシンクロさせ、社会的な関係の結びつきを強めていくのです。"],
+                question: "【問題】「私はこの音楽がとてもお気に入りです」と、心のプラスのメーターを素直に開示する形はどれでしょう？",
+                choices: [
+                    { text: "Music is music.", correct: false, feedback: "感情のメーターが1ミリも動いていない冷たい同語反復です。これでは人間関係に火が灯りません。" },
+                    { text: "I like this music very much.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “I like” は、あなたの心のカメラが対象に対してポジティブな光線を当てている状態を示します。<div class='academic-bridge-content'>💡 **学問への架け橋**：物事に対する主観的な価値判断の認知を**「評価（Evaluation）」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l18", title: "感情の大爆発", grammar: "love / hate", cognitive: "感情強度", social: "自己開示",
+                text: ["メーターが目盛りを振り切って、真っ赤なランプを点滅させながら激しく火花を散らしている光景を想像してください。抑えきれないほどの情熱です。", "英語話者は、感情の「強さ」を単語の選択によってダイナミックに切り替えます。 “love” や “hate” は、メーターを限界まで押し込んだ究極の自己開示の言葉であり、これらを投げかけることで、自分のパッションの全貌を伝えることができます。"],
+                question: "【問題】「この映画が心の底から大好きなんだ！」と、メーターを最大値まで振り切って熱狂を伝えるときの表現はどれでしょう？",
+                choices: [
+                    { text: "I like this movie a little bit.", correct: false, feedback: "これだとメーターがむしろ下がり気味なひかえめ表現になってしまい、熱狂が伝わりません。" },
+                    { text: "I love this movie.", correct: true, feedback: "<strong>【解説】</strong>完璧です！ “love” という引き出しを開けることで、魂が対象にロックオンしているという強烈な感情強度を届けられます。<div class='academic-bridge-content'>💡 **学問への架け橋**：感情のボリュームの大きさを**「感情強度（Affective Intensity）」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l19", title: "「なぜなら」で心をつなぐ", grammar: "because", cognitive: "因果", social: "社会的理由付け",
+                text: ["目の前に、「楽しそうな笑顔」という結果があります。その裏側に、「大好きな友達と一緒にいるから」という理由がしっかりと結び付けられている場面を想像してください。", "人間は、ただ感情をぶつけるだけでは納得しません。「私はこう感じる。なぜなら……」と、理由を丁寧に説明されて初めて、他者は共感し、社会的な信頼を結ぶことができるのです。"],
+                question: "【問題】「彼女は幸せそうだ。なぜなら、欲しかったプレゼントを手に入れたからだ」と、原因を論理的につないで説明している英文はどれでしょう？",
+                choices: [
+                    { text: "She is happy but she got the present.", correct: false, feedback: "“but” を使うと、幸せとプレゼントというバラバラな要素がつながらず、意味が崩れてしまいます。" },
+                    { text: "She is happy because she got the present.", correct: true, feedback: "<strong>【解説】</strong>その通り！ “because” で接着することで、「結果」と「原因」を脳内で連結させています。<div class='academic-bridge-content'>💡 **学問への架け橋**：原因と結果のつながりを認知する働きを**「因果関係の認知」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l20", title: "あなたの心に潜り込む", grammar: "I understand.", cognitive: "共感", social: "同調行為",
+                text: ["友達が涙を流しているとき、あなたも胸の奥が痛くなり、まるで自分のことのように悲しい気持ちになる場面を想像してください。二人の心の波形が重なり合っています。", "“I understand.” という言葉は、単に知的なサインではありません。「あなたのカメラの隣に立ち、あなたと同じ景色を見ているよ」という、社会的なぬくもりのハグなのです。"],
+                question: "【問題】落ち込んでいる相手に対して、「あなたのその辛い気持ち、本当によく分かりますよ」と、心に寄り添う共感を伝える表現はどれでしょう？",
+                choices: [
+                    { text: "That is your own problem.", correct: false, feedback: "「お前自身の問題だ」と突き放す冷酷な言葉です。これでは人間関係が凍りついてしまいます。" },
+                    { text: "I understand how you feel.", correct: true, feedback: "<strong>【解説】</strong>大正解！ “how you feel” の引き出しを包み込むことで、最高の共感を表現できます。<div class='academic-bridge-content'>💡 **学問への架け橋**：他者の感情を自分のことのように脳内で共有する働きを**「共感（Empathy）」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l21", title: "相手のサングラスをかける", grammar: "Perspective Taking", cognitive: "Perspective Taking", social: "視点共有",
+                text: ["赤色のサングラスをかけた人と、青いサングラスの人が向かい合っています。二人が見ている世界の色は違います。相手を理解するには、自分のサングラスを外し、相手のサングラスを借りる必要があります。", "自分のカメラを完全に離れて、相手の立場に意識をワープさせて世界を眺めること。これを「視点取得」と呼びます。これができる人間だけが、本当の大人として他者と深い対話ができます。"],
+                question: "【問題】「相手の立場になって考えてみよう」という大人のカメラワークを、代表的な身体メタファーで表しているのはどれでしょう？",
+                choices: [
+                    { text: "Look at his face with a mirror.", correct: false, feedback: "「鏡で顔を見ろ」という意味の分からない絵になってしまいます。" },
+                    { text: "Put yourself in his shoes.", correct: true, feedback: "<strong>【解説】</strong>その通り！「彼の靴の中に自分の足を入れてみなさい」という、他人の痛みがわかるための美しい知恵です。<div class='academic-bridge-content'>💡 **学問への架け橋**：身体の感覚を使って抽象的な心の動きを表現することを**「身体性（Embodiment）」**の理論と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l22", title: "言葉の花束を贈る", grammar: "褒め表現", cognitive: "関係構築", social: "社会的ストローク",
+                text: ["誰かから「今日の服、素敵だね！」と笑顔で褒められ、脳内に光が差し込んで、一日中ハッピーになった経験を想像してください。", "人を褒めるということは、単なるお世辞ではありません。相手の存在価値を見つけ出し、それを「言葉の花束」にしてプレゼントする社会的行為です。褒め言葉は、心の壁を溶かす最高の魔法なのです。"],
+                question: "【問題】友達のプレゼンテーションに対して、「本当に見事な仕事ぶりだったよ！」と賛辞を贈る表現はどれでしょう？",
+                choices: [
+                    { text: "Your job was just normal standard.", correct: false, feedback: "褒めるどころか冷や水を浴びせるような冷たい表現で、相手との距離を遠ざけてしまいます。" },
+                    { text: "You did a fantastic job!", correct: true, feedback: "<strong>【解説】</strong>正解です！ “fantastic job” を相手の行動に投げつけることで、相手の自己肯定感を満たし、関係性を強固にします。<div class='academic-bridge-content'>💡 **学問への架け橋**：他者の価値を認めて安心感を与える言葉のやり取りを**「社会的ストローク」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l23", title: "ありがとうのキャッチボール", grammar: "感謝表現", cognitive: "互恵性", social: "社会的絆",
+                text: ["荷物を持ってもらったとき、今度はあなたがおいしいお茶を出す。そんな「優しさのキャッチボール」がぐるぐると回っている光景を想像してください。", "人間関係は、もらいっぱなしでは成立しません。感謝の言葉を返すことで、お互いの貸し借りのバランスを整えます。この『恩返しルール』があるからこそ、社会はバラバラに崩壊せずに保たれているのです。"],
+                question: "【問題】親切にしてくれた友人に対して、「本当に感謝しています」と深い感謝を伝える表現はどれでしょう？",
+                choices: [
+                    { text: "I am happy because you are working.", correct: false, feedback: "「あなたが働いているから幸せだ」という、感謝のピントがズレた報告になってしまいます。" },
+                    { text: "I really appreciate your kind help.", correct: true, feedback: "<strong>【解説】</strong>完璧です！ “appreciate” で相手の優しさの価値を評価し、言葉のギフトとして投げ返しています。<div class='academic-bridge-content'>💡 **学問への架け橋**：優しさを与え合って良好な関係を維持しようとする心理を**「互恵性（Reciprocity）」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l24", title: "「気持ち」の世界の完成", grammar: "第3章 総復習", cognitive: "世界観の総括", social: "共有認識",
+                text: ["素晴らしい！私たちは、言葉が単なる事実の記号ではなく、心のメーターを動かし、因果でつなぎ、共感のハグを交わし、言葉の花束を贈るという、熱い「エモーションのインフラ」であることを体感してきました。", "感情を社会的に開示し、分かち合うことこそが、人間関係という建物の強固なコンクリートになります。第3章の総括問題へ進みましょう！"],
+                question: "【総合問題】「私はこの街が大好きだ。なぜなら優しいから」という確信と、「あなたの親切に心から感謝します」という２つの心の動きを、正しく表現しているペアはどれでしょう？",
+                choices: [
+                    { text: "I hate this town but people are kind. You must thank me.", correct: false, feedback: "これでは街を嫌い、相手を怒鳴りつける最悪な関係にしか見えません。" },
+                    { text: "I love this town because people are kind. I deeply appreciate your kindness.", correct: true, feedback: "<strong>【解説】</strong>ウルトラパーフェクト！ “love” と “because” で熱い感情の因果関係を美しくマッピングし、 “appreciate” で感謝を返しています。<div class='academic-bridge-content'>💡 **学問への架け橋**：感情表現とは単なる脳の興奮の出力ではなく、他者と「社会的同盟」を結ぶための戦略です。</div>" }
+                ]
+            },
+
+            // --- 第4章 ---
+            {
+                id: "q4_l25", title: "優しく背中を押す魔法", grammar: "Please", cognitive: "協力要請", social: "社会的な依頼",
+                text: ["あなたが重い扉を開けようとして両手が塞がっている場面を想像してください。あなたは通りがかった人に「この扉を開けるのを手伝っていただけますか？」と視線を送ります。", "相手に頼むとき、ただ「やれ！」と命令するとフェイスを侵害します。 “Please” という言葉は、その命令のトゲを丸く削り、「どうか私のために、力を貸してください」と優しく要請するカメラワークなのです。"],
+                question: "【問題】「どうぞ座ってください」と、相手のナワバリを尊重しながら行動を促す最も適切な表現はどれでしょう？",
+                choices: [
+                    { text: "Sit down on this chair now.", correct: false, feedback: "これだと「今すぐ座れ！」という強制的な命令になり、非常に失礼な絵になります。" },
+                    { text: "Please have a seat.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “Please” をつけることで、「あなたの意志で、どうぞ心地よくお座りください」というリスペクトの空間が生まれます。<div class='academic-bridge-content'>💡 **学問への架け橋**：行動させる言葉の働きを**「発話内行為（Illocutionary Act）」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l26", title: "同じ船に乗ろう", grammar: "Let’s", cognitive: "共同行為", social: "連帯の提案",
+                text: ["あなたと仲間たちが、一隻のボートに乗り込んでいる光景を想像してください。全員がオールを持ち、タイミングを合わせて漕ぎ出します。進むも退くも全員が運命共同体です。", "“Let’s...” という表現の本質は、この「同じ船への招待」です。自分一人だけで走るのではなく、相手の手を握って、「共通の目標に向かって、一緒にアクションを起こそうぜ！」と巻き込む協力の接着剤なのです。"],
+                question: "【問題】「一緒にちょっと休憩しようよ！」と同じ船に巻き込んで優しく提案するときの正しい形はどれでしょう？",
+                choices: [
+                    { text: "I will take a break and you look.", correct: false, feedback: "「自分だけ休むからお前は見とけ」という身勝手な絵になってしまい、協力のドラマが生まれません。" },
+                    { text: "Let’s take a break.", correct: true, feedback: "<strong>【解説】</strong>完璧です！ “Let’s” の中には `let us` 、つまり「一緒にやろう」という巻き込みが100%入っています。<div class='academic-bridge-content'>💡 **学問への架け橋**：同じ社会的なイベントを立ち上げる提案を**「共同行為（Joint Action）の交渉」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l27", title: "特別なディナーへの招待", grammar: "Would you like to...?", cognitive: "関係強化", social: "関係深化の作法",
+                text: ["あなたが大切なゲストを、高級レストランの特等席へ招き入れる場面を想像してください。あなたは椅子を引き、相手が心地よく腰掛けられるようにエスコートします。", "“Would you like to...?” は、過去形の「仮想の距離」の応用です。「もしよろしければ、私と同じ時間を過ごすという特別な体験を楽しんでいただけますか？」という、相手の人間性を高めた、最も美しい招待の作法です。"],
+                question: "【問題】「今週末、僕と一緒に映画を観に行きませんか？」と、最大級の気遣いを込めてオシャレに誘う表現はどれでしょう？",
+                choices: [
+                    { text: "Come to the cinema with me now.", correct: false, feedback: "強制連行するような乱暴な絵になってしまい、相手から怖がられてしまいます。" },
+                    { text: "Would you like to go to the movies with me this weekend?", correct: true, feedback: "<strong>【解説】</strong>ビューティフル！相手に「断る自由」を残しながら、スマートに心のサークルへ招待しています。<div class='academic-bridge-content'>💡 **学問への架け橋**：相手のプライドを最大限に扱う戦略を**「ポジティブ・ポライトネス」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l28", title: "がっちりスクラムを組む", grammar: "賛成表現", cognitive: "連帯", social: "アライアンス形成",
+                text: ["ラグビーの選手たちが、肩を組み合って、巨大な壁となって敵に向かって突き進む「スクラム」の光景を想像してください。全員の意志が1ミリのズレもなくシンクロしています。", "他人の意見に「賛成する」ということは、単にボタンを押すことではありません。「あなたの意見の中に飛び込んで、これから一緒に戦う仲間になるぞ」という、強力な連帯の社会行為なのです。"],
+                question: "【問題】「あなたのその提案に、私は100%同意します」と、同盟を宣言する大人の表現はどれでしょう？",
+                choices: [
+                    { text: "I am agree with myself.", correct: false, feedback: "これだと「自分自身に賛成している」という独り言になってしまい、相手との連帯が組めません。" },
+                    { text: "I completely agree with your opinion.", correct: true, feedback: "<strong>【解説】</strong>正解です！相手の意見と自分のカメラが寸分の狂いもなく重なった、強固な同盟の絵を上映します。<div class='academic-bridge-content'>💡 **学問への架け橋**：意見の一致を示してまとまりを強化する行為を**「アライアンス形成」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l29", title: "嵐の中でカサを差す", grammar: "反対表現", cognitive: "対立管理", social: "クッション対比",
+                text: ["ドシャ降りの雨の中で、頑丈な傘をパッと広げて、冷たい雨粒を完全に防いでいる場面を想像してください。傘を一枚挟むことで、外の衝撃から身を守っています。", "社会生活の中で、他人の意見に「反対」しなければならない場面は訪れます。しかし、「お前は間違っている！」と殴ると大戦争が起きます。賢い話者は、一度相手を褒めるなどの「カサ」を差してから、そっと自分の違うカメラを提示します。"],
+                question: "【問題】相手の意見に対して、「よく分かりますが、費用が少し高すぎるのではないかと思います」と、摩擦を起こさずに反対する表現はどれでしょう？",
+                choices: [
+                    { text: "You are wrong. Stop that plan.", correct: false, feedback: "ノーカサで相手を殴り倒す暴走表現です。会議の空気が凍りついてしまいます。" },
+                    { text: "I understand your view, but I’m afraid it might be too expensive.", correct: true, feedback: "<strong>【解説】</strong>素晴らしい！一度相手を包み、反対意見を最も柔らかく着地させています。<div class='academic-bridge-content'>💡 **学問への架け橋**：意見の対立を平和的にコントロールする脳の働きを**「対立管理」**の戦略と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l30", title: "お互いの陣地の真ん中へ", grammar: "交渉表現", cognitive: "利害調整", social: "ディベートの作法",
+                text: ["綱引きでロープの両端を引っ張り合っていますが、どちらかが倒れて終わります。二人は一歩歩み寄り、ロープの真ん中でガシッと握手を交わしました。", "自分のわがままだけを通すのでもなく、相手にすべてを譲るのでもない。お互いのカメラのちょうど「妥協点」を探して、社会的な合意を新しく建設すること。これを「交渉」と呼び、対話の作法になります。"],
+                question: "【問題】「お互いにとって良い解決策を見つけるために、少し話し合いましょう」と、建設的な歩み寄りを提案する正しい表現はどれでしょう？",
+                choices: [
+                    { text: "I will never change my mind forever.", correct: false, feedback: "頑なに心を閉ざしてしまう形です。これではロープが千切れてしまい、交渉が決裂してしまいます。" },
+                    { text: "Let’s find a win-win solution for both of us.", correct: true, feedback: "<strong>【解説】</strong>正解です！二人のサークル全体が幸せになるための中間地点への歩み寄りを促すことができます。<div class='academic-bridge-content'>💡 **学問への架け橋**：お互いの妥協点を模索する営みを**「利害調整（Negotiation）」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l31", title: "一つのレンガの家を建てる", grammar: "合意形成", cognitive: "協働", social: "社会的合意",
+                text: ["みんなで力を合わせて一つの「レンガの家」を建てている光景を想像してください。あなたがレンガを運び、友達がセメントを塗り、別の人が屋根を載せる。全員の力が合わさって、一つの形が完成します。", "会話のゴールは、バラバラの意見を戦わせることではなく、全員が「よし、この方向で進もう！」と一つになることです。言葉を使って社会の新しい現実を一緒に作り上げる、美しいゴールです。"],
+                question: "【問題】話し合いの最後に、「僕たちはついに全員の意見が一つにまとまったね」と、協働の成功を宣言する正しい表現はどれでしょう？",
+                choices: [
+                    { text: "I am winning this discussion alone.", correct: false, feedback: "「私一人が勝ちつつある」という、チームを無視した独りよがりの絵になってしまいます。" },
+                    { text: "We have reached an agreement.", correct: true, feedback: "<strong>【解説】</strong>パーフェクト！話し合いのプロセスが、ついに「合意」というゴールに到達した、感動的なカメラワークです。<div class='academic-bridge-content'>💡 **学問への架け橋**：共通の決定に到達する高度な社会行為を**「合意形成（Consensus Building）」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l32", title: "「協力」の世界の完成", grammar: "第4章 総復習", cognitive: "世界観の総括", social: "共有認識",
+                text: ["素晴らしい！私たちは、言葉がただの独り言ではなく、Pleaseで協力を求め、Let'sで同じ船に誘い、クッションを挟んで平和的に反対意見をコントロールし、最後に全員で合意の家を建てるという、社会を動かすシステムであることを学んできました。", "社会は一人では作れません。他者と手をつなぎ、歯車を噛み合わせるための「協働の文法」が、これであなたの脳内に完全に定着しました。総括問題に挑みましょう！"],
+                question: "【総合問題】「一緒にプロジェクトを始めよう！」という提案と、「僕たちは合意に達したね！」という協働の完成を、正しく表現しているペアはどれでしょう？",
+                choices: [
+                    { text: "I will start the project alone. Agreement is just a normal word.", correct: false, feedback: "一人のスタンドプレーと合意への冷ややかな態度になってしまい、チームのドラマが千切れてしまいます。" },
+                    { text: "Let’s start the project. We have reached an agreement.", correct: true, feedback: "<strong>【解説】</strong>ウルトラブラボー！！！ “Let’s” で同じ船に巻き込み、 “have reached” で合意の家が完成した現在のリアリティを捉えています。<div class='academic-bridge-content'>💡 **学問への架け橋**：言葉の力で社会的な現実を協働でアップデートしていくプロセスこそが、コミュニケーションの究極の姿です。</div>" }
+                ]
+            },
+
+            // --- 第5章 ---
+            {
+                id: "q4_l33", title: "相手の頭の引き出しを覗く", grammar: "Theory of Mind", cognitive: "Theory of Mind", social: "前提の共有",
+                text: ["あなたは宝物を箱の中に隠しました。子供はまだその中身を知りません。あなたは「この子はまだ中身を知らないぞ」と、相手の頭の中の引き出しの状態をシミュレーションしています。", "人間には、目の前の相手が「何を知っていて、何を考えているか」を、脳内で鏡のように映し出して推測する特別なレーダーがあります。これを「心の理論」と呼びます。英語話者はいつもこのレーダーを回して、相手を覗き見ながら言葉を選んでいるのです。"],
+                question: "【問題】「彼はその秘密の答えをすでに知っていると思うよ」と、相手の頭の中を推測して語る表現はどれでしょう？",
+                choices: [
+                    { text: "Secret is hidden in the dark mountain.", correct: false, feedback: "ただのファンタジーの背景描写になってしまい、他者の知識状態を推測する会話になりません。" },
+                    { text: "I believe he already knows the secret.", correct: true, feedback: "<strong>【解説】</strong>正解です！ “I believe” というカメラから、“knows the secret” という「知識状態」へ矢印を飛ばしています。<div class='academic-bridge-content'>💡 **学問への架け橋**：他者の心の状態を類推する認知メカニズムを**「心の理論（Theory of Mind）」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l34", title: "知識のデコボコを測る", grammar: "the / a の使い分け", cognitive: "知識差", social: "情報構造の調整",
+                text: ["水槽が二つ並んでいます。左の水槽（あなたの頭）にはデータが満たされていますが、右の水槽（相手の頭）はまだ空っぽです。二つの水槽の間には「知識のデコボコ」があります。", "英語の “a” と “the” の使い分けは、このデコボコを測る精密なセンサーです。「相手はまだ知らないな」と思えば “a” の箱に入れ、共通の知識になったと確信できれば “the” のシールをペタッと貼るのです。"],
+                question: "【問題】「一匹の犬を見つけてさ……」「その犬がすごく可愛かったんだ！」とつなぐ正しい使い分けはどれでしょう？",
+                choices: [
+                    { text: "I found the dog yesterday. The dog was cute from the history.", correct: false, feedback: "最初から “the” と言ってしまうと、相手は「え？どの犬のこと？」とパニックを起こしてしまいます。" },
+                    { text: "I found a dog yesterday. The dog was really cute.", correct: true, feedback: "<strong>【解説】</strong>ウルトラ正解！最初は相手の頭が空っぽなので “a dog” で登場させ、共通の知識になった瞬間に “The dog” へスイッチを切り替えています。<div class='academic-bridge-content'>💡 **学問への架け橋**：情報を管理する仕組みを**「情報構造（Information Structure）」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l35", title: "言葉のチューニング", grammar: "説明の文法", cognitive: "情報調整", social: "聞き手配慮",
+                text: ["ラジオのつまみを回しながら、雑音を消して、きれいな音楽が聞こえる「ぴったりの周波数」に合わせていく場面を想像してください。", "人に物事を説明するとき、私たちは相手の知識レベルに合わせて、言葉をリアルタイムで「チューニング」しています。相手を置いてけぼりにせず、一番受け取りやすいサイズに切り分けてあげる、最高の聞き手配慮のカメラワークです。"],
+                question: "【問題】「つまり、もっと簡単に言うとこういうことだよ」と、相手の周波数に合わせて言葉を言い換えるときのフレーズはどれでしょう？",
+                choices: [
+                    { text: "You have a low intelligence so I stop.", correct: false, feedback: "人格を侮辱する絶対にやってはいけない暴言です。" },
+                    { text: "In other words, it means this simple pattern.", correct: true, feedback: "<strong>【解説】</strong>その通り！ “In other words” で、「あなたの頭のサイズに合わせてラッピングし直しますよ」という合図を届けています。<div class='academic-bridge-content'>💡 **学問への架け橋**：話し手が聞き手に合わせて話し方を変形させる心の動きを**「コミュニケーション適応理論」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l36", title: "二つのカメラのすれ違い", grammar: "誤解のメカニズム", cognitive: "視点差", social: "トラブルシューティング",
+                text: ["一つの立体的な「６」が置かれています。あなたが南側から見ると「６」ですが、真向かいの友達のカメラから見ると、逆立ちして「９」に見えています。二人とも正しいのに、景色が違います。", "誤解は、悪者がいるわけではありません。お互いのカメラ位置が少しズレているために、同じ言葉が違う意味に翻訳されてしまうのです。このズレに気づくことが、大人の知性です。"],
+                question: "【問題】「カメラの位置が違うから、誤解が起きちゃったんだね。話し合おう」と、視点のズレを客観的に見つめる大人の表現はどれでしょう？",
+                choices: [
+                    { text: "You are looking at the wrong 100% space.", correct: false, feedback: "「お前が間違っている」と糾弾する形では、視点の差をお互いに認め合う大人の会話になりません。" },
+                    { text: "We just saw the matter from different angles.", correct: true, feedback: "<strong>【解説】</strong>お見事！ “from different angles” と表現することで、どちらか一方が悪いのではなく、三脚の位置がズレたのだと客観的に棚卸しできます。<div class='academic-bridge-content'>💡 **学問への架け橋**：視点による認識の限界を**「視点の相対性」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l37", title: "壊れた架け橋をなおす", grammar: "会話の修復表現", cognitive: "Repair", social: "対話維持行為",
+                text: ["会話の途中でロープが切れて、言葉が宙ぶらりんになってしまっている光景を想像してください。このままでは会話が遭難してしまいます。", "言葉が伝わらなかったり聞き取れなかったりしたとき、逃げ出すのではなく「工具箱を広げて橋を修理する」こと。これを「会話の修復（リペア）」と呼び、社会的な対話をやり遂げるための、最も重要な技術です。"],
+                question: "【問題】相手の言葉が聞き取れなかったときに、「恐れ入りますが、もう一度おっしゃっていただけますでしょうか」と、橋を修理する表現はどれでしょう？",
+                choices: [
+                    { text: "What? Speak again loudly.", correct: false, feedback: "「デカい声で喋れよ」と相手を威嚇するような野蛮な絵になってしまい、美しい会話の修理になりません。" },
+                    { text: "I beg your pardon?", correct: true, feedback: "<strong>【解説】</strong>完璧です！非常に上品なリペアの引き出しを使うことで、相手に不快感を与えずに言葉のロープを結び直すことができます。<div class='academic-bridge-content'>💡 **学問への架け橋**：エラーをその場で修正する行動を**「修復（Repair）」**メカニズムと呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l38", title: "言葉の裏側の景色を読む", grammar: "助動詞の推論", cognitive: "推論", social: "コンテクスト利用",
+                text: ["友達が首元をあおぎながら、「喉が渇いちゃったな……」と言葉をこぼしました。目は部屋の隅にある冷蔵庫をチラリと見ています。", "言葉のデータ（喉が渇いた）だけでなく、「冷たいお茶が飲みたいんだな」と、裏側のメッセージを脳内でジャンプして読み取ること。これを「推論（空気を読むこと）」と呼び、社会性の高い人間の証拠なのです。"],
+                question: "【問題】「（汗をかいているから）彼は今、緊張しているに違いないぞ」と、状況から裏側の現実を確信を持って推論する表現はどれでしょう？",
+                choices: [
+                    { text: "He used to be nervous now.", correct: false, feedback: "これだと「昔は緊張したものだ」という意味になり、今の状況からの大人の推論になりません。" },
+                    { text: "He must be nervous now.", correct: true, feedback: "<strong>【解説】</strong>その通り！この “must” は命令ではなく、「証拠から逆算すれば、間違いなく〜に違いない！」という強力な『推論』のカメラワークです。<div class='academic-bridge-content'>💡 **学問への架け橋**：状況から真意を導き出す脳の働きを**「発話の推論」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l39", title: "「社会」へつながる門の前に", grammar: "人間関係の維持", cognitive: "社会的知能", social: "相互行為の統合",
+                text: ["Quest IVで初めて、カメラのレンズの前に生々しい『人間そのもの』が登場しました。人間関係を維持するということ。それは、自分に閉じこもるのをやめ、相手にお引越しし、適切な心の距離を測り、相手の心の引き出しを思いやるという、美しいダンスのような営みそのものです。この共有認識に立ったとき、言葉は本当の「社会的な力」へと進化します。"],
+                question: "【問題】英語話者が言葉を使って人間関係を築くプロセスとして、最も正しいものはどれでしょう？",
+                choices: [
+                    { text: "人間関係とは利益の計算であり、丸暗記によって相手を操作するための機械的な記号処理である。", correct: false, feedback: "残念！それはこれまで乗り越えてきた、古い「OS 1.0」の化石のような考え方です。" },
+                    { text: "言葉は単なるデータを運ぶ郵便ポストではなく、相手との心理的距離やメンツを調整しながら、社会のつながりを一緒に作り上げるための温かい道具である。", correct: true, feedback: "<strong>【解説】</strong>正解です！文法を学ぶことは、社会の中で他者と心地よく共生するための最高の知恵です。<div class='academic-bridge-content'>💡 **学問への架け橋**：会話を通じて、お互いの関係性をリアルタイムで構築し続ける理論を**「相互行為の主観性」**と呼びます。</div>" }
+                ]
+            },
+            {
+                id: "q4_l40", title: "Quest IV 最終章", grammar: "人間関係の統合", cognitive: "メタ認知の完成", social: "多層的英語観の獲得",
+                text: ["おめでとうございます！ついにQuest IVの頂点へ到達しました！ 終わってみれば、英語話者のシステムは、シンプルな5つの脳内アクション（OS 2.0）の組み合わせに過ぎなかったことが理解できるはずです。", "これら5つのコアを統合したとき、あなたの脳内には、認知から社会へつながる「多層的英語観」のピラミッドが堂々と完成します。この冒険の総括問題に挑みましょう！"],
+                question: "【最終総合問題】英語話者が他者と関わり、人間関係を築くプロセスを完璧に言い尽くしている思想はどれでしょう？",
+                choices: [
+                    { text: "英語のコミュニケーションとは、単に日本語を機械的に置き換えるパズルであり、話し手の視点移動などは一切関係のない、単一の記号処理である。", correct: false, feedback: "OS 1.0の罠にかかってはいけません！私たちは人間ドラマ（Meaning/Use）を体感してきたはずです。" },
+                    { text: "英語話者は、私とあなたを区別して対話に立ち、過去形をスライドさせて心の距離を調整し、理由を添えて感情を共有し、協力して合意を建て、相手の行間の空気を推測することで、人間関係を築いている。", correct: true, feedback: "<strong>✨🎉👑【QUEST IV 完全制覇！！！】👑🎉✨</strong> あなたは、文法をただの「法律」ではなく「愛の芸術」として統合しました！この獲得した羅針盤は、あなたを「最高の表現者」へと進化させるでしょう！最高の冒険をありがとう！👍<div class='academic-bridge-content'>🎓 **Navigatorからの最終メッセージ**：これにてQuest IV、完全完結です。さあ、広大な【Quest V：社会の世界】へ次なる冒険に出発しましょう！</div>" }
+                ]
+            }
+        ]
+    };
+
+    let playerProgress = { clearedLevelIds: [] };
+
+    function loadGame() {
+        const saved = localStorage.getItem('english_quest_q4_save');
+        if (saved) {
+            try { playerProgress = JSON.parse(saved); } catch(e) { console.error(e); }
+        }
+    }
+
+    function saveGame() {
+        localStorage.setItem('english_quest_q4_save', JSON.stringify(playerProgress));
+    }
+
+    function resetSaveData() {
+        if (confirm("これまでのQuest 4の冒険の書をリセットします。よろしいですか？")) {
+            localStorage.removeItem('english_quest_q4_save');
+            playerProgress = { clearedLevelIds: [] };
+            alert("リセットしました。新たな人間関係の旅へ出発しましょう！");
+            renderMainScreen();
+        }
+    }
+
+    function switchScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        if (screenId === 'screen-main') {
+            document.getElementById('global-nav').style.display = 'none';
+        } else {
+            document.getElementById('global-nav').style.display = 'block';
+        }
+    }
+
+    function saveAndExit() {
+        saveGame();
+        renderMainScreen();
+        switchScreen('screen-main');
+    }
+
+    function renderMainScreen() {
+        loadGame();
+        const container = document.getElementById('worlds-container');
+        container.innerHTML = '';
+
+        const worldCard = document.createElement('div');
+        worldCard.className = 'quest-world-card';
+
+        const header = document.createElement('div');
+        header.className = 'quest-world-header';
+        
+        const totalLevels = questData.levels.length;
+        const clearedCount = questData.levels.filter(l => playerProgress.clearedLevelIds.includes(l.id)).length;
+        
+        header.innerHTML = `
+            <h3>${questData.title}</h3>
+            <span style="font-size:0.9rem; color:#475569; font-weight:bold;">獲得スタンプ: ${clearedCount} / ${totalLevels}</span>
+        `;
+        worldCard.appendChild(header);
+
+        const stampsGrid = document.createElement('div');
+        stampsGrid.className = 'stamps-grid';
+        questData.levels.forEach((lvl, idx) => {
+            const isLvlCleared = playerProgress.clearedLevelIds.includes(lvl.id);
+            const stampDot = document.createElement('div');
+            stampDot.className = `stamp-dot ${isLvlCleared ? 'cleared' : ''}`;
+            stampDot.innerHTML = isLvlCleared ? '👍' : (idx + 1);
+            stampsGrid.appendChild(stampDot);
+        });
+        worldCard.appendChild(stampsGrid);
+
+        questData.chapters.forEach(ch => {
+            const chHeader = document.createElement('h3');
+            chHeader.className = 'chapter-title';
+            chHeader.innerText = ch.title;
+            worldCard.appendChild(chHeader);
+
+            const nodesDiv = document.createElement('div');
+            nodesDiv.className = 'level-nodes';
+
+            for (let i = ch.startIdx; i <= ch.endIdx; i++) {
+                const lvl = questData.levels[i];
+                const isLvlCleared = playerProgress.clearedLevelIds.includes(lvl.id);
+                
+                let isLocked = false;
+                if (i > 0) {
+                    const prevLvlId = questData.levels[i - 1].id;
+                    if (!playerProgress.clearedLevelIds.includes(prevLvlId)) {
+                        isLocked = true;
+                    }
+                }
+
+                const nodeBtn = document.createElement('button');
+                nodeBtn.className = `level-node-btn ${isLvlCleared ? 'cleared' : ''}`;
+                
+                if (isLocked) {
+                    nodeBtn.innerText = `🔒 Lv ${i + 1}`;
+                    nodeBtn.disabled = true;
+                } else {
+                    nodeBtn.innerText = `${isLvlCleared ? '✓ ' : ''}Level ${i + 1}`;
+                    nodeBtn.onclick = () => startQuest(i);
+                }
+                nodesDiv.appendChild(nodeBtn);
+            }
+            worldCard.appendChild(nodesDiv);
+        });
+
+        container.appendChild(worldCard);
+    }
+
+    let activeLevelIndex = 0;
+
+    function startQuest(levelIndex) {
+        activeLevelIndex = levelIndex;
+        switchScreen('screen-quest');
+
+        const lvlData = questData.levels[levelIndex];
+        document.getElementById('quest-header-title').innerText = `Level ${levelIndex + 1} : ${lvlData.title}`;
+        
+        const storyBox = document.getElementById('story-container');
+        storyBox.innerHTML = `
+            <div class="academic-badge-zone">
+                <span class="academic-badge">中心テーマ: ${lvlData.grammar}</span>
+                <span class="academic-badge">認知言語学: ${lvlData.cognitive}</span>
+                <span class="academic-badge social">社会言語学・英語観: ${lvlData.social}</span>
+            </div>
+        `;
+        lvlData.text.forEach(para => {
+            const p = document.createElement('p');
+            p.innerText = para;
+            storyBox.appendChild(p);
+        });
+
+        document.getElementById('question-container').innerHTML = lvlData.question;
+        
+        const choicesBox = document.getElementById('choices-container');
+        choicesBox.innerHTML = '';
+        document.getElementById('feedback-container').style.display = 'none';
+
+        lvlData.choices.forEach((choice) => {
+            const btn = document.createElement('button');
+            btn.className = 'choice-item-btn';
+            btn.innerHTML = choice.text;
+            btn.onclick = () => selectChoice(choice, btn);
+            choicesBox.appendChild(btn);
+        });
+    }
+
+    function selectChoice(selectedChoice, clickedBtn) {
+        const lvlData = questData.levels[activeLevelIndex];
+        const buttons = document.querySelectorAll('.choice-item-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        const feedbackContainer = document.getElementById('feedback-container');
+        const statusText = document.getElementById('feedback-status');
+        const fbText = document.getElementById('feedback-text');
+        const nextBtn = document.getElementById('next-action-btn');
+
+        feedbackContainer.style.display = 'block';
+
+        if (selectedChoice.correct) {
+            clickedBtn.classList.add('correct');
+            feedbackContainer.className = "feedback-zone correct-zone";
+            statusText.innerText = "👍 大正解！その人間関係のカメラワークです。";
+            fbText.innerHTML = selectedChoice.feedback;
+            nextBtn.style.display = 'inline-block';
+
+            if (!playerProgress.clearedLevelIds.includes(lvlData.id)) {
+                playerProgress.clearedLevelIds.push(lvlData.id);
+                saveGame();
+            }
+        } else {
+            clickedBtn.classList.add('wrong');
+            feedbackContainer.className = "feedback-zone wrong-zone";
+            statusText.innerText = "🔍 相手との心の距離感や引き出しを、もう一度イメージしてみよう";
+            fbText.innerHTML = selectedChoice.feedback;
+            nextBtn.style.display = 'none';
+
+            setTimeout(() => {
+                buttons.forEach(b => {
+                    if (!b.classList.contains('wrong')) b.disabled = false;
+                });
+            }, 1000);
+        }
+    }
+
+    function advanceQuest() {
+        alert(`人間関係スタンプを獲得しました！`);
+        saveAndExit();
+    }
+
+    window.onload = () => {
+        renderMainScreen();
+    };
+</script>
+
+</body>
+</html>
