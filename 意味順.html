@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>意味順×街ツク 🗺️ 肯定・否定・疑問のハイブリッド自動化ノック</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            margin: 0; padding: 0; background-color: #aed6f1; color: #333;
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden;
+        }
+        header { background-color: #2c3e50; color: white; width: 100%; padding: 15px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; }
+        header h1 { margin: 0; font-size: 20px; }
+        .container { max-width: 1100px; width: 100%; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        .view-panel { display: none; width: 100%; }
+        .view-panel.active { display: block; }
+
+        /* === 🗺️ 箱庭マップエリア (30レベル対応グリッド設計) === */
+        .map-wrapper { background-color: #52be80; border: 5px solid #27ae60; border-radius: 24px; padding: 20px; width: 100%; max-width: 850px; margin: 0 auto; box-shadow: 0 15px 30px rgba(0,0,0,0.2); position: relative; overflow: hidden; }
+        .map-wrapper::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: linear-gradient(90deg, transparent 46%, #5d6d7e 46%, #5d6d7e 54%, transparent 54%), linear-gradient(0deg, transparent 46%, #5d6d7e 46%, #5d6d7e 54%, transparent 54%); background-size: 200px 200px; opacity: 0.35; pointer-events: none; z-index: 1; }
+        .town-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; z-index: 2; position: relative; padding: 5px; }
+        .map-plot { display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(255,255,255,0.12); padding: 8px; border-radius: 12px; }
+
+        .building-site { width: 85px; height: 65px; background-color: #f39c12; border: 2px solid #d35400; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 38px; box-shadow: 0 4px 0 #b37d14, 0 8px 0 #936209, 0 12px 15px rgba(0,0,0,0.4); position: relative; transition: all 0.4s ease; }
+        .map-plot.locked .building-site { background-color: #7f8c8d; border-color: #707b7c; box-shadow: 0 4px 0 #566573, 0 8px 0 #424949, 0 10px 10px rgba(0,0,0,0.3); opacity: 0.6; }
+        .map-plot.unlocked .building-site { background-color: #ffffff; border-color: #2ecc71; box-shadow: 0 4px 0 #27ae60, 0 8px 0 #1e8449, 0 12px 15px rgba(0,0,0,0.3); animation: buildUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        .map-balloon { background-color: #2980b9; color: white; padding: 6px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; text-align: center; box-shadow: 0 5px 10px rgba(0,0,0,0.25); border: 2px solid #fff; cursor: pointer; z-index: 999; transition: transform 0.2s; margin-bottom: 6px; width: 100%; }
+        .map-balloon:hover { background-color: #3498db; }
+        .map-balloon:active { transform: scale(0.95); }
+
+        .map-plot.locked .map-balloon { background-color: #7f8c8d; border-color: #bdc3c7; cursor: not-allowed; pointer-events: none; }
+        .map-plot.unlocked .map-balloon { background-color: #27ae60; }
+
+        @keyframes buildUp {
+            0% { transform: translateY(-30px) scale(0.5); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        /* === 🎮 ゲーム画面スタイル === */
+        .game-card { background-color: white; border-radius: 16px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; position: relative; }
+        .situation-box { background-color: #fef9e7; border-left: 5px solid #f39c12; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-weight: bold; font-size: 15px; line-height: 1.4; }
+        .slots-container { display: flex; gap: 6px; margin-bottom: 25px; width: 100%; overflow-x: auto; padding-bottom: 5px; }
+        .slot { flex: 1; background-color: #f8f9f9; border: 1.5px dashed #bdc3c7; border-radius: 6px; min-height: 100px; display: flex; flex-direction: column; align-items: center; padding: 4px; min-width: 130px; }
+        .slot-header { font-size: 10px; color: #5d6d7e; margin-bottom: 5px; font-weight: bold; background-color: #ebf5fb; padding: 2px 4px; border-radius: 4px; text-align: center; width: 100%; }
+        .slot-content { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; }
+        .word-pool { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; min-height: 60px; padding: 12px; background-color: #f2f4f4; border-radius: 8px; margin-bottom: 20px; }
+        .word-card { background-color: #3498db; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; box-shadow: 0 3px 0 #2980b9; user-select: none; text-align: center; line-height: 1.2; }
+        .word-card:active { transform: translateY(3px); box-shadow: none; }
+        .slot-content .word-card { width: 100%; font-size: 12px; padding: 6px 4px; box-shadow: none; }
+        .meta-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 14px; font-weight: bold; }
+        .progress-bar-container { width: 100%; height: 8px; background-color: #e5e7e9; border-radius: 4px; overflow: hidden; margin-bottom: 20px; }
+        .progress-bar { height: 100%; width: 0%; background-color: #2ecc71; transition: width 0.3s ease; }
+        .btn { background-color: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .message { text-align: center; font-size: 17px; font-weight: bold; color: #27ae60; margin-top: 10px; min-height: 27px; }
+
+        .celebration-banner { position: absolute; top: -150px; left: 5%; width: 90%; background: linear-gradient(135deg, #f1c40f, #f39c12); color: #2c3e50; text-align: center; padding: 18px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); border: 4px dashed #fff; font-size: 24px; font-weight: 900; letter-spacing: 2px; z-index: 100; opacity: 0; transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none; }
+        .celebration-banner.show { top: 20px; opacity: 1; transform: scale(1.05); animation: pulse 1s infinite alternate ease-in-out; }
+        @keyframes pulse { 0% { transform: scale(1.02); } 100% { transform: scale(1.06); } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>意味順×街ツク 🗺️ 肯定・否定・疑問のハイブリッド自動化ノック</h1>
+    </header>
+
+    <div class="container">
+        <div id="view-map" class="view-panel active">
+            <p style="text-align:center; font-weight:bold; color:#2c3e50; margin-bottom:15px; font-size:14px;">
+                🚧 タップして建築！肯定文で慣らし、否定・疑問文でOSの自動化を完成させよう！
+            </p>
+            <div class="map-wrapper">
+                <div class="town-grid" id="map-grid-container"></div>
+            </div>
+            <div style="text-align: center; margin-top: 25px;">
+                <button class="btn" id="reset-btn" style="font-size: 12px; padding: 6px 12px; background-color: #7f8c8d;">街をすべて初期化する</button>
+            </div>
+        </div>
+
+        <div id="view-game" class="view-panel">
+            <div class="game-card">
+                <div id="clear-banner" class="celebration-banner">
+                    🎉 CONGRATULATIONS! 🎉<br>
+                    <span style="font-size:15px; font-weight:normal;">素晴らしい！肯定・否定・疑問の語順OSを完全自動化しました！</span>
+                </div>
+                <div class="meta-info">
+                    <div id="stage-title">ステージ</div>
+                    <div id="question-num">問 1</div>
+                </div>
+                <div class="progress-bar-container"><div class="progress-bar" id="p-bar"></div></div>
+                <div class="situation-box" id="situation">シチュエーション</div>
+                <div class="slots-container" id="slots-area"></div>
+                <div class="word-pool" id="word-pool"></div>
+                <div class="message" id="message"></div>
+                <div style="text-align: center; margin-top: 15px;">
+                    <button class="btn" style="background-color: #7f8c8d;" onclick="backToMap()">マップに戻る</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const buildingIcons = { 
+            1: "🌸", 2: "🏠", 3: "🏫", 4: "👟", 5: "🏯", 6: "⛲", 7: "📮",
+            8: "🎯", 9: "⚖️", 10: "🛡️", 11: "🗺️", 12: "🌳", 13: "👑", 14: "🔑",
+            15: "🧠", 16: "🐈", 17: "🔮", 18: "🎵", 19: "⏳", 20: "💼", 21: "👁️",
+            22: "🌐", 23: "🌀", 24: "📚", 25: "💵", 26: "🧬", 27: "💡", 28: "😊",
+            29: "🌧️", 30: "💥"
+        };
+
+        const allStages = {
+            1: {
+                title: "レベル1：【気分・状態(SVC)の型】",
+                headers: ["だれが (S) / 助動詞", "〜です (V)", "どんな状態 (C)"],
+                problems: [
+                    { situation: "🎬 クラス替え初日の朝、教室のドアを開ける瞬間…（緊張！）", words: ["I", "am", "nervous"] },
+                    { situation: "🎬 隣の席の人が笑顔で挨拶してくれた！（ワクワク！）", words: ["I", "am", "excited"] },
+                    { situation: "🎬 先生が意外と優しそうな人で、ホッとしたな。", words: ["I", "am", "relieved"] },
+                    { situation: "🎬 3時間目、新しい教科書が配られた。よし、やる気満々だぞ！", words: ["I", "am", "ready"] },
+                    { situation: "🎬 4時間目。時計をチラチラ。あぁ、お腹がもうペコペコだ！", words: ["I", "am", "starving"] },
+                    { situation: "🎬 待ちに待ったお昼休み！大好きなメニューで本当に幸せ。", words: ["I", "am", "happy"] },
+                    { situation: "🎬 6時間目。窓の外がぽかぽかしてきて、ものすごく眠い。", words: ["I", "am", "sleepy"] },
+                    { situation: "🎬 帰り道、もうすっかり新しいクラスに馴染んだから大丈夫。", words: ["I", "am", "fine"] },
+                    { situation: "🎬 🛑【否定ノック】「（ガクガク震えながら）いや、僕は全然緊張なんかしてないぞ！」", words: ["I", "am not", "nervous"] },
+                    { situation: "🎬 🛑【否定ノック】「周りは難しそうにしてるけど、僕は混乱してないぞ。」", words: ["I", "am not", "confused"] },
+                    { situation: "🎬 🛑【否定ノック】「友達とおしゃべりしてるから、今は少しも寂しくない！」", words: ["I", "am not", "lonely"] },
+                    { situation: "🎬 🛑【否定ノック】「初日だけど、全然疲れてないよ。まだまだ元気！」", words: ["I", "am not", "tired"] },
+                    { situation: "🎬 ❓【疑問ノック】「ねえ、君もやっぱり緊張してる？」", words: ["Are", "you", "nervous"] },
+                    { situation: "🎬 ❓【疑問ノック】「次の英語の授業、もう心の準備できてる？」", words: ["Are", "you", "ready"] },
+                    { situation: "🎬 ❓【疑問ノック】「今日のテスト満点だったの？本当に（誇りに思ってる）？」", words: ["Are", "you", "proud"] }
+                ]
+            },
+            2: {
+                title: "レベル2：【身体の感覚(現在進行形)の型】",
+                headers: ["なにが (S) / 助動詞", "いま〜だ (V)", "どうしている"],
+                problems: [
+                    { situation: "🎬 最初の自己紹介の順番が近づいてきた！心臓がバクバク脈打っている！", words: ["My heart", "is", "racing"] },
+                    { situation: "🎬 緊張がピークに達して、頭がクラクラ回っている感じがする…", words: ["My head", "is", "spinning"] },
+                    { situation: "🎬 お昼前、お腹の虫がグーグー大合唱を始めた！恥ずかしい！", words: ["My stomach", "is", "growling"] },
+                    { situation: "🎬 初めての部活体験。先輩たちの前で足がガクガク震えてる！", words: ["My legs", "are", "shaking"] },
+                    { situation: "🎬 覚えることが多すぎて、目がパチパチ激しく泳いじゃう！", words: ["My eyes", "are", "blinking"] },
+                    { situation: "🎬 緊張がほぐれて、冷たかった指先がだんだん温まってきた。", words: ["My fingers", "are", "warming"] },
+                    { situation: "🎬 お風呂に浸かってリラックス。全身の筋肉がほぐれていくのを感じる。", words: ["My body", "is", "relaxing"] },
+                    { situation: "🎬 眠りにつく瞬間も、明日へのワクワクで胸がドキドキ高鳴っている。", words: ["My heart", "is", "pounding"] },
+                    { situation: "🎬 🛑【否定ノック】「ほら、もう自己紹介終わったから、心臓はバクバクしてないよ。」", words: ["My heart", "is not", "racing"] },
+                    { situation: "🎬 🛑【否定ノック】「ちゃんと休んだから、もう頭はクラクラしていない。」", words: ["My head", "is not", "spinning"] },
+                    { situation: "🎬 🛑【否定ノック】「先輩たちとも打ち解けたから、もう足は震えてないぞ！」", words: ["My legs", "are not", "shaking"] },
+                    { situation: "🎬 🛑【否定ノック】「目薬をさしたから、もう目はチカチカしていない。」", words: ["My eyes", "are not", "blinking"] },
+                    { situation: "🎬 ❓【疑問ノック】「顔色が悪いよ。頭がクラクラしてない？」", words: ["Is", "your head", "spinning"] },
+                    { situation: "🎬 ❓【疑問ノック】「さっきから変な音が（笑）。お腹がグーグー鳴ってる？」", words: ["Is", "your stomach", "growling"] },
+                    { situation: "🎬 ❓【疑問ノック】「ものすごく走ったね！心臓がバクバク言ってる？」", words: ["Is", "your heart", "racing"] }
+                ]
+            },
+            3: {
+                title: "レベル3：【世界に働きかける(SVO)の型】",
+                headers: ["だれが / 助動詞", "どうする (V)", "なにを (O)"],
+                problems: [
+                    { situation: "🎬 「僕は毎日、とにかく野球を練習しています！」", words: ["I", "practice", "baseball"] },
+                    { situation: "🎬 「お父さんが、僕のピッチングをいつもチェックしてくれるんだ」", words: ["My father", "checks", "my pitching"] },
+                    { situation: "🎬 「僕は、あのオシャレな先生のファッションをリスペクトしている」", words: ["I", "respect", "that teacher's fashion"] },
+                    { situation: "🎬 「実は僕、あの有名ブランドのスニーカーを持ってるんだよね」", words: ["I", "own", "the stylish sneakers"] },
+                    { situation: "🎬 「みんなが噂してるあの女の子、毎日ものすごい量の本を読んでるらしい」", words: ["That girl", "reads", "many books"] },
+                    { situation: "🎬 「彼女、英語のスピーチコンテストでまた最優秀賞を獲ったんだって！」", words: ["She", "won", "the first prize"] },
+                    { situation: "🎬 「放課後は、音楽室でプロ並みのピアノを奏でているよ」", words: ["That girl", "plays", "the piano"] },
+                    { situation: "🎬 「彼女が弾く美しいメロディは、聴く人みんなの心を揺さぶる」", words: ["The music", "touches", "our hearts"] },
+                    { situation: "🎬 「誰もが彼女の才能と美しさを絶賛している」", words: ["Everyone", "admires", "her beauty"] },
+                    { situation: "🎬 「彼女はいつも、僕たちに新しい刺激と元気をくれる！」", words: ["She", "inspires", "everyone"] },
+                    { situation: "🎬 🛑【否定ノック】「僕は普段、ジュースは飲まないんだ。（いつもお茶か水！）」", words: ["I", "don't drink", "juice"] },
+                    { situation: "🎬 🛑【否定ノック】「あのオシャレな先生、安っぽい服は着ないらしいよ（こだわり！）」", words: ["That teacher", "doesn't wear", "cheap clothes"] },
+                    { situation: "🎬 🛑【否定ノック】「あんなに完璧な彼女だけど、決して自慢話はしないんだ。」", words: ["She", "doesn't tell", "proud stories"] },
+                    { situation: "🎬 🛑【否定ノック】「彼女はテレビを全く見ないらしい。だからあんなに頭脳明晰んだね。」", words: ["That girl", "doesn't watch", "TV"] },
+                    { situation: "🎬 🛑【否定ノック】「僕たちのチームは、どんなに強い相手でも決して恐れない！」", words: ["Our team", "doesn't fear", "any rivals"] },
+                    { situation: "🎬 ❓【疑問ノック】「ねえ、君も野球を練習してるの？」", words: ["Do", "you", "practice", "baseball"] },
+                    { situation: "🎬 ❓【疑問ノック】「あのオシャレな先生のファッション、君もリスペクトしてる？」", words: ["Do", "you", "respect", "that teacher's fashion"] },
+                    { situation: "🎬 ❓【疑問ノック】「噂の彼女って、本当に毎日あんなにたくさんの本を読んでるの？」", words: ["Does", "that girl", "read", "many books"] },
+                    { situation: "🎬 ❓【疑問ノック】「彼女、今度の発表会でもピアノを弾くのかな？」", words: ["Does", "she", "play", "the piano"] },
+                    { situation: "🎬 ❓【疑問ノック】「君、彼女の連絡先を知ってたりする…！？」", words: ["Do", "you", "know", "her number"] }
+                ]
+            },
+            4: {
+                title: "レベル4：【対象を広げる型(前置詞つきSVC)】",
+                headers: ["だれが / 助動詞", "〜です (V)", "どんな状態 (C)", "なにについて/だれを"],
+                problems: [
+                    { situation: "🎬 先輩たちが優しそう！「新しい学校生活にワクワクしています！」", words: ["I", "am", "excited", "about my new life"] },
+                    { situation: "🎬 気の合う友達が見つかりそう！「新しい友達作りにドキドキ！」", words: ["I", "am", "excited", "about making new friends"] },
+                    { situation: "🎬 放課後の予定を考えてニヤリ。「部活動にワクワクしています」", words: ["I", "am", "excited", "about club activities"] },
+                    { situation: "🎬 大活躍した過去を振り返って。「あの試合の勝利を誇りに思う」", words: ["I", "am", "proud", "of the victory"] },
+                    { situation: "🎬 難関コンクールで見事に金賞を獲った、自慢の姉（妹）を思って。", words: ["I", "am", "proud", "of my sister"] },
+                    { situation: "🎬 いつもオシャレで生徒想いで、有名なあの先生を思って。", words: ["I", "am", "proud", "of that teacher"] },
+                    { situation: "🎬 厳しい練習を乗り越えて、ついにマウンドに立つあのピッチャーを思って。", words: ["I", "am", "proud", "of the pitcher"] },
+                    { situation: "🎬 「明日の大事な試合、天気が雨にならないか心配だ」", words: ["I", "am", "worried", "about the weather"] },
+                    { situation: "🎬 🛑【否定ノック】「次の英語のスピーチ？全然心配してないよ、練習したし！」", words: ["I", "am not", "worried", "about the speech"] },
+                    { situation: "🎬 🛑【否定ノック】「明日の大一番だけど、自分の選択に少しも迷いはない！」", words: ["I", "am not", "worried", "about my choice"] },
+                    { situation: "🎬 🛑【否定ノック】「あいつの球速なら、次の対戦相手のことなんて誰も心配してないよ。」", words: ["I", "am not", "worried", "about the rivals"] },
+                    { situation: "🎬 🛑【否定ノック】「テストの結果が悪かったからって、僕は自分にがっかりしてないぞ！」", words: ["I", "am not", "disappointed", "in myself"] },
+                    { situation: "🎬 ❓【疑問ノック】「今度の土曜日の練習試合、君もワクワクしてる？」", words: ["Are", "you", "excited", "about this Saturday"] },
+                    { situation: "🎬 ❓【疑問ノック】「ねえ、本当に明日のスピーチのこと、心配してないの？」", words: ["Are", "you", "worried", "about the speech"] },
+                    { situation: "🎬 ❓【疑問ノック】「君は、自分の所属しているこのチームを誇りに思ってる？」", words: ["Are", "you", "proud", "of your team"] }
+                ]
+            },
+            5: {
+                title: "レベル5：【未来の予定(will)＋場所＋時間】",
+                headers: ["だれが / 助動詞", "これから〜 (V)", "どこを/なにを", "いつ"],
+                problems: [
+                    { situation: "🎬 「放課後、ちょっと駅前のあのコンビニに立ち寄ってみよう」", words: ["I", "will", "visit", "the convenience store", "after school"] },
+                    { situation: "🎬 新入生として部活動の体験へ。「放課後、部室を訪ねる予定です」", words: ["I", "will", "visit", "the club room", "after school"] },
+                    { situation: "🎬 歴史好きな友人と一緒に、地元のシンボルであるお城を見学しに行く。", words: ["I", "will", "visit", "Gifu Castle", "after school"] },
+                    { situation: "🎬 テスト前のご褒美。「放課後、あのおしゃれなカフェに足を運ぶぞ」", words: ["I", "will", "visit", "the cafe", "after school"] },
+                    { situation: "🎬 姉（妹）の晴れ舞台！「今夜、彼女が出場するピアノのコンサートに行くんだ」", words: ["I", "will", "visit", "the concert hall", "tonight"] },
+                    { situation: "🎬 「明日の朝一番に、学校の職員室に行ってあのオシャレな先生に質問しよう」", words: ["I", "will", "visit", "the teachers' room", "tomorrow morning"] },
+                    { situation: "🎬 「夏休みには、絶対にあの有名なスタジアムに試合を観に行くぞ！」", words: ["I", "will", "visit", "the stadium", "this summer"] },
+                    { situation: "🎬 「いつか将来、教科書に載っているような本場イギリスの街を訪れてみたい」", words: ["I", "will", "visit", "London", "in the future"] },
+                    { situation: "🎬 🛑【否定ノック】「今日は雨だし、放課後は本屋さんには立ち寄らないつもりだ。」", words: ["I", "will not", "visit", "the bookstore", "after school"] },
+                    { situation: "🎬 🛑【否定ノック】「明日は予定があるから、放課後は部室には行かないよ。」", words: ["I", "will not", "visit", "the club room", "after school"] },
+                    { situation: "🎬 🛑【否定ノック】「今週末は家でピアノの猛練習だから、遊園地には行かないんだ。」", words: ["I", "will not", "visit", "the park", "this weekend"] },
+                    { situation: "🎬 🛑【否定ノック】「今日の夕方は、駅前のショッピングモールには寄らないで帰るね。」", words: ["I", "will not", "visit", "the mall", "this evening"] },
+                    { situation: "🎬 ❓【疑問ノック】「今日の放課後、例のおしゃれなカフェに一緒に行かない？」", words: ["Will", "you", "visit", "the cafe", "after school"] },
+                    { situation: "🎬 ❓【疑問ノック】「明日の朝、あのオシャレな先生のいる職員室に一緒に行く？」", words: ["Will", "you", "visit", "the teachers' room", "tomorrow morning"] },
+                    { situation: "🎬 ❓【疑問ノック】「今夜、彼女が演奏するコンサートホールに君も行く？」", words: ["Will", "you", "visit", "the concert hall", "tonight"] }
+                ]
+            },
+            6: {
+                title: "レベル6：【知覚と変化(知覚SVC)の型】",
+                headers: ["だれが / 助動詞", "〜のようだ (V)", "どんな状態 (C)"],
+                problems: [
+                    { situation: "🎬 「あのオシャレな先生のジャケット、すごく高そうに見える！」", words: ["That teacher's jacket", "looks", "expensive"] },
+                    { situation: "🎬 「あの先生、いつもめちゃくちゃ良い香水のにおい(smell)がする！」", words: ["That teacher", "smells", "good"] },
+                    { situation: "🎬 「グラウンドを見て。あのピッチャー、すごくタフに見える！」", words: ["The pitcher", "looks", "tough"] },
+                    { situation: "🎬 「ミットに収まるボールの音が、ものすごく力強く聴こえる(sound)！」", words: ["The sound", "sounds", "powerful"] },
+                    { situation: "🎬 「給食室からカレーのめちゃくちゃ良いにおいがしてきた！」", words: ["The lunch", "smells", "delicious"] },
+                    { situation: "🎬 「購買部で買ったこのメロンパン、ものすごく甘くて美味しい味がする(taste)！」", words: ["This bread", "tastes", "sweet"] },
+                    { situation: "🎬 「練習が進むにつれて、彼のピッチングがだんだん速くなっていってる(get)！」", words: ["His pitching", "is getting", "faster"] },
+                    { situation: "🎬 「ハードな練習の後、みんなお腹がペコペコになってきた！」", words: ["Everyone", "is getting", "hungry"] },
+                    { situation: "🎬 🛑【否定ノック】「あの先生の時計、シンプルだけど全然安っぽくは見えないね！」", words: ["That teacher's watch", "doesn't look", "cheap"] },
+                    { situation: "🎬 🛑【否定ノック】「この部室、男臭いかと思ったら、全然嫌なにおいはしないな。」", words: ["This room", "doesn't smell", "bad"] },
+                    { situation: "🎬 🛑【否定ノック】「これ、見た目は激辛そうだけど、全然辛い味がしないよ（甘いよ）。」", words: ["This food", "doesn't taste", "hot"] },
+                    { situation: "🎬 🛑【否定ノック】「あいつ、連投してるのにピッチングが全然遅くなってないぞ！」", words: ["His pitching", "doesn't get", "slower"] },
+                    { situation: "🎬 ❓【疑問ノック】「あの先生の新しいジャケット、すごくスタイリッシュに見える？」", words: ["Does", "that jacket", "look", "stylish"] },
+                    { situation: "🎬 ❓【疑問ノック】「なんか焦げ臭い…？どこかで何かが変なにおいがしてない？」", words: ["Does", "it", "smell", "strange"] },
+                    { situation: "🎬 ❓【疑問ノック】「お母さんが作ったその特大お弁当、やっぱり最高の味がする？」", words: ["Does", "your lunch", "taste", "wonderful"] }
+                ]
+            },
+            7: {
+                title: "レベル7：【人へのギブ(SVOO)の型】",
+                headers: ["だれが / 助動詞", "どうする (V)", "だれに (O1)", "なにを (O2)"],
+                problems: [
+                    { situation: "🎬 「おすすめの音楽を、部活の仲間に教えて（シェアして）あげた」", words: ["I", "showed", "my friends", "the music"] },
+                    { situation: "🎬 「英語の先生が、僕にスピーチのコツを教えてくれた！」", words: ["The teacher", "taught", "me", "the tips"] },
+                    { situation: "🎬 「お父さんが、僕にピッチングのフォームを教えてくれた！」", words: ["My father", "taught", "me", "the form"] },
+                    { situation: "🎬 「お父さんが、僕に新しい野球のグローブを買ってくれた！」", words: ["My father", "bought", "me", "a new glove"] },
+                    { situation: "🎬 「お父さんが、僕に速いボールを投げる秘密を教えてくれた」", words: ["My father", "told", "me", "the secret"] },
+                    { situation: "🎬 「お母さんが、毎朝僕に特大のお弁当を作ってくれる！」", words: ["My mother", "makes", "me", "a big lunch"] },
+                    { situation: "🎬 「おじいちゃんが、僕に試合のチケットをくれた！」", words: ["My grandfather", "gave", "me", "the tickets"] },
+                    { situation: "🎬 「今度は僕が、家族みんなに勝利を届ける（与える）番だ！」", words: ["I", "will give", "my family", "the victory"] },
+                    { situation: "🎬 🛑【否定ノック】「お父さん、自分の秘密の魔球の握り方だけは教えてくれなかったんだ。」", words: ["My father", "didn't teach", "me", "the grip"] },
+                    { situation: "🎬 🛑【否定ノック】「あのオシャレな先生、今日の宿題は僕たちに出さなかった。」", words: ["The teacher", "didn't give", "us", "the homework"] },
+                    { situation: "🎬 🛑【否定ノック】「ケチなアイツは、僕にその面白い本を貸してくれなかったんだ。」", words: ["He", "didn't lend", "me", "the book"] },
+                    { situation: "🎬 🛑【否定ノック】「お母さん、急いでたから今朝は僕にバナナをくれなかった（笑）」", words: ["My mother", "didn't give", "me", "a banana"] },
+                    { situation: "🎬 ❓【疑問ノック】「すごい！本当にお父さんが新しい野球のグローブを買ってくれたの？」", words: ["Did", "your father", "buy", "you", "a new glove"] },
+                    { situation: "🎬 ❓【疑問ノック】「ねえ、あの頭脳明晰な彼女、君に数学の解き方を教えてくれた？」", words: ["Did", "she", "teach", "you", "the secret"] },
+                    { situation: "🎬 ❓【疑問ノック】「昨日みんなで撮ったあのお城の写真、もう友達に見せてあげた？」", words: ["Did", "you", "show", "your friends", "the photos"] }
+                ]
+            },
+            8: {
+                title: "レベル8：【不定詞（目的語）の型】",
+                headers: ["だれが / 助動詞", "どうする (V)", "なにを（これからすること）"],
+                problems: [
+                    { situation: "🎬 「僕は放課後、みんなとサッカーをすることを欲している（やりたい！）」", words: ["I", "want", "to play soccer"] },
+                    { situation: "🎬 「あのオシャレな先生、今度の週末に新しいArmaniの店に行くのを計画しているらしい。」", words: ["That teacher", "plans", "to visit Armani"] },
+                    { situation: "🎬 「娘は Ami Paris の新作バッグを手に入れることを切望しているよ」", words: ["My daughter", "hopes", "to get Ami"] },
+                    { situation: "🎬 「エースピッチャーの息子は、次のマウンドで完封することを目指している」", words: ["My son", "aims", "to pitch perfectly"] },
+                    { situation: "🎬 「彼女はスピーチコンテストでまた優勝することを決意した！」", words: ["She", "decided", "to win again"] },
+                    { situation: "🎬 「部員みんなが、明日の遠征試合で晴れることを願っているよ」", words: ["Everyone", "hopes", "to see sunshine"] },
+                    { situation: "🎬 「お父さんは、週末に息子のキャッチボールに付き合うことを約束してくれた」", words: ["My father", "promised", "to play catch"] },
+                    { situation: "🎬 「妻は今度の記念日に、Celineのブティックに行くことを希望している」", words: ["My wife", "wishes", "to visit Celine"] },
+                    { situation: "🎬 🛑【否定ノック】「今はかなり疲れているから、外に走りに行きたいとは思わないな。」", words: ["I", "don't want", "to go running"] },
+                    { situation: "🎬 🛑【否定ノック】「あのオシャレな先生、安易に流行りの安物服を買うことはしないね。」", words: ["That teacher", "doesn't choose", "to buy cheap"] },
+                    { situation: "🎬 🛑【否定ノック】「娘は、ダサいデザインの服だけは絶対に選ぼうとしない（こだわり！）」", words: ["My daughter", "refuses", "to wear that"] },
+                    { situation: "🎬 🛑【否定ノック】「息子は今日のハードな居なり練習を、全く嫌がったりしなかったぞ！」", words: ["My son", "didn't mind", "to practice hard"] },
+                    { situation: "🎬 ❓【疑問ノック】「ねえ、君も一緒に放課後サッカーやりたい？」", words: ["Do", "you", "want", "to play soccer"] },
+                    { situation: "🎬 ❓【疑問ノック】「噂の彼女、今度の全国スピーチコンテストでもまた優勝を狙っているのかな？」", words: ["Does", "she", "aim", "to win again"] },
+                    { situation: "🎬 ❓【疑問ノック】「お父さん、今度の週末本当にキャッチボールに付き合ってくれるって約束した？」", words: ["Did", "your father", "promise", "to play catch"] }
+                ]
+            },
+            9: {
+                title: "レベル9：【メーターを比べる（比較級）の型】",
+                headers: ["だれ・なにが / 助動詞", "〜です (V)", "どんな状態（より高いメーター）", "だれ・なによりも"],
+                problems: [
+                    { situation: "🎬 「あのオシャレな先生のルックスは、そこらのプロのモデルよりもカッコいい！」", words: ["The teacher", "is", "cooler", "than a model"] },
+                    { situation: "🎬 「うちの息子のストレートは、リーグの他のどのピッチャーよりも速いぞ！」", words: ["His pitch", "is", "faster", "than other boys"] },
+                    { situation: "🎬 「彼女が英語を話す時の声は、普段の喋り声よりもずっと大人っぽく聴こえる」", words: ["Her English", "sounds", "more beautiful", "than usual"] },
+                    { situation: "🎬 「この特注のグローブは、量産されている通常のグローブよりも軽いね」", words: ["This glove", "is", "lighter", "than ordinary ones"] },
+                    { situation: "🎬 「お母さんが作った特大お弁当は、お店のどんなランチよりも美味しい！」", words: ["This lunch", "tastes", "better", "than store food"] },
+                    { situation: "🎬 「Pradaのスニーカーは、僕が持っている他のどの靴よりも履き心地が良い」", words: ["Those sneakers", "are", "more comfortable", "than mine"] },
+                    { situation: "🎬 「今日のグラウンドの熱気は、昨日の練習の時よりもはるかに凄まじいぞ」", words: ["The field", "is", "hotter", "than yesterday"] },
+                    { situation: "🎬 🛑【否定ノック】「あいつの球速、噂ほど速くはないな（あのエースピッチャーと比べたら）。」", words: ["His ball", "is not", "faster", "than the star"] },
+                    { situation: "🎬 🛑【否定ノック】「このアウター、高級ブランドだけど、フリース素材だから重くはないよ」", words: ["This jacket", "is not", "heavier", "than leather"] },
+                    { situation: "🎬 🛑【否定ノック】「今日のテスト、準備を万全にしたから前回ほど難しくは感じなかったな」", words: ["The exam", "was not", "harder", "than before"] },
+                    { situation: "🎬 🛑【否定ノック】「あの先生、普段はハイブランドを着てるけど、決して近寄りがたくはないよ」", words: ["That teacher", "is not", "less friendly", "than others"] },
+                    { situation: "🎬 ❓【疑問ノック】「この本って、先週読んだあの難解なミステリー小説よりも面白かった？」", words: ["Is", "this book", "better", "than that one"] },
+                    { situation: "🎬 ❓【疑問ノック】「新しいバット、前に使っていた金属バットよりも本当に軽くて振りやすい？」", words: ["Is", "this bat", "lighter", "than your old one"] },
+                    { situation: "🎬 ❓【疑問ノック】「あのオシャレな先生の講義、他の教授の授業よりもずっと知的刺激に満ちている？」", words: ["Is", "his lecture", "more exciting", "than others"] }
+                ]
+            },
+            10: {
+                title: "レベル10：【動作の矢印を逆に受ける（受動態）の型】",
+                headers: ["なにが / 助動詞", "〜される状態だ (V)", "過去分詞による行為の残り香", "だれによって"],
+                problems: [
+                    { situation: "🎬 「この美しいメロディは、音楽室の彼女によって毎日奏でられています」", words: ["The music", "is", "played", "by the girl"] },
+                    { situation: "🎬 「僕たちの野球チームのユニフォームは、お母さんによっていつもピカピカに洗濯されている」", words: ["The uniform", "is", "washed", "by my mother"] },
+                    { situation: "🎬 「あのオシャレな先生の素晴らしいコーディネートは、クラスの全員から絶賛されているぞ」", words: ["His fashion", "is", "admired", "by everyone"] },
+                    { situation: "🎬 「マウンド上の息子のピッチングデータは、お父さんによって毎試合細かく記録されている」", words: ["The score", "is", "checked", "by his father"] },
+                    { situation: "🎬 「この特大の素晴らしいお弁当は、毎朝お母さんによって愛情を込めて作られているんだ」", words: ["The big lunch", "is", "made", "by my mother"] },
+                    { situation: "🎬 「英語のスピーチ原稿の表現は、あのオシャレな先生によって完璧に添削された」", words: ["The speech", "was", "fixed", "by the teacher"] },
+                    { situation: "🎬 「歴史の授業で話題になったあの古い岐阜のお城は、多くの観光客によって訪れられている」", words: ["The castle", "is", "visited", "by many people"] },
+                    { situation: "🎬 🛑【否定ノック】「あのピッチャーの唸るような剛速球は、今回の試合では誰にもヒットにされなかったぞ！」", words: ["His ball", "was not", "hit", "by any batters"] },
+                    { situation: "🎬 🛑【否定ノック】「彼女が大切にしている Ami Paris の限定服は、決して誰にも触らせられない（触られていない）。」", words: ["Her sweater", "is not", "touched", "by anyone"] },
+                    { situation: "🎬 🛑【否定ノック】「あのオシャレな先生のこだわり抜いた部屋は、決して安っぽいインテリアで汚されたりしない」", words: ["His room", "is not", "decorated", "by cheap items"] },
+                    { situation: "🎬 🛑【否定ノック】「今日のミーティングでの決定は、監督ではなく、僕たち選手自身の話し合いによって決められたんだ」", words: ["The plan", "was not", "made", "by the coach"] },
+                    { situation: "🎬 ❓【疑問ノック】「この見事なピアノの旋律は、本当にあの噂の彼女によって演奏されているの？」", words: ["Is", "this music", "played", "by the girl"] },
+                    { situation: "🎬 ❓【疑問ノック】「あの素晴らしいスピーチ、やっぱり審査員全員に高く評価された？」", words: ["Was", "her speech", "admired", "by the judges"] },
+                    { situation: "🎬 ❓【疑問ノック】「今日の練習メニュー、本当にあの鬼監督によって決められたの？」", words: ["Was", "the menu", "made", "by the coach"] }
+                ]
+            },
+            11: {
+                title: "レベル11：【過去から今へつながる足跡（現在完了・経験）の型】",
+                headers: ["だれが / 助動詞", "これまでに〜 (V)", "どうした状態を持っている", "どこに/なにを"],
+                problems: [
+                    { situation: "🎬 全人生を振り返って。「僕は今までに、京都を訪れた経験を持っています」", words: ["I", "have", "ever", "visited", "Kyoto"] },
+                    { situation: "🎬 「あのオシャレな先生は、これまでに何度もイタリアのArmani本店に行ったことがあるらしい」", words: ["That teacher", "has", "often", "visited", "Milan"] },
+                    { situation: "🎬 「息子はこれまでに、公式戦で3回も完封勝利を挙げた経験があるんだぞ」", words: ["My son", "has", "pitched", "three shutouts", "before"] },
+                    { situation: "🎬 「娘は Ami Paris の新作アイテムを、すでにオンラインで3回もチェックしている」", words: ["My daughter", "has", "already", "checked", "the store"] },
+                    { situation: "🎬 「彼女はこれまでに、英語のスピーチコンテストで2回も全国大会に進んだ実績がある」", words: ["She", "has", "already", "won", "the big prizes"] },
+                    { situation: "🎬 「お父さんは仕事で、世界の有名なスタジアムを何度も訪れたことがあるらしい」", words: ["My father", "has", "visited", "many stadiums", "before"] },
+                    { situation: "🎬 「妻が長年愛用している Chanel のバッグは、これまでに何度も丁寧にメンテナンスされている」", words: ["The bag", "has", "been", "fixed", "many times"] },
+                    { situation: "🎬 🛑【否定ノック】「僕はこれまでの人生で、一度もハイブランドの高級服なんて袖を通したことがない。」", words: ["I", "have", "never", "worn", "expensive clothes"] },
+                    { situation: "🎬 🛑【否定ノック】「息子は今シーズン、マウンドでまだ一度もフォアボールを出したことがない。驚異的だ！」", words: ["My son", "has", "never", "given", "any walks"] },
+                    { situation: "🎬 🛑【否定ノック】「彼女はあんなにピアノが上手なのに、実は一度もプロの専門レッスンを受けたことがないらしい」", words: ["She", "has", "never", "taken", "the professional lessons"] },
+                    { situation: "🎬 🛑【否定ノック】「あのオシャレな先生の『OS 2.0』講義は、一度たりとも学生を退屈させたことがない。」", words: ["His lecture", "has", "never", "bored", "any students"] },
+                    { situation: "🎬 ❓【疑問ノック】「ねえ、君は今までに、あの有名な岐阜のお城に登ったことがある？」", words: ["Have", "you", "ever", "visited", "Gifu Castle"] },
+                    { situation: "🎬 ❓【疑問ノック】「あのオシャレな先生、もう今月発売の新しい認知言語学の専門書を読んだのかな？」", words: ["Has", "the teacher", "already", "read", "the new book"] },
+                    { situation: "🎬 ❓【疑問ノック】「息子さん、これまでにあの強豪チームのエースピッチャーと対戦したことってある？」", words: ["Has", "your son", "ever", "faced", "the star pitcher"] }
+                ]
+            },
+            12: {
+                title: "レベル12：【時間の幅を生きる（現在完了進行形）の型】",
+                headers: ["だれが / 助動詞", "ずっと〜し続けている (V)", "その動作の最中だ", "どれくらいの期間"],
+                problems: [
+                    { situation: "🎬 「僕は今日の午後、もうかれこれ3時間もずっと野球を練習し続けているんだ」", words: ["I", "have", "been", "practicing", "baseball", "for three hours"] },
+                    { situation: "🎬 「あのオシャレな先生は、朝から研究室でずっと新しい論文を書き続けているらしい」", words: ["The professor", "has", "been", "writing", "the paper", "since this morning"] },
+                    { situation: "🎬 「娘はリビングのソファで、もう2時間も Ami Paris の服をスマホで物色し続けている」", words: ["My daughter", "has", "been", "checking", "the fashion sites", "for two hours"] },
+                    { situation: "🎬 「彼女は次のコンクールに向けて、お昼休み返上でずっとピアノを弾き続けているよ」", words: ["She", "has", "been", "playing", "the piano", "since noon"] },
+                    { situation: "🎬 「お父さんはマウンドの横で、さっきからずっと息子の投球フォームをビデオ撮影し続けている」", words: ["My father", "has", "been", "watching", "his pitching", "for an hour"] },
+                    { situation: "🎬 「外は、僕たちがグラウンドで練習を始めた時からずっと激しい雨が降り続いている」", words: ["It", "has", "been", "raining", "hard", "since we started"] },
+                    { situation: "🎬 「学生たちは、あの先生の『OS 2.0』の講義を、目を見開いて90分間ずっと集中して聴き続けている」", words: ["The students", "have", "been", "listening", "to the lecture", "for ninety minutes"] },
+                    { situation: "🎬 🛑【否定ノック】「僕はさぼっていませんよ！さっきから一瞬たりともスマホでゲームなんてしていません！」", words: ["I", "have not", "been", "playing", "games", "at all"] },
+                    { situation: "🎬 🛑【否定ノック】「あのピッチャーは、今日は全く無理をしていない。連投を避けてずっとベンチで休んでいるよ」", words: ["He", "has not", "been", "pitching", "on the mound", "today"] },
+                    { situation: "🎬 🛑【否定ノック】「彼女はスピーチのプレッシャーに負けてない。決して泣き言なんて一言も言わずに努力を続けている」", words: ["She", "has not", "been", "complaining", "about the hard task", "at all"] },
+                    { situation: "🎬 🛑【否定ノック】「お母さんは今朝からずっと忙しくて、一息つく暇もなく特大弁当や家事をこなし続けている」", words: ["My mother", "has not", "been", "resting", "since five AM"] },
+                    { situation: "🎬 ❓【疑問ノック】「きつい練習だね。君、もうどれくらいの時間、マウンドでノックを走り続けているの？」", words: ["Have", "you", "been", "running", "on the field", "for long"] },
+                    { situation: "🎬 ❓('7.16 PM JST' における文脈準拠) 「あのオシャレな先生、さっきからずっとパソコンの前で熱心に学生のメールを添削し続けているの？」", words: ["Has", "the teacher", "been", "checking", "the student papers", "all evening"] },
+                    { situation: "🎬 ❓【疑問ノック】「彼女、さっきから音楽室の奥で、ずっとあの難しいスピーチのセリフを暗唱し続けているのかな？」", words: ["Has", "she", "been", "practicing", "her English speech", "since school over"] }
+                ]
+            },
+            13: {
+                title: "レベル13：【行動の目的を添える（不定詞・副詞用法）の型】",
+                headers: ["だれが / 助動詞", "どうする (V)", "なにを/どこへ", "なんのために（矢印の先）"],
+                problems: [
+                    { situation: "🎬 「僕は次の週末、わざわざ名古屋へ行くんだ。新しいEmporio Armaniのジャケットを買うためにね！」", words: ["I", "will visit", "the big city", "to buy a new jacket"] },
+                    { situation: "🎬 「エースの息子は、毎晩暗くなるまでグラウンドで走り込んでいる。球速をさらにアップさせるために」", words: ["My son", "practices", "hard every night", "to pitch faster balls"] },
+                    { situation: "🎬 「あのオシャレな先生は、夜遅くまで研究室のデスクで文献を読んでいる。認知言語学の講義を完璧にするために」", words: ["The professor", "studies", "cognitive linguistics", "to prepare his lectures"] },
+                    { situation: "🎬 「娘はお小遣いを必死に貯めている。憧れの Ami Paris の新作セーターを原宿の店に買いに行くために」", words: ["My daughter", "saves", "her money", "to buy the stylish sweater"] },
+                    { situation: "🎬 「彼女は毎朝、誰よりも早く登校して音楽室にこもっている。コンクールで最高のピアノを演奏するために」", words: ["She", "practices", "the piano early", "to win the gold medal"] },
+                    { situation: "🎬 「お母さんは毎朝5時に起きてキッチンに立つ。息子のために特大の特製お弁当を完成させるためにね」", words: ["My mother", "wakes", "up very early", "to make a big lunch"] },
+                    { situation: "🎬 「チームのキャプテンは、監督の自宅を直談判で訪れた。明日の練習試合の作戦についてアドバイスをもらうために」", words: ["The captain", "visited", "the coach's room", "to ask about the strategy"] },
+                    { situation: "🎬 🛑【否定ノック】「僕は単に遊ぶためにここに来たんじゃない。明日の大切な英語スピーチの特訓をするために来たんだ！」", words: ["I", "didn't come", "to this room", "to play with you"] },
+                    { situation: "🎬 🛑【否定ノック】「あのオシャレな先生は、単に周囲に見せびらかすために Prada の靴を履いているわけではない。デザインの本質を愛するが故だ」", words: ["He", "doesn't wear", "luxury brands", "to show off his money"] },
+                    { situation: "🎬 🛑【否定ノック】「息子は決して監督に怒られないために走っているのではない。自分自身の限界を突破するために走っているのだ」", words: ["My son", "doesn't practice", "the hard running", "to please his coach"] },
+                    { situation: "🎬 🛑【否定ノック】「彼女は誰かから報酬をもらうために、あの美しい英語のスピーチを完成させたわけではない。」", words: ["She", "didn't write", "the long speech", "to get any money"] },
+                    { situation: "🎬 ❓【疑問ノック】「君は、あのオシャレな先生に英語の質問をするために、わざわざ職員室の前で待っていたの？」", words: ["Did", "you", "stay", "at the door", "to see the professor"] },
+                    { situation: "🎬 ❓【疑問ノック】「息子さん、次の大会の対戦相手のピッチングを研究するために、あのスタジアムへ偵察に行ったのかな？」", words: ["Did", "your son", "visit", "the baseball field", "to watch the rivals"] },
+                    { situation: "🎬 ❓【疑問ノック】「彼女は、大好きなフランスのブランドの歴史を調べるために、図書館の奥で専門書をめくっているの？」", words: ["Does", "your daughter", "read", "the fashion books", "to learn its history"] }
+                ]
+            },
+            14: {
+                title: "レベル14：【【高校】同時に起きる事象をまとう（分詞構文）の型】",
+                headers: ["だれが / 助動詞", "メインの動作 (V)", "なにを/どこで", "もうひとつの事象を同時にまといながら"],
+                problems: [
+                    { situation: "🎬 「僕は、マウンドの上で大きく深呼吸をしながら、バッターを鋭く見据えた」", words: ["I", "stood", "on the mound", ", taking a deep breath"] },
+                    { situation: "🎬 「彼女は、英語のスピーチコンテストの最優秀賞のトロフィーを抱きしめて、嬉し涙を流した」", words: ["She", "received", "the big prize", ", crying with happiness"] },
+                    { situation: "🎬 「娘は、 Ami Paris の新作カタログをめくりながら、次のコーディネートの計画をニヤニヤ考えている」", words: ["My daughter", "read", "the fashion magazine", ", planning her next style"] },
+                    { situation: "🎬 「お父さんは、息子の野球の素晴らしいピッチングの動画をスマホで再生しながら、とても誇らしげに笑った」", words: ["My father", "watched", "the video", ", smiling with great pride"] },
+                    { situation: "🎬 「あのオシャレな先生は、黒板に『意味順』のカラフルなチョークの枠線を引きながら、英語の構造を熱弁した」", words: ["The professor", "explained", "the sentence structure", ", drawing diagrams on the board"] },
+                    { situation: "🎬 「僕たちの野球チームは、グラウンドに全員で元気よく礼をしながら、今日の過酷な練習メニューを終えた」", words: ["The players", "left", "the field", ", bowing politely to the stadium"] },
+                    { situation: "🎬 🛑【否定ノック】「彼は、厳しい監督に対して一言も文句の言葉を言わずに、そのきつい練習メニューを完璧にやり遂げた。」", words: ["He", "finished", "the hard running", ", not saying a word"] },
+                    { situation: "🎬 🛑【否定ノック】「あのオシャレな先生は、周囲の目を少しも気にする風にすることなく、自分のアヴァンギャルドな着こなしを貫いた」", words: ["That teacher", "wore", "the loud jacket", ", not caring about others"] }, { situation: "🎬 🛑【否定ノック】「エースの息子は、ノーアウト満塁という絶体絶命のピンチを迎えても、決して動じることなくストレートを投げ込んだ」", words: ["My son", "faced", "the dangerous hitter", ", not losing his cool head"] }, { situation: "🎬 🛑【否定ノック】「彼女は、大勢の聴衆が見守るステージの上で、少しも震える素振りを見せずに、完璧な英語スピーチを完結させた」", words: ["She", "stood", "before the big crowd", ", not showing any fear"] } ] }, 15: { title: "レベル15：【【高校】あの時すでに完了していた（過去完了）の型】", headers: ["だれが / 助動詞", "あの過去の時点で (V)", "すでに〜した状態を持っていた", "なにを/どこで", "別の過去の出来事より前に"], problems: [ { situation: "🎬 「先週の公式戦の前に、息子はすでに練習試合で2回の完封勝利を達成していたんだ」", words: ["My son", "had", "already", "pitched", "two shutouts", "before that"] }, { situation: "🎬 「娘が Ami Paris の店舗に行く前に、彼女はオンラインで新作の在庫をすべてチェックし終えていた」", words: ["She", "had", "already", "checked", "the items", "before that"] }, { situation: "🎬 「彼女が本番のステージに立つより前に、先生は彼女のスピーチ原稿を10回以上添削し終えていたぞ」", words: ["The teacher", "had", "already", "read", "her speech", "before that"] }, { situation: "🎬 「監督がグラウンドに到着した時、部員たちはすでに猛烈なダッシュのメニューを終わらせていた」", words: ["The players", "had", "already", "finished", "the practice", "before that"] }, { situation: "🎬 「お父さんが新しいグローブを買ってくれるより前に、僕は古いグローブをボロボロになるまで使い切っていた」", words: ["I", "had", "long", "used", "my old glove", "before that"] }, { situation: "🎬 「あのオシャレな先生が『意味順』の理論を発表する前に、彼は膨大な言語学の文献を読み込んでいた」", words: ["He", "had", "already", "studied", "cognitive linguistics", "before that"] }, { situation: "🎬 🛑【否定ノック】「あの運命の試合が始まるまで、僕は一度もマウンドに立ったことがなかった。」", words: ["I", "had", "never", "stood", "on the mound", "before that"] }, { situation: "🎬 🛑【否定ノック】「あのオシャレな先生が授業を始めるまで、学生たちは『事象の捉え方』なんて考えたこともなかった」", words: ["The students", "had", "never", "thought", "about event construal", "before that"] }, { situation: "🎬 🛑【否定ノック】「彼女がスピーチコンテストで優勝するまで、彼女は一度も人前で褒められたことがなかった」", words: ["She", "had", "never", "been", "praised by others", "before that"] } ] }, 16: { title: "レベル16：【思考のセリフをパック（名詞節のO）の型】", headers: ["だれが / 助動詞", "頭の中で思う・言う (V)", "パックされたセリフの中身（大きな目的語）"], problems: [ { situation: "🎬 「あのオシャレな先生は、英語教育の古い文法規則はアップデートされるべきだと確信している」", words: ["The teacher", "believes", "that the traditional grammar should change"] }, { situation: "🎬 「息子は、毎日の泥だらけの厳しい練習が絶対に自分を裏切らないと信じているぞ」", words: ["My son", "believes", "that his hard practice rewards him"] }, { situation: "🎬 「お父さんは、息子のストレートの球速が秋までにさらに進化すると確信している」", words: ["My father", "thinks", "that his pitch gets much faster"] }, { situation: "🎬 「娘は、今度の誕生日プレゼントに絶対に Ami Paris の新作がもらえると思い込んでいる」", words: ["My daughter", "hopes", "that she can get the new sweater"] }, { situation: "🎬 「彼女は、自分が音楽室で奏でる美しいピアノがみんなに届くと信じているよ」", words: ["She", "believes", "that her music makes everyone happy"] }, { situation: "🎬 「監督は、今度の遠征試合で我がチームが必ず歴史的な大勝利を挙げると宣言した」", words: ["The coach", "says", "that our team wins the big game"] }, { situation: "🎬 🛑【否定ノック】「僕は、あのオシャレな先生がこんな安っぽいデザインの服を好むとは到底思えないね。」", words: ["I", "don't think", "that the teacher likes cheap clothes"] }, { situation: "🎬 🛑【否定ノック】「対戦相手の強豪チームは、まさか我が校の小6ピッチャーがこれほど鋭い変化球を投げるとは思っていなかったぞ」", words: ["The rivals", "didn't expect", "that the boy pitches wonderful curves"] }, { situation: "🎬 🛑【否定ノック】「彼女は、スピーチコンテストの本番で自分が緊張のあまりセリフを忘れてしまうなんて、少しも考えていなかった」", words: ["She", "never imagined", "that she would fail on the stage"] }, { situation: "🎬 ❓【疑問ノック】「君は、あのオシャレな先生の新刊の理論が、日本の英語教育を根底から変えると思う？」", words: ["Do", "you", "believe", "that his new book changes English education"] }, { situation: "🎬 ❓【疑問ノック】「監督は、明日の公式戦の先発ピッチャーに、本当にうちの息子を指名すると思う？」", words: ["Do", "you", "think", "that the coach chooses my son"] } ] }, 17: { title: "レベル17：【もしも現実と違ったら（仮定法過去）の型】", headers: ["だれが / 助動詞", "どうするだろう（脳内妄想） (V)", "なにを/どこで", "もしも現実と違う条件だったら（引き金）"], problems: [ { situation: "🎬 「もし僕がプロの野球選手だったら、今すぐあの憧れの特大スタジアムのマウンドに立つのになぁ」", words: ["I", "would stand", "on the mound", "if I were a professional star"] }, { situation: "🎬 「あのオシャレな先生なら、もし大金を手にしたら、ミラノの高級ブティックをすべて買い占めるだろうね」", words: ["The teacher", "would buy", "the luxury shops", "if he won the lottery"] }, { situation: "🎬 「娘は、もしパリに住んでいたら、毎日 Ami Paris の本店に通い詰めているだろう」", words: ["My daughter", "would visit", "the Paris stores", "if she lived there"] }, { situation: "🎬 「彼女は、もし時間に余裕があれば、毎日でもあの大きな音楽室でピアノを奏でているだろう」", words: ["She", "would play", "the piano all day", "if she had time"] }, { situation: "🎬 「お父さんは、もし仕事が休みなら、毎日の部活の練習をすべてグラウンドの横で見学するだろうね」", words: ["My father", "would watch", "the baseball practice", "if he were free"] }, { situation: "🎬 🛑【否定ノック】「あのオシャレな先生なら、どんなに大金を積まれても自分のファッションのこだわりは曲げないだろう」", words: ["He", "would not", "change", "his style", "if he were rich"] }, { situation: "🛑【否定ノック】「いくら相手が強豪チームでも、マウンドの息子は絶対に弱気なボールは投げないだろう」", words: ["My son", "would not", "pitch", "weak balls", "if they were strong"] }, { situation: "🎬 🛑【否定ノック】「もしテストで満点を取れなくても、僕は自分を嫌いになったりしないぞ！」", words: ["I", "would not", "hate", "myself", "if I failed the exam"] }, { situation: "🎬 ❓【疑問ノック】「もし君が本当にお金持ちだったら、一体何を購入する？」", words: ["What", "would", "you", "buy", "if you were rich"] }, { situation: "🎬 ❓【疑問ノック】「もし今週末の試合が雨で中止になったら、君たちは代わりに何をする予定？」", words: ["What", "would", "you", "do", "if it rained Sunday"] }, { situation: "🎬 ❓【疑問ノック】「もしあのオシャレな先生に直接アドバイスを求めたら、英語のスピーチをチェックしてくれるかな？」", words: ["Would", "he", "help", "your speech", "if you asked him"] } ] }, 18: { title: "レベル18：【イベントが直接耳目に飛び込む（原形不定詞）の型】", headers: ["だれが / 助動詞", "どうする（知覚）", "だれが", "どう動くのを"], problems: [ { situation: "🎬 「彼女が美しい歌を歌う、その現場の響きが耳に飛び込んできた！」", words: ["I", "heard", "her", "sing a song"] }, { situation: "🎬 「あのオシャレな先生が、颯爽とArmaniのスーツを着て廊下を歩いていくのを目撃した！」", words: ["I", "saw", "that teacher", "walk down the hall"] }, { situation: "🎬 「僕は、ピッチャーの息子がマウンドで110キロの唸る直球を投げ込む瞬間を間近で見たんだ」", words: ["I", "watched", "my son", "pitch a fast ball"] }, { situation: "🎬 「放課後、彼女が誰もいない音楽室の奥で、見事なショパンの旋律を奏でるのをじっと聴いていた」", words: ["I", "listened", "to her", "play the piano"] }, { situation: "🎬 「監督は、部員たちが誰も見ていない早朝のグラウンドで黙々とダッシュを繰り返しているのを見守っていた」", words: ["The coach", "watched", "the players", "run on the field"] }, { situation: "🎬 「娘が、お母さんのためにこっそりキッチンで美味しい朝ご飯を作っている気配がリビングに伝わってきた」", words: ["I", "felt", "my daughter", "make the breakfast"] }, { situation: "🎬 🛑【否定ノック】「僕は、あのオシャレな先生が、学生に対して理不尽に大声で怒鳴るような姿は一度も見聞きしたことがない」", words: ["I", "never saw", "the professor", "shout at his students"] }, { situation: "🎬 🛑【否定ノック】「バックネット裏のお父さんは、息子が今日の試合で一度だって弱気な表情を浮かべるのを見逃さなかったぞ」", words: ["The father", "didn't see", "his son", "lose his confidence"] }, { situation: "🎬 🛑【否定ノック】「審査員たちは、彼女がステージの真ん中で、英語のスピーチのセリフを一瞬たりとも詰まらせるのを聞かなかった」", words: ["The judges", "didn't hear", "the girl", "stop her speech"] }, { situation: "🎬 ❓【疑問ノック】「ねえ、君はさっき、あのオシャレな先生が新しいデザインのジャケットを着て校門をくぐるのを見かけた？」", words: ["Did", "you", "see", "the teacher", "enter the gate"] }, { situation: "🎬 ❓【疑問ノック】「今日の試合中、監督がベンチの奥で、次の回の秘密の戦術をキャプテンに熱く授けているの声が聞こえた？」", words: ["Did", "you", "hear", "the coach", "tell the secret"] } ] }, 19: { title: "レベル19：【【高校】あの時やっておけば（助動詞＋現在完了）の型】", headers: ["だれが / 助動詞", "あの過去の時点で〜しておくべきだった (V)", "その行為の残り香", "なにを/どこで"], problems: [ { situation: "🎬 「あぁ！僕はあの時、マウンドの上でもう少し冷静にコースを狙って投球しておくべきだったなぁ！」", words: ["I", "should", "have pitched", "the ball carefully"] }, { situation: "🎬 「あのオシャレな先生、先週のミラノの出張の時に、限定モデルの Prada のスニーカーを思い切って買っておくべきだったと後悔している」", words: ["The teacher", "should", "have bought", "the luxury sneakers"] }, { situation: "🎬 「娘は、 Ami Paris の原宿店がセールをやっていた期間に、あの可愛いセーターを絶対に手に入れておくべきだったなぁ」", words: ["My daughter", "should", "have ordered", "the red sweater"] }, { situation: "🎬 「彼女は、スピーチコンテストのステージに上がる直前、もう一回だけ深呼吸をして緊張をほぐしておくべきだった」", words: ["She", "should", "have taken", "a deep breath before"] }, { situation: "🎬 「僕たちの野球チームは、昨日の強豪校との激しい練習試合で、もっと早くバントのサインを出しておくべきだったね」", words: ["Our team", "should", "have used", "the clean bunt strategy"] }, { situation: "🎬 「お母さんは、今日の息子の特大お弁当の中に、大好物のハンバーグをもう一個余分に詰め込んでおくべきだったわ、と笑った」", words: ["My mother", "should", "have cooked", "the big hamburger"] }, { situation: "🎬 🛑【否定ノック】「僕は、あのオシャレな先生のアドバイスを無視して、あんな古い文法問題集なんてわざわざ購入しておくべきではなかった。」", words: ["I", "should not", "have bought", "the old textbook"] }, { situation: "🎬 🛑【否定ノック】「息子は、前の回のバッターに対して、あんなに不用意に真ん中へストレートを投げ込んでおくべきではなかったんだ」", words: ["My son", "should not", "have thrown", "the easy straight pitch"] }, { situation: "🎬 🛑【否定ノック】「彼女は、ピアノの発表会の本番の最中に、隣の席の人のミスをそんなに過剰に気にしておくべきではなかったね」", words: ["She", "should not", "have minded", "the other's error"] }, { situation: "🎬 🛑【否定ノック】「お父さんは、いくら急な仕事が入ったからといって、息子のせっかくの先発マウンドの試合のビデオ撮影を忘れておくべきではなかった」", words: ["The father", "should not", "have left", "the glove outside"] }, { situation: "🎬 ❓【疑問ノック】「彼はあの時、提示された大切なオファーを受け入れておくべきだったのかな？」", words: ["Should", "he", "have accepted", "the offer"] }, { situation: "🎬 ❓【疑問ノック】「あのオシャレな先生、今日の学会の発表で、別のスライド資料を提示しておくべきだったと思う？」", words: ["Should", "the teacher", "have shown", "the other slides"] }, { situation: "🎬 ❓【疑問ノック】「僕たちの野球チーム、あそこの場面でピッチャーを交代させておくべきだったのかな？」", words: ["Should", "our team", "have changed", "the pitcher"] } ] }, 20: { title: "レベル20：【セリフパックに疑問詞が潜入（間接疑問）の型】", headers: ["だれが / 助動詞", "知っている・尋ねる (V)", "【疑問詞】が率いる、セリフの中身（目的語の塊）"], problems: [ { situation: "🎬 「僕は、あのオシャレな先生が一体どこの高級ブティックでそのジャケットを購入したのか、知りたくてたまらない」", words: ["I", "want to know", "where the teacher bought the jacket"] }, { situation: "🎬 「監督は、マウンドの息子が次のバッターに対して、一体どの変化球を投げるつもりなのかをじっと見つめている」", words: ["The coach", "watches", "what ball my son pitches next"] }, { situation: "🎬 「お父さんは、娘が今度の誕生日プレゼントに、一体 Ami Paris のどの服を欲しがっているのか、完全に把握しているぞ」", words: ["The father", "knows", "what my daughter wants"] }, { situation: "🎬 「今日の練習に、あのオシャレな先生が見学に来てくれるかどうか、キャプテンが気にしてる」", words: ["The captain", "asks", "if the teacher comes"] }, { situation: "🎬 「対戦相手のバッターが、どこのコースのボールを狙っているのか、キャッチがサインを送った」", words: ["The catcher", "knows", "what ball the hitter wants"] }, { situation: "🎬 「お母さんが今朝の特大お弁当の中に、何の隠し味を入れたのか、僕は分かっちゃったぞ」", words: ["I", "know", "what secret she used"] }, { situation: "🎬 🛑【否定ノック】「あのオシャレな先生が一体どこに住んでいるのか、僕は個人情報だから知らないな。」", words: ["I", "don't know", "where he lives"] }, { situation: "🎬 🛑【否定ノック】「息子が次の打席でヒットを打てるかどうか、僕には神様じゃないから分からない」", words: ["I", "can't tell", "if he hits well"] }, { situation: "🎬 🛑【否定ノック】「彼女が一体いつからあんなに見事なピアノの旋律を弾けるようになったのか、誰も正確には知らない」", words: ["Nobody", "remembers", "when she started the piano lessons"] } ] }, 21: { title: "レベル21：【【高校】目撃された状態を背負う（知覚受動態）の型】", headers: ["だれが / 助動詞", "〜される（目撃）", "〜するのを（toが出現）"], problems: [ { situation: "🎬 彼が「通りを渡る」という一部始終が、誰かにバッチリ目撃された状態に。", words: ["He", "was", "seen", "to cross the street"] }, { situation: "🎬 「あのオシャレな先生が、高級ブランドのブティックに入っていく姿が、学生たちによって目撃されたぞ」", words: ["That teacher", "was", "seen", "to enter the shop"] }, { situation: "🎬 「エースピッチャーの息子が、誰もいない早朝のグラウンドで黙々と走り込んでいる姿が監督に見つかった」", words: ["My son", "was", "seen", "to practice hard"] }, { situation: "🎬 「彼女が音楽室の奥で、人知れず新しいスピーチの原稿を何度も音読している姿が、通りすがりの先生に聞かれた」", words: ["She", "was", "heard", "to read the speech"] }, { situation: "🎬 「娘が Ami Paris の服を着て、リビングの鏡の前でこっそりポーズを決めているところをお母さんに見られた」", words: ["My daughter", "was", "seen", "to check her fashion"] }, { situation: "🎬 「放課後、彼女が誰もいない講堂のピアノで、見事なショパンの難曲をノーミスで弾ききった瞬間がみんなに聞かれていた」", words: ["She", "was", "heard", "to play the classical music"] }, { situation: "🎬 🛑【否定ノック】「あのオシャレな先生が、そこらのディスカウントショップで安っぽい服を漁っている姿なんて、天地がひっくり返っても誰にも目撃されたことはない！」", words: ["The professor", "was never seen", "to buy cheap clothes"] }, { situation: "🎬 🛑【否定ノック】「マウンドの息子は、試合中に一度だって弱音を吐いたり、監督に向かって不満を漏らす姿を聞かれたことはないぞ」", words: ["My son", "was never heard", "to complain about the training"] }, { situation: "🎬 🛑【否定ノック】「彼女は、スピーチコンテストの楽屋裏で、緊張のあまり泣き言を言っている姿を誰にも見られなかった」", words: ["She", "was not seen", "to cry before the match"] } ] }, 22: { title: "レベル22：【ドラマの舞台（関係副詞 where）の型】", headers: ["その場所が / 助動詞", "〜です (V)", "どんな舞台だ", "【where】その舞台の内部で、だれがどうする"], problems: [ { situation: "🎬 「岐阜のこの美しいお城こそが、僕たちが歴史の授業のフィールドワークで訪れた場所だね」", words: ["Gifu Castle", "is", "the place where we visited yesterday"] }, { situation: "🎬 「この静かな音楽室こそが、彼女が毎日のように美しいピアノの旋律を奏でているお気に入りの空間だ」", words: ["This", "is", "the music room where she plays piano"] }, { situation: "🎬 「大学のこの大きな講義室が、あのオシャレな先生が『OS 2.0』の熱い講義を展開している舞台だよ」", words: ["This", "is", "the hall where the professor teaches us"] }, { situation: "🎬 🛑【否定ノック】「ここは、僕たちが放課後にいつも集まって作戦会議を開くお気に入りの場所じゃない。」", words: ["This", "is not", "the place where we meet"] }, { situation: "🎬 🛑【否定ノック】「あそこは、あのオシャレな先生が安っぽい服を大量買いするようなディスカウント店ではない」", words: ["That", "is not", "the shop where the teacher buys suits"] }, { situation: "🎬 🛑【否定ノック】「今回の遠征先は、僕たちの野球チームが過去に一度でも負けた記憶のある苦手な球場ではないぞ」", words: ["This", "is not", "the field where our team lost before"] }, { situation: "🎬 🛑【否定ノック】「ここは、彼女が緊張してスピーチのセリフをすべて忘れてしまったという忌まわしいステージじゃない」", words: ["This", "is not", "the stage where she failed her speech"] }, { situation: "🎬 ❓【疑問ノック】「ここが、彼らが伝説の宝物を発見したまさにその歴史的な場所なの？」", words: ["Is", "this", "the site where they found it"] }, { situation: "🎬 ❓【疑問ノック】「あれが、あのオシャレな先生がいつもおすすめしている、絶品のコーヒーを出すおしゃれなカフェ？」", words: ["Is", "that", "the cafe where the teacher relaxes"] }, { situation: "🎬 ❓【疑問ノック】「ここが、君の息子さんがいつか先発マウンドに立つことを夢見ている、あの憧れの甲子園スタジアム？」", words: ["Is", "this", "the stadium where your son wants to play"] } ] }, 23: { title: "レベル23：【【高校】あの時こうだったら（仮定法過去完了）の型】", headers: ["だれが / 助動詞", "どうなっていただろう（過去の脳内妄想） (V)", "どんな状態に", "もしあの過去の引き金が違っていたら"], problems: [ { situation: "🎬 「もしあの最後の場面で、息子が渾身の内角ストレートを投げ込んでいたら、我がチームは確実に大勝利を収めていただろうなぁ！」", words: ["Our team", "would have won", "the final game", "if he had pitched the straight ball"] }, { situation: "🎬 「あのオシャレな先生、もし先週の名古屋のブティックで、あの限定の Emporio Armani のアウターを迷わず購入していたら、今日の学会の主役になっていただろうね」", words: ["The teacher", "would have worn", "the beautiful jacket", "if he had ordered it"] }, { situation: "🎬 「娘は、もし昨日おじいちゃんからお小遣いをもらっていたら、今頃 Ami Paris の原宿店にダッシュして新作を買っていただろう」", words: ["My daughter", "would have bought", "the luxury sweater", "if she had possessed the money"] }, { situation: "🎬 「彼女は、もし風邪をひかずに万全の体調で挑めていたら、今度の上級ピアノコンクールで間違いなく最高得点をマークしていただろう」", words: ["She", "would have achieved", "the best score", "if she had played perfectly"] }, { situation: "🎬 「お父さんは、もし昨夜の飛行機が遅延していなければ、息子の記念すべき完封勝利の瞬間をスタジアムの特等席でバッチリ目撃できていただろうに」", words: ["The father", "would have watched", "the amazing pitching", "if he had arrived at the stadium"] }, { situation: "🎬 🛑【否定ノック】「息子はマウンドで絶対に崩れなかった。たとえ味方のエラーで満塁のピンチを背負わされていたとしても、決して失点は許さなかっただろう」", words: ["My son", "would not have given", "any points", "even if he had given up runs"] }, { situation: "🎬 🛑【否定ノック】「彼女は完璧に語順OSを自動化していた。もし本番で突然マイクが故障しても、決してパニックにならなかっただろう」", words: ["She", "would not", "have panicked", "on the stage", "if the microphone had broken"] }, { situation: "🎬 ❓【疑問ノック】「もしあの時十分な時間と予算があったなら、君は本当に海外へ行っていただろうか？」", words: ["Would", "you", "have gone", "if you had time"] }, { situation: "🎬 ❓【疑問ノック】「あのオシャレな先生、もし事前に相談を受けていたら、彼女の英語スピーチを喜んで添削してくれたと思う？」", words: ["Would", "the teacher", "have checked", "her speech", "if she had asked him"] }, { situation: "🎬 ❓【疑問ノック】「もしあの場面でアウトローの直球ではなく変化球を投げていたら、バッターを三振に打ち取れていたと思う？」", words: ["Would", "your son", "have struck", "out the hitter", "if he had thrown a curve"] } ] }, 24: { title: "レベル24：【【高校】メーターの傾き（not so much A as B）の型】", headers: ["だれが / 助動詞", "〜ではない（Aのメーターは低い）", "どんな・だれ (A)", "〜というよりはむしろ (B)"], problems: [ { situation: "🎬 「彼の属性は学者というよりは、むしろ作家としてのメーターが満ちている」", words: ["He", "is not", "so much a scholar", "as a writer"] }, { situation: "🎬 「あのオシャレな先生のこだわりは、単に高級ブランドが好きというより、服のデザインを芸術として愛しているのだ」", words: ["His fashion", "is not", "so much expensive", "as artistic"] }, { situation: "🎬 「うちの息子の投球スタイルは、単に力でねじ伏せる剛速球というより、緻密なコントロールで勝負するタイプだ」", words: ["His pitching", "is not", "so much powerful", "as smart"] }, { situation: "🎬 「彼女の素晴らしい英語は、単に帰国子女だからというより、日頃の圧倒的な音読ノックの賜物だ」", words: ["Her English", "is not", "so much a natural talent", "as a hard effort"] }, { situation: "🎬 「娘の Ami Paris への執着は、単に友達に自慢したいというより、純粋にあのフランスの洗練されたロゴデザインが好きなのだ」", words: ["Her interest", "is not", "so much a trend", "as a true love"] }, { situation: "🎬 「彼女の奏でるショパンのピアノは、単に指の動きが正確というより、聴く人の魂を揺さぶる情熱がこもっている」", words: ["Her piano music", "is not", "so much a technique", "as a deep passion"] }, { situation: "🎬 🛑【否定ノック】「あのオシャレな先生の『OS 2.0』講義は、従来の退屈な詰め込み英語教育とは180度違う、極上のエンタメ思考パズルだ」", words: ["His class", "is not", "so much a task", "as an entertainment"] }, { situation: "🎬 🛑【否定ノック】「今日の野球部の過酷な居残りダッシュメニューは、単なる罰則などではなく、夏を乗り切るための愛のムチだ」", words: ["The training", "was not", "so much a punishment", "as a hidden love"] } ] }, 25: { title: "レベル25：【【高校】クジラの構文（no more A than B）の型】", headers: ["だれ・なにが / 助動詞", "メーターはゼロだ（Bがゼロなのと同様に） (V)", "どんな状態 (A)", "だれ・なにが（Bのメーターも完全にゼロだ）"], problems: [ { situation: "🎬 「彼が学者でないのは、彼女が学者でないのと全く同じだ（どちらも学者メーターはゼロ！）」", words: ["He", "is", "no more a scholar", "than she is"] }, { situation: "🎬 「あのオシャレな先生が、その辺のダサくて安っぽい量産服を着るわけがないのは、パリのトップモデルが作業着でランウェイを歩かないのと同様だ」", words: ["The professor", "wishes", "no more to buy cheap items", "than the top models do"] }, { situation: "🎬 「小6ピッチャーの息子が、マウンドでバッターを恐れて逃げ腰のボールを投げるわけがないのは、プロのエースが敵前逃亡しないのと完全に同じだ！」", words: ["My son", "is", "no more afraid of rivals", "than the star pitcher is"] }, { situation: "🎬 「彼女が英語のスピーチの本番で、緊張のあまり頭が真っ白になってパニックを起こすわけがないのは、ベテランのアナウンサーがセリフをトチらないのと同義だ」", words: ["She", "is", "no more nervous on the stage", "than the professional speakers are"] }, { situation: "🎬 「娘が、ブランドのロゴが一切入っていない偽物の安物セーターを Ami Paris だと言い張って喜ぶわけがないのは、ファッションデザイナーが模倣品を認めないのと同じだ」", words: ["My daughter", "likes", "no more the fake sweaters", "than the designer does"] }, { situation: "🎬 「お母さんの手作りの特大お弁当が、そこらのコンビニの冷めきった惣菜に味で負けるわけがないのは、三ツ星レストランのシェフが素人の料理に敗北しないのと一緒よ」", words: ["This special lunch", "is", "no more worse than store food", "than a gourmet meal is"] }, { situation: "🎬 🛑【否定ノック】「あのオシャレな先生の書いた革新的な新刊の理論が、そこらのつまらない pseudo-scientific な第二言語習得(SLA)の論文と同レベルであるわけがない（クジラの否定・誇り）」", words: ["His framework", "is", "no more a simple variable theory", "than the great linguistics is"] } ] }, 26: { title: "レベル26：【【高校】部分的なメーターの否定（部分否定）の型】", headers: ["主語（すべての〜が） / 助動詞", "〜というわけではない（100%ではない） (V)", "どんな状態・動作の中身"], problems: [ { situation: "🎬 「すべての学生が、その試験で満点を獲得できるわけではない」", words: ["All students", "do not get", "the perfect score"] }, { situation: "🎬 「あのオシャレな先生がクローゼットに持っている服のすべてが、 Emporio Armani などの超高級ハイブランドだけで埋め尽くされているわけではない（お気に入りの定番もある！）」", words: ["All his jackets", "are not", "made by Armani"] }, { situation: "🎬 「野球チームのメンバーの全員が、息子の投げるような110キロを超える驚異的なストレートを打てるわけではないのだ」", words: ["All players", "cannot hit", "his fast balls"] }, { situation: "🎬 「全国のスピーチコンテストに出場する精鋭たちの全員が、彼女のように一切原稿を見ずに堂々と完璧な表現力で喋れるわけではない」", words: ["All speakers", "do not perform", "so layout-free like her"] }, { situation: "🎬 「娘が愛読しているファッション雑誌に載っているコーディネートのすべてが、 Ami Paris や Celine などのフランス発ブランドばかりというわけではない」", words: ["All pages", "do not show", "the French brands"] }, { situation: "🎬 🛑【否定ノック】「ピアノの発表会で、すべての演奏者がミスを一切出さずに完璧に弾ききれるわけではないのが現実だ」", words: ["All pianists", "do not finish", "the songs perfectly"] }, { situation: "🎬 🛑【否定ノック】「高価なオーダーメイドの野球グローブのすべてが、個人の手に一瞬で完璧に馴染むわけではない」", words: ["All gloves", "do not fit", "your hands immediately"] }, { situation: "🎬 ❓【疑問ノック】「生物のすべての突然変異が、やっぱり100%病気を引き起こすわけではないのですか？」", words: ["Do", "all mutations", "not cause", "disease"] }, { situation: "🎬 ❓【疑問ノック】「高級ブランドのジャケットなら、すべてのデザインがビジネスのフォーマルな場に適合するわけではない？」", words: ["Do", "all jacket designs", "not match", "the formal meetings"] }, { situation: "🎬 ❓【疑問ノック】「強豪校のピッチャーが投げるボールなら、すべてが110キロを超えるスピードに達するわけではない？」", words: ["Do", "all their pitches", "not cross", "the limit"] } ] }, 27: { title: "レベル27：【【高校】スポットライトを当てる（強調構文）の型】", headers: ["形式的な主語 / 助動詞", "〜です (V)", "強調したいもの", "補足（彼が失ったのは…）"], problems: [ { situation: "🎬 彼が失ったのは他の何でもない「お金」だったんだ！とスポットライトを当てる。", words: ["It", "was", "money", "that he lost"] }, { situation: "🎬 「あのオシャレな先生が、イタリアのミラノで直接買い付けたのは、まさにこのジャケットだったんだ！」", words: ["It", "was", "this jacket", "that the teacher bought"] }, { situation: "🎬 「昨日の大一番の試合で、値千金の決勝ホームランを放ったのは、他ならぬうちの息子だったぞ！」", words: ["It", "was", "my son", "that hit the home run"] }, { situation: "🎬 「スピーチコンテストの舞台で、審査員全員の涙を誘ったのは、彼女のあの堂々とした表現力だった」", words: ["It", "was", "her presentation", "that moved the judges"] }, { situation: "🎬 「娘が片時も離さずに大切にバッグに飾っているのは、まさに Ami Paris の限定キーホルダーだ」", words: ["It", "is", "the tiny keychain", "that she loves most"] }, { situation: "🎬 「僕たちの野球チームに、記念すべき今シーズン初の逆転勝利をもたらしたのは、キャプテンのあの熱い一言だった」", words: ["It", "was", "his speech", "that changed our team history"] }, { situation: "🎬 🛑【否定ノック】「あのオシャレな先生が、新刊の執筆中に一番苦労したのは、文法の解説ではなく、学生のリアルな疑問の選定だったのだ」", words: ["It", "was not", "the grammar rules", "that he worried most"] }, { situation: "🎬 🛑【否定ノック】「マウンド上の息子が、強豪バッターを前にして本当に意識していたのは、球速ではなく、アウトローの精密なコントロールだった」", words: ["It", "was not", "the speed", "that he focused on"] }, { situation: "🎬 🛑【否定ノック】「彼女がピアノの猛練習の末に手に入れたのは、単なるコンクールの金賞という結果ではなく、何物にも代えがたい絶対的な自信だった」", words: ["It", "was not", "the gold medal", "that she wanted most"] } ] }, 28: { title: "レベル28：【【高校】わずかこれだけ（no more than）の型】", headers: ["だれ・なにが / 助動詞", "どうする (V)", "【no more than】（メーターはわずかこれっぽっち！）", "その具体的な数値・中身"], problems: [ { situation: "🎬 「彼の財布の中には、わずか10ドルぴったりしか残っていなかったんだ」", words: ["He", "had", "no more than ten dollars"] }, { situation: "🎬 「あのオシャレな先生、驚くほどスリムで、体脂肪率はわずか8%のラインを維持しているらしい」", words: ["That teacher", "has", "no more than eight percent fat"] }, { situation: "🎬 「小6のピッチャーの息子、今日の強力な打線を相手に、許したヒットはわずか2本ぴったりだ！」", words: ["My son", "allowed", "no more than two hits"] }, { situation: "🎬 「彼女の英語スピーチ、完璧すぎて、原稿全体の修正箇所はわずか1語ぴったりしかなかったぞ」", words: ["The teacher", "found", "no more than one error"] }, { situation: "🎬 「娘がお小遣いをやりくりして買った Ami Paris のキーホルダー、値段はわずか30ドルポッキリだった」", words: ["She", "paid", "no more than thirty dollars"] }, { situation: "🎬 「今日の野球部の居残り特打練習、参加を許されたのは、精鋭のわずか4人のメンバーだけだ」", words: ["The coach", "chose", "no more than four players"] }, { situation: "🎬 「あのオシャレな先生の書いた新刊、あまりに大人気で、書店の棚にはわずか残り2冊しかなかった」", words: ["The bookstore", "has", "no more than two books"] }, { situation: "🎬 「お父さんが仕事の合間を縫って、息子のピッチングをチェックしてくれた時間は、わずか15分間だけだった」", words: ["My father", "stayed", "no more than fifteen minutes"] }, { situation: "🎬 🛑【否定ノック】「あの最強バッターを相手にして、エースの息子はまだわずか3点しか失点していないぞ（no more thanの否定形）。」", words: ["He", "has lost", "no more than three points"] }, { situation: "🎬 🛑【否定ノック】「あのオシャレな先生、コーディネートに使う色の数は、いつ見てもわずか3色以内に完璧に抑えられている」", words: ["He", "uses", "no more than three colors"] }, { situation: "🎬 🛑【否定ノック】「全国大会のスピーチ審査、ファイナルステージに進出できるのはわずか5人の狭き門なんだ」", words: ["The committee", "selects", "no more than five speakers"] } ] }, 29: { title: "レベル29：【【高校】ハプニングが動作を阻む（prevent 人 from）の型】", headers: ["ハプニング（主語） / 助動詞", "〜を阻む (V)", "だれを", "【from】〜するという動作から遠ざけた状態に"], problems: [ { situation: "🎬 「激しい大雨（主語）のせいで、僕たちはそこへ行くのを阻まれた（行けなかった）。」", words: ["The heavy rain", "prevented", "us", "from going there"] }, { situation: "🎬 「あまりの価格の高騰（主語）のせいで、あのオシャレな先生は、狙っていた Gucci の新作アウターの購入を阻まれた」", words: ["The high price", "prevented", "the teacher", "from buying the coat"] }, { situation: "🎬 「突然の肩の違和感（主語）のせいで、エースの息子は、今日の公式戦での先発登板を阻まれてしまった」", words: ["The shoulder pain", "prevented", "my son", "from pitching today"] }, { situation: "🎬 「本番直前の激しい緊張（主語）のせいで、彼女はステージの上でいつもの美しい英語スピーチを披露するのを阻まれそうになった」", words: ["The stage fright", "prevented", "the girl", "from speaking well"] }, { situation: "🎬 「原宿店の凄まじい大行列（主語）のせいで、娘は Ami Paris の限定バッグを初日に手に入れるのを阻まれたの」", words: ["The long line", "prevented", "my daughter", "from entering the shop"] }, { situation: "🎬 「突然の強い突風（主語）のせいで、センターの選手は、息子の放った素晴らしい大飛球をキャッチするのを阻まれた」", words: ["The strong wind", "prevented", "the player", "from catching the ball"] }, { situation: "🎬 🛑【否定ノック】「あのオシャレな先生の圧倒的な審美眼は、流行のチープな安物服の誘惑であっても、彼が Prada のスニーカーを選ぶのを阻むことはできなかった」", words: ["The trend", "didn't prevent", "the professor", "from wearing it"] }, { situation: "🎬 🛑【否定ノック】「マウンド上の息子の凄まじい集中力は、バッター側のどんな大歓声のヤジであっても、投球を阻むことはできなかったぞ」", words: ["The noise", "didn't prevent", "the pitcher", "from throwing strikes"] }, { situation: "🎬 🛑【否定ノック】「彼女が完璧に身につけた語順OSの自動化は、本番のどんな突発的なハプニングであっても、スピーチを阻めなかった」", words: ["The trouble", "didn't prevent", "her", "from winning the game"] }, { situation: "🎬 ❓【疑問ノック】「激しい雨の巨大なエネルギーのせいで、やっぱり君はそこに行くのを阻まれちゃった（行けなかった）の？」", words: ["Did", "the rain", "prevent", "you", "from going"] }, { situation: "🎬 ❓【疑問ノック】「急な体調不良のせいで、彼女は楽しみにしていたピアノの発表会での演奏を阻まれてしまったのかな？」", words: ["Did", "the fever", "prevent", "the girl", "from playing the piano"] }, { situation: "🎬 ❓【疑問ノック】「予算の厳しい上限のせいで、あのオシャレな先生は研究室の新しい機材を購入するのを阻まれたの？」", words: ["Did", "the low budget", "prevent", "the professor", "from ordering books"] } ] },
+            30: {
+                title: "レベル30：【【最難関】彼の放った言葉が引き金（関係詞節主語）の型】",
+                headers: ["なにが（彼の言ったことという大きな塊） / 助動詞", "どうする（変化させる）", "だれを", "どんな状態に"],
+                problems: [
+                    { situation: "🎬 「彼の放った言葉の内容」がひとつの大きな引き金（主語）となり、あなたを悲しませた。", words: ["What he said", "made", "you", "sad"] },
+                    { situation: "🎬 「あのオシャレな先生が『OS 2.0』の講義で熱弁した事象の本質」が、詰め込み英語に慣れた学生たちの脳を激しく揺さぶった！", words: ["What the professor taught", "made", "the students", "excited"] },
+                    { situation: "🎬 「マウンド上のエースの息子が全力で投げ込んだ渾身のインサイド直球」が、相手の最強バッターを完全に沈黙させたぞ！", words: ["What my son pitched", "made", "the heavy hitter", "helpless"] },
+                    { situation: "🎬 「彼女が音楽室の奥で何百回も繰り返した、ショパンのあの激しい旋律」が、聴く人すべての心を鷲掴みにして感動させたんだ", words: ["What she performed", "made", "the listeners", "emotional"] },
+                    { situation: "🎬 「娘が Ami Paris や高級ブランドの歴史を徹底的に調べ上げて得た知識」が、彼女の私服のセンスを一層プロっぽく進化させた", words: ["What my daughter studied", "made", "her style", "wonderful"] },
+                    { situation: "🎬 「お母さんが毎朝真心を込めて作り続けた、あの栄養満点の特大お弁当」が、息子の強靭な身体と110キロの球速を支える引き金になったのよ", words: ["What my mother cooked", "made", "his body", "strong"] },
+                    { situation: "🎬 🛑【否定ノック】「あのオシャレな先生が新刊に込めた熱いメッセージは、読んだ教育関係者を決して落胆させるような内容ではなかった」", words: ["What the teacher wrote", "didn't make", "the readers", "disappointed"] },
+                    { situation: "🎬 🛑【否定ノック】「今日のマウンドの息子が投げた丁寧なアウトローへの変化球は、相手の監督にスクイズなどの策を一切弄させなかったぞ」", words: ["What the pitcher threw", "didn't make", "the rivals", "successful"] },
+                    { situation: "🎬 ❓【疑問ノック】「あの時彼があなたに向かって放った不用意な発言の内容が、本当にあなたをそんなに怒らせてしまったの？」", words: ["Did", "what he said", "make", "you", "so angry"] },
+                    { situation: "🎬 ❓【疑問ノック】「あのオシャレな先生が黒板に書いた、意味順のカラフルなマトリクス図の内容が、学生たちの疑問を一瞬で解決したのかな？」", words: ["Did", "what the professor wrote", "make", "the structure", "clear"] }
+                ]
+            }
+        };
+
+        let activeLevel = 1;
+        let currentProblemIndex = 0;
+        let userAnswers = [];
+
+        function startLevel(levelNum) {
+            activeLevel = levelNum;
+            currentProblemIndex = 0;
+            document.getElementById("view-map").classList.remove("active");
+            document.getElementById("view-game").classList.add("active");
+            document.getElementById("clear-banner").classList.remove("show");
+            initQuestion();
+        }
+
+        function backToMap() {
+            document.getElementById("view-game").classList.remove("active");
+            document.getElementById("view-map").classList.add("active");
+            renderMap();
+        }
+
+        function initQuestion() {
+            const stage = allStages[activeLevel];
+            if (!stage) return;
+            
+            if (currentProblemIndex >= stage.problems.length) {
+                document.getElementById("clear-banner").classList.add("show");
+                document.getElementById("message").innerText = "🏆 ステージクリア！建物が進化しました！";
+                document.getElementById("message").style.color = "#27ae60";
+                
+                let clearCount = parseInt(localStorage.getItem("imijun_map_clear_count3") || "0");
+                if (activeLevel > clearCount) {
+                    localStorage.setItem("imijun_map_clear_count3", activeLevel.toString());
+                }
+                setTimeout(backToMap, 2500);
+                return;
+            }
+
+            document.getElementById("stage-title").innerText = stage.title;
+            document.getElementById("question-num").innerText = `問 ${currentProblemIndex + 1} / ${stage.problems.length}`;
+            
+            const pct = (currentProblemIndex / stage.problems.length) * 100;
+            document.getElementById("p-bar").style.width = `${pct}%`;
+
+            const problem = stage.problems[currentProblemIndex];
+            document.getElementById("situation").innerText = problem.situation;
+            document.getElementById("message").innerText = "";
+
+            // ユーザー回答配列の初期化（問題の単語数に応じた要素数に設定）
+            userAnswers = new Array(problem.words.length).fill(null);
+
+            // スロットエリアの生成
+            const slotsArea = document.getElementById("slots-area");
+            slotsArea.innerHTML = "";
+            for (let i = 0; i < problem.words.length; i++) {
+                const slotDiv = document.createElement("div");
+                slotDiv.className = "slot";
+                
+                const headerDiv = document.createElement("div");
+                headerDiv.className = "slot-header";
+                headerDiv.innerText = stage.headers[i] || `要素 ${i+1}`;
+                
+                const contentDiv = document.createElement("div");
+                contentDiv.className = "slot-content";
+                contentDiv.id = `slot-content-${i}`;
+                
+                slotDiv.appendChild(headerDiv);
+                slotDiv.appendChild(contentDiv);
+                slotsArea.appendChild(slotDiv);
+            }
+
+            // 単語プールの生成（シャッフル）
+            const wordPool = document.getElementById("word-pool");
+            wordPool.innerHTML = "";
+            let shuffled = [...problem.words].sort(() => Math.random() - 0.5);
+            
+            shuffled.forEach((word, idx) => {
+                const card = document.createElement("div");
+                card.className = "word-card";
+                card.innerText = word;
+                card.id = `word-card-${idx}`;
+                card.onclick = () => handleWordClick(word, `word-card-${idx}`);
+                wordPool.appendChild(card);
+            });
+        }
+
+        function handleWordClick(text, cardId) {
+            const cardElement = document.getElementById(cardId);
+            if (!cardElement || cardElement.style.visibility === "hidden") return;
+
+            let targetSlotIdx = userAnswers.findIndex(w => w === null);
+            if (targetSlotIdx === -1) return;
+
+            userAnswers[targetSlotIdx] = text;
+            const slotContent = document.getElementById(`slot-content-${targetSlotIdx}`);
+            
+            const placedCard = document.createElement("div");
+            placedCard.className = "word-card";
+            placedCard.innerText = text;
+            
+            // スロット内のカードをクリックでキャンセル可能にする
+            const currentSlotIdx = targetSlotIdx;
+            placedCard.onclick = () => {
+                userAnswers[currentSlotIdx] = null;
+                slotContent.innerHTML = "";
+                cardElement.style.visibility = "visible";
+            };
+
+            slotContent.appendChild(placedCard);
+            cardElement.style.visibility = "hidden";
+
+            // すべてのスロットが埋まったら判定へ
+            if (userAnswers.filter(w => w !== null).length === userAnswers.length) { 
+                setTimeout(checkAnswer, 150); 
+            }
+        }
+
+        function checkAnswer() {
+            const stage = allStages[activeLevel];
+            const problem = stage.problems[currentProblemIndex];
+            let isCorrect = true;
+            for(let i = 0; i < problem.words.length; i++) {
+                if (userAnswers[i] !== problem.words[i]) { isCorrect = false; break; }
+            }
+            if (isCorrect) {
+                document.getElementById("message").innerText = "✨ 正解！語順の自動化クリア！";
+                document.getElementById("message").style.color = "#27ae60";
+                currentProblemIndex++;
+                let cleanText = problem.words.join(" ");
+                speakEnglish(cleanText, () => { setTimeout(initQuestion, 400); });
+            } else {
+                document.getElementById("message").innerText = "❌ 語順の配置が違うようです。もう一度！";
+                document.getElementById("message").style.color = "#e74c3c";
+                setTimeout(initQuestion, 1400);
+            }
+        }
+
+        function speakEnglish(text, callback) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = 'en-US';
+                u.rate = 0.9;
+                u.onend = () => { if(callback) callback(); };
+                u.onerror = () => { if(callback) callback(); };
+                window.speechSynthesis.speak(u);
+            } else {
+                if(callback) callback();
+            }
+        }
+
+        function generateMapDOM() {
+            const container = document.getElementById("map-grid-container");
+            container.innerHTML = "";
+            for (let i = 1; i <= 30; i++) {
+                const plotDiv = document.createElement("div");
+                plotDiv.className = "map-plot";
+                plotDiv.id = `plot-${i}`;
+
+                const balloon = document.createElement("div");
+                balloon.className = "map-balloon";
+                balloon.onclick = () => startLevel(i);
+                
+                const fullTitle = allStages[i].title;
+                const shortTitle = fullTitle.substring(fullTitle.indexOf("：") + 1);
+                balloon.innerText = `${i}. ${shortTitle}`;
+
+                const site = document.createElement("div");
+                site.className = "building-site";
+                site.id = `b-icon-${i}`;
+                site.innerText = "🏗️";
+
+                plotDiv.appendChild(balloon);
+                plotDiv.appendChild(site);
+                container.appendChild(plotDiv);
+            }
+        }
+
+        function renderMap() {
+            let clearCount = parseInt(localStorage.getItem("imijun_map_clear_count3") || "0");
+            for (let i = 1; i <= 30; i++) {
+                const plot = document.getElementById(`plot-${i}`);
+                const icon = document.getElementById(`b-icon-${i}`);
+                if (!plot || !icon) continue;
+
+                if (i <= clearCount) {
+                    plot.className = "map-plot unlocked";
+                    icon.innerText = buildingIcons[i] || "🏢";
+                } else if (i === clearCount + 1) {
+                    plot.className = "map-plot unlocked";
+                    icon.innerText = "🏗️";
+                } else {
+                    plot.className = "map-plot locked";
+                    icon.innerText = "🔒";
+                }
+            }
+        }
+
+        document.getElementById("reset-btn").onclick = () => {
+            if(confirm("すべての建物を初期化して更地に戻しますか？")) {
+                localStorage.setItem("imijun_map_clear_count3", "0"); 
+                renderMap();
+            }
+        };
+        
+        // ページ読み込み時に初期化処理を確実に実行
+        window.addEventListener('DOMContentLoaded', () => {
+            generateMapDOM();
+            renderMap();
+        });
+    </script>
+</body>
+</html>
