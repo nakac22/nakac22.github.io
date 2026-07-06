@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>前置詞の風景①：in / outとon/off</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.8; max-width: 800px; margin: 0 auto; padding: 30px; color: #333; background: #fdfdfd; }
+        h1 { border-bottom: 3px solid #2c3e50; padding-bottom: 10px; color: #2c3e50; text-align: center; }
+        h2 { color: #2980b9; margin-top: 40px; border-left: 5px solid #2980b9; padding-left: 10px; }
+        
+        /* 画面切り替え用 */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* トップメニュー */
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
+        .menu-card { border: 2px solid #2c3e50; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; background: #fff; transition: 0.2s; position: relative; }
+        .menu-card:hover { background: #f0f7fc; transform: translateY(-2px); }
+        .stamp { position: absolute; top: 10px; right: 10px; background: #e74c3c; color: white; padding: 3px 8px; border-radius: 20px; font-size: 0.8em; font-weight: bold; display: none; transform: rotate(15deg); border: 2px dashed white; }
+        .menu-card.cleared .stamp { display: block; }
+
+        .story-text { font-size: 1.15em; margin-bottom: 40px; border-bottom: 2px solid #eee; padding-bottom: 30px; }
+        
+        /* パズルUI */
+        .puzzle-container { margin-top: 30px; padding: 30px; border: 2px solid #34495e; border-radius: 10px; background: #f0f0f0; position: relative; }
+        .timer-container { font-size: 1.2em; font-weight: bold; color: #e74c3c; text-align: right; margin-bottom: 10px; }
+        .folder-container { display: flex; gap: 10px; margin: 20px 0; overflow-x: auto; padding-bottom: 10px; }
+        .folder { border: 2px solid #2c3e50; padding: 15px; width: 170px; min-height: 120px; text-align: center; background: #fff; border-radius: 8px; flex-shrink: 0; }
+        .folder-label { font-size: 0.85em; font-weight: bold; display: block; margin-bottom: 10px; color: #2c3e50; border-bottom: 2px solid #bdc3c7; padding-bottom: 3px; background: #eaedf1; border-radius: 3px; }
+        .drop-zone { min-height: 60px; background: #fafafa; border: 1px dashed #ccc; border-radius: 4px; padding: 5px; }
+        
+        /* 単語カード */
+        .word-pool { margin: 20px 0; padding: 15px; background: #fff; border-radius: 6px; border: 1px solid #ddd; min-height: 50px; }
+        .word-card { background: #fff; border: 1px solid #333; padding: 10px 15px; margin: 5px; cursor: pointer; display: inline-block; border-radius: 4px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); font-weight: bold; font-size: 1.05em; }
+        .word-card:hover { background: #e8f4f8; }
+        
+        .nav-button { padding: 15px 30px; font-size: 1.1em; cursor: pointer; background: #2980b9; color: white; border: none; border-radius: 5px; font-weight: bold; display: inline-block; }
+        .nav-button:hover { background: #3498db; }
+        
+        /* アラートの代わりに使うメッセージ通知用オーバーレイ */
+        .msg-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 10; flex-direction: column; justify-content: center; align-items: center; text-align: center; border-radius: 8px; }
+        .msg-text { font-size: 1.5em; font-weight: bold; margin-bottom: 20px; }
+
+        /* コングラッチュレーション横断幕 */
+        .banner { display: none; background: linear-gradient(45deg, #f1c40f, #e67e22); color: white; padding: 40px; text-align: center; border-radius: 10px; margin-top: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); animation: pop 0.5s ease-out; }
+        .banner h2 { color: white; border: none; margin: 0 0 20px 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        @keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <h1>前置詞の風景①：in / outとon/off</h1>
+
+    <!-- 1. トップメニュー画面 -->
+    <div id="screen-menu" class="screen active">
+        <p style="text-align: center; font-size: 1.2em; color: #555;">学びたい前置詞を選んで、深淵なる世界観をのぞいてみよう！</p>
+        <div class="menu-grid">
+            <div class="menu-card" id="btn-menu-in" onclick="startTopic('in')">
+                <span class="stamp">✅ クリア!</span>
+                <h3>1. IN</h3>
+                <p>包み込まれる感覚の物語</p>
+            </div>
+            <div class="menu-card" id="btn-menu-out" onclick="startTopic('out')">
+                <span class="stamp">✅ クリア!</span>
+                <h3>2. OUT</h3>
+                <p>枠から飛び出す・現れる感覚</p>
+            </div>
+            <div class="menu-card" id="btn-menu-on" onclick="startTopic('on')">
+                <span class="stamp">✅ クリア!</span>
+                <h3>3. ON</h3>
+                <p>ぴったりと接触する感覚</p>
+            </div>
+            <div class="menu-card" id="btn-menu-off" onclick="startTopic('off')">
+                <span class="stamp">✅ クリア!</span>
+                <h3>4. OFF</h3>
+                <p>接触からパッと離れる感覚</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 解説画面 -->
+    <div id="screen-story" class="screen">
+        <div id="story-content"></div>
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="nav-button" onclick="goToPuzzle()">意味順パズルに挑戦する</button>
+        </div>
+    </div>
+
+    <!-- 3. パズル画面 -->
+    <div id="screen-puzzle" class="screen">
+        <div class="puzzle-container">
+            <!-- 演出用メッセージレイヤー（アラートの代わり） -->
+            <div id="msg-overlay" class="msg-overlay" style="display: flex;">
+                <div class="msg-text" id="msg-text"></div>
+                <button class="nav-button" id="msg-btn" onclick="closeOverlay()">次へ進む</button>
+            </div>
+
+            <div class="timer-container">⏳ 残り時間: <span id="timer-sec">10</span>秒</div>
+            <h3 id="puzzle-title">第 1 問</h3>
+            <p id="puzzle-japanese" style="font-size: 1.2em; font-weight: bold; color: #2c3e50;"></p>
+            
+            <div class="folder-container" id="folder-wrapper">
+                <!-- ここにフォルダが動的に生成されます -->
+            </div>
+            
+            <div class="word-pool" id="word-pool-wrapper">
+                <!-- ここに単語カードが動的に生成されます -->
+            </div>
+
+            <button class="nav-button" id="check-btn" onclick="checkAnswer()">答え合わせ</button>
+        </div>
+    </div>
+
+    <!-- 4. コングラッチュレーション横断幕画面 -->
+    <div id="screen-clear" class="screen">
+        <div class="banner" id="congrats-banner">
+            <h2>🎉 コングラッチュレーション！ 🎉</h2>
+            <p style="font-size: 1.3em; margin-bottom: 30px;">この前置詞の本質をマスターしました！</p>
+            <button class="nav-button" style="background: #2c3e50;" onclick="returnToMenu()">トップ画面に戻る</button>
+        </div>
+    </div>
+
+<script>
+    // --- データ定義（意味順に則った厳密なカード・フォルダ分割） ---
+    const topics = {
+        in: {
+            title: "1. IN：包み込まれる感覚の物語",
+            html: `
+                <h2>IN：包み込まれる感覚</h2>
+                <div class="story-text">
+                    <p>私たちは皆、何らかの空間に身を置いています。部屋の中にいたり、電車の中にいたり、あるいは特定の組織の中に所属していたりします。英語で <strong>in</strong> という言葉を耳にするとき、私たちの心の中に広がるのは「何らかの境界線に囲まれていて、その内側に収まっている」という極めて直感的な感覚です。真ん中にいても、隅っこにいても、外との間に「壁」や「仕切り」がある限り、私たちは <strong>in</strong> の領域にいるのです。</p>
+                    <p>この感覚は、目に見える場所だけでなく、抽象的な概念にも拡張されます。「朝」という時間は、一日の始まりと終わりという「枠」に囲まれています。だから私たちは <em>in the morning</em> と言います。「状態」も同じです。<em>in trouble</em>（困った状況という枠）、<em>in love</em>（恋という状態の枠）。囲いの中にいるからこそ、そこから簡単には抜け出せない、その状況にどっぷりと浸かっている感覚が伝わるのです。</p>
+                    <p><em>He is in.</em> だけで「彼は在室中」となるのも、話し手と聞き手が「今、ここにある囲い（部屋やオフィスなど）」を暗黙のうちに共有しているからです。すべての表現は、この「枠の中」という感覚から生まれています。</p>
+                    <p><strong>【日常生活に溢れる IN の10の風景】</strong></p>
+                    <ol>
+                        <li>The cat is in the box.（猫が箱の中にいる。）</li>
+                        <li>She is in the library.（彼女は図書館の中にいる。）</li>
+                        <li>The keys are in the drawer.（鍵は引き出しの中にある。）</li>
+                        <li>He gets up in the morning.（彼は朝（という枠の時間）に起きる。）</li>
+                        <li>It happened in 2026.（それは2026年（という年の枠内）に起きた。）</li>
+                        <li>He is in a bad mood.（彼は不機嫌（という気分の枠）の中にいる。）</li>
+                        <li>I am in a hurry.（私は急いでいる（急ぎという状態の枠内）。）</li>
+                        <li>She is in charge of this.（彼女がこれの担当（責任という枠内）だ。）</li>
+                        <li>He is in high school.（彼は高校（という組織の枠内）に在籍している。）</li>
+                        <li>I am interested in this book.（私はこの本（という領域）に興味がある。）</li>
+                    </ol>
+                </div>
+            `,
+            questions: [
+                { jp: "猫が箱の中にいる。", en: "The cat is in the box", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["The cat", "is", "in the box"] },
+                { jp: "彼は不機嫌（という枠の中）にいる。", en: "He is in a bad mood", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["He", "is", "in a bad mood"] },
+                { jp: "私はこの本に興味がある（興味という状態の枠内）。", en: "I am interested in this book", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["I", "am interested", "in this book"] },
+                { jp: "彼女は図書館（の中）にいますか？", en: "Is she in the library", folders: ["質問の合図", "①だれが・何が", "④どこで・いつ・おまけ"], cards: ["Is", "she", "in the library"], isQuestion: true },
+                { jp: "鍵は引き出しの中にありますか？", en: "Are the keys in the drawer", folders: ["質問の合図", "①だれが・何が", "④どこで・いつ・おまけ"], cards: ["Are", "the keys", "in the drawer"], isQuestion: true }
+            ]
+        },
+        out: {
+            title: "2. OUT：枠から飛び出す・外に現れる感覚",
+            html: `
+                <h2>OUT：枠から飛び出す・外に現れる感覚</h2>
+                <div class="story-text">
+                    <p><strong>in</strong> が「囲いの中」なら、<strong>out</strong> はその囲いの「外へ出る」、あるいは「最初から外にある」感覚です。単に外側にポツンとあるだけでなく、元いた場所から「境界線を越えて外へ飛び出す」という動的なエネルギーをはらんでいることが多くあります。家から外へ出る、秘密が外に漏れる、頭の中からアイデアを外に出す。すべて <strong>out</strong> の仕業です。</p>
+                    <p>さらに、隠れていたものが「境界線の外に出てくる」ということは、周りから「はっきりと見えるようになる」ということでもあります。本が出出版される（<em>come out</em>）、火事や戦争が突然発生して人々の目の前に現れる（<em>break out</em>）、星が夜空に出てくる（<em>the stars are out</em>）。これらはすべて、暗闇や内側という隠れ家から、誰もが見える「外の世界」へと飛び出してきた風景なのです。</p>
+                    <p>また、中のものをすべて外に出し尽くすと、中は「空っぽ」になります。ここから <strong>out</strong> には「品切れ（<em>out of stock</em>）」や「完全に使い果たす（<em>run out of</em>）」という意味も生まれます。境界線の外へ、という一見シンプルな動きが、これほど豊かな表情を見せてくれるのです。</p>
+                    <p><strong>【日常生活に溢れる OUT の10の風景】</strong></p>
+                    <ol>
+                        <li>Please go out of the room.（部屋の外へ出てください。）</li>
+                        <li>The sun came out.（太陽が（雲の境目を越えて）出てきた。）</li>
+                        <li>His new book will come out next month.（彼の新刊が来月出版される。）</li>
+                        <li>We are out of milk.（牛乳が（冷蔵庫の枠から）出尽くして切れている。）</li>
+                        <li>The truth leaked out.（真実が（秘密の枠から）外に漏れた。）</li>
+                        <li>Find out the answer.（（隠れた）答えを見つけ出す。）</li>
+                        <li>Watch out!（（自分の殻から）外に目を向けて警戒しろ！）</li>
+                        <li>He is out of town today.（彼は今日、街（の境界線）を離れている。）</li>
+                        <li>The fire went out.（火が（燃える領域から）消え去った。）</li>
+                        <li>I am wiped out.（私は（エネルギーが出尽くして）クタクタだ。）</li>
+                    </ol>
+                </div>
+            `,
+            questions: [
+                { jp: "答えを見つけ出そう。（命令文）", en: "Find out the answer", folders: ["②どうする・どうだ", "③だれに・何に"], cards: ["Find out", "the answer"] },
+                { jp: "太陽が出てきた。", en: "The sun came out", folders: ["①だれが・何が", "②どうする・どうだ"], cards: ["The sun", "came out"] },
+                { jp: "私たちは牛乳を切らしている（牛乳の枠から外に出た状態）。", en: "We are out of milk", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["We", "are", "out of milk"] },
+                { jp: "真実は外に漏れましたか？", en: "Did the truth leak out", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ"], cards: ["Did", "the truth", "leak out"], isQuestion: true },
+                { jp: "部屋の外へ出てください。（命令文）", en: "Please go out of the room", folders: ["②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Please go", "out of the room"] }
+            ]
+        },
+        on: {
+            title: "3. ON：ぴったりと接触する感覚",
+            html: `
+                <h2>ON：ぴったりと接触する感覚</h2>
+                <div class="story-text">
+                    <p>多くの人が <strong>on</strong> を「〜の上」と覚えますが、その本質は「上」ではなく「<strong>接触（ぴったりくっついていること）</strong>」です。テーブルの上にリンゴがあるときはもちろん、壁にカレンダーが掛かっているときも、天井にハエが止まっているときも、すべて <strong>on</strong> を使います。支える面が上だろうが、横だろうが、下だろうが、2つのものが「ペタッ」と触れ合っていれば、それは <strong>on</strong> の世界なのです。</p>
+                    <p>この「接触」の感覚は、比喩的に「依存」や「継続」へと繋がっていきます。何かに寄りかかって支えてもらう（<em>depend on</em>）、線の上をどこまでも進んでいくように動作を続ける（<em>keep on</em>）。また、電気のスイッチを「接触」させることで電流が流れ、機械が作動する状態になるのも <strong>on</strong>（<em>turn on</em>）です。</p>
+                    <p>さらに、特定の「日」を表すときにも <strong>on</strong> を使います（<em>on Sunday</em>）。これは、カレンダーという長い月日の線上において、その特定の日に自分の足が「ピタッ」と乗っかっているイメージを思い浮かべると、とてもしっくりくるはずです。</p>
+                    <p><strong>【日常生活に溢れる ON の10の風景】</strong></p>
+                    <ol>
+                        <li>The cup is on the table.（カップがテーブルの上に（接して）ある。）</li>
+                        <li>There is a picture on the wall.（壁に絵が（ぴったり）掛かっている。）</li>
+                        <li>Turn on the light.（（接点を繋いで）電気をつけて。）</li>
+                        <li>I was born on July 7th.（私は7月7日（という日付の線の上）に生まれた。）</li>
+                        <li>He is on his way to school.（彼は学校へ行く途中（の道の上）にいる。）</li>
+                        <li>You can depend on me.（私に（寄りかかって）頼っていいよ。）</li>
+                        <li>Keep on walking.（（歩みの線を進めるように）歩き続けなさい。）</li>
+                        <li>She is on the phone.（彼女は電話中（電話線に繋がっている状態）だ。）</li>
+                        <li>He did it on purpose.（彼はわざと（意図という土台に乗って）それをした。）</li>
+                        <li>Put on your coat.（コートを（肌に接するように）着なさい。）</li>
+                    </ol>
+                </div>
+            `,
+            questions: [
+                { jp: "カップがテーブルの上に（接して）ある。", en: "The cup is on the table", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["The cup", "is", "on the table"] },
+                { jp: "あなたは私を頼っていいよ（私を支えとして接触する）。", en: "You can depend on me", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["You", "can depend", "on me"] },
+                { jp: "彼女は今、電話中（電話線に接触）ですか？", en: "Is she on the phone", folders: ["質問の合図", "①だれが・何が", "④どこで・いつ・おまけ"], cards: ["Is", "she", "on the phone"], isQuestion: true },
+                { jp: "歩き続けなさい。（命令文）", en: "Keep on walking", folders: ["②どうする・どうだ"], cards: ["Keep on walking"] },
+                { jp: "電気をつけてください。（接点を繋ぐ／命令文）", en: "Turn on the light", folders: ["②どうする・どうだ", "③だれに・何に"], cards: ["Turn on", "the light"] }
+            ]
+        },
+        off: {
+            title: "4. OFF：接触から「離れる」感覚",
+            html: `
+                <h2>OFF：接触から「離れる」感覚</h2>
+                <div class="story-text">
+                    <p><strong>on</strong> が「ぴったり接触」なら、<strong>off</strong> はその接触状態から「<strong>パッと離れる（分離）</strong>」感覚です。テーブルからコップが落ちる、電車から降りる、服を脱ぐ. これらはすべて、それまでくっついていた場所から、距離が生まれて離れていく動きです。<strong>out</strong> が「容器の内から外へ」という立体的な移動なのに対し、<strong>off</strong> は「くっついていた面から離れる」という平面的な移動という違いがあります。</p>
+                    <p>電気を消す（<em>turn off</em>）のは、繋がっていた回路の接点を「パッと離す」からです。仕事から離れるから「休み（<em>day off</em>）」になり、予定していたルートや基準から離れるから「割引（<em>20% off</em>）」や「外れる（<em>off-track</em>）」になります。飛行機が地面を蹴って空へ離陸するのも <em>take off</em> ですね。</p>
+                    <p>何かが <strong>off</strong> されるとき、そこには「それまでの縛りから解放されて自由になる」という、どこかスッキリしたニュアンスが漂います。くっついていた重荷をベリッと剥がして、離れた場所へ。それが <strong>off</strong> の持つ力強いメッセージです。</p>
+                    <p><strong>【日常生活に溢れる OFF の10の風景】</strong></p>
+                    <ol>
+                        <li>The apple fell off the tree.（リンゴが木（の枝）から離れて落ちた。）</li>
+                        <li>Get off the bus.（バス（の床面）から降りなさい。）</li>
+                        <li>Take off your shoes.（（肌に接している）靴を脱ぎなさい。）</li>
+                        <li>Turn off the TV.（（接点を離して）テレビを消して。）</li>
+                        <li>I have a day off tomorrow.（明日は仕事（の線上）から離れた休みだ。）</li>
+                        <li>This T-shirt is 30% off.（このTシャツは通常価格から30%離れている（割引）。）</li>
+                        <li>The plane took off.（飛行機が（地面を離れて）離陸した。）</li>
+                        <li>Keep off the grass.（芝生（に触れるの）から離れていなさい＝立入禁止。）</li>
+                        <li>Hands off!（（そこから手を離せ！）触るな！）</li>
+                        <li>He walked off.（彼は（その場から）歩き去った。）</li>
+                    </ol>
+                </div>
+            `,
+            questions: [
+                { jp: "靴を脱ぎなさい。（命令文）", en: "Take off your shoes", folders: ["②どうする・どうだ", "③だれに・何に"], cards: ["Take off", "your shoes"] },
+                { jp: "飛行機は離陸しましたか（地面から離れたか）？", en: "Did the plane take off", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ"], cards: ["Did", "the plane", "take off"], isQuestion: true },
+                { jp: "リンゴが木から離れて落ちた。", en: "The apple fell off the tree", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["The apple", "fell", "off the tree"] },
+                { jp: "私は明日、仕事から離れた休み（休日）がある。", en: "I have a day off tomorrow", folders: ["①だれが・何が", "②どうする・どうだ", "③だれに・何に", "④どこで・いつ・おまけ"], cards: ["I", "have", "a day off", "tomorrow"] },
+                { jp: "テレビを消してください。（接点を離す／命令文）", en: "Turn off the TV", folders: ["②どうする・どうだ", "③だれに・何に"], cards: ["Turn off", "the TV"] }
+            ]
+        }
+    };
+
+    // 状態管理変数
+    let currentTopic = "";
+    let currentQuestionIdx = 0;
+    let timerInterval = null;
+    let timeLeft = 10;
+    let overlayMode = ""; // "correct", "timeout", "wrong"
+    const clearedTopics = { in: false, out: false, on: false, off: false };
+
+    // --- 確実なシャッフルアルゴリズム (Fisher-Yates) ---
+    function shuffleArray(array) {
+        let shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        if (shuffled.length > 1 && JSON.stringify(array) === JSON.stringify(shuffled)) {
+            return shuffleArray(array);
+        }
+        return shuffled;
+    }
+
+    // --- 画面遷移コントロール ---
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    // 1. メニュー ➔ 解説
+    function startTopic(topicKey) {
+        currentTopic = topicKey;
+        currentQuestionIdx = 0;
+        document.getElementById('story-content').innerHTML = topics[topicKey].html;
+        showScreen('screen-story');
+        window.scrollTo(0,0);
+    }
+
+    // 2. 解説 ➔ パズル画面へ進む
+    function goToPuzzle() {
+        showScreen('screen-puzzle');
+        loadQuestion();
+    }
+
+    // --- パズルロジック ---
+    function loadQuestion() {
+        document.getElementById('msg-overlay').style.display = 'none';
+        clearInterval(timerInterval);
+        timeLeft = 10;
+        document.getElementById('timer-sec').innerText = timeLeft;
+
+        const qData = topics[currentTopic].questions[currentQuestionIdx];
+        document.getElementById('puzzle-title').innerText = `第 ${currentQuestionIdx + 1} 問 / 全5問`;
+        document.getElementById('puzzle-japanese').innerText = qData.jp;
+
+        // フォルダ生成
+        const wrapper = document.getElementById('folder-wrapper');
+        wrapper.innerHTML = "";
+        
+        let foldersToCreate = [...qData.folders];
+        if(qData.isQuestion && !foldersToCreate.includes("質問の合図")) {
+            foldersToCreate.unshift("質問の合図");
+        }
+
+        foldersToCreate.forEach((fLabel, idx) => {
+            const folderDiv = document.createElement('div');
+            folderDiv.className = 'folder';
+            folderDiv.innerHTML = `
+                <span class="folder-label">${fLabel}</span>
+                <div class="drop-zone" id="zone-${idx}"></div>
+            `;
+            wrapper.appendChild(folderDiv);
+        });
+
+        // 単語カードの配置
+        const pool = document.getElementById('word-pool-wrapper');
+        pool.innerHTML = "";
+        
+        let shuffledCards = shuffleArray(qData.cards);
+
+        shuffledCards.forEach(cardText => {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'word-card';
+            cardDiv.innerText = cardText;
+            cardDiv.onclick = function() { moveCard(this); };
+            pool.appendChild(cardDiv);
+        });
+
+        startTimer();
+    }
+
+    // カード移動処理
+    function moveCard(card) {
+        const parent = card.parentElement;
+        if (parent.classList.contains('drop-zone')) {
+            document.getElementById('word-pool-wrapper').appendChild(card);
+        } else {
+            const zones = document.querySelectorAll('.drop-zone');
+            for (let z of zones) {
+                if (z.children.length === 0) {
+                    z.appendChild(card);
+                    break;
+                }
+            }
+        }
+    }
+
+    // タイマー開始
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer-sec').innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                showOverlay("⏳ タイムアップ！<br>もう一度この問題に挑戦しよう！", "timeout");
+            }
+        }, 1000);
+    }
+
+    // 答え合わせ
+    function checkAnswer() {
+        clearInterval(timerInterval);
+        const qData = topics[currentTopic].questions[currentQuestionIdx];
+        
+        const zones = document.querySelectorAll('.drop-zone');
+        let userWords = [];
+        zones.forEach(z => {
+            if(z.children.length > 0) {
+                userWords.push(z.innerText.trim());
+            }
+        });
+
+        const userSentence = userWords.join(" ").toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~?]/g,"");
+        const correctSentence = qData.en.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~?]/g,"");
+
+        if (userSentence === correctSentence) {
+            window.speechSynthesis.cancel();
+            
+            const utter = new SpeechSynthesisUtterance(qData.en);
+            utter.lang = 'en-US';
+            utter.rate = 0.9;
+            window.speechSynthesis.speak(utter);
+
+            showOverlay(`🎉 正解です！<br><span style="font-size:1.2em; color:#2980b9;">"${qData.en}"</span>`, "correct");
+            
+        } else {
+            showOverlay("おっと、並べ方が違うか、まだカードが残っているみたい。<br>もう一度考えてみよう！", "wrong");
+        }
+    }
+
+    // メッセージレイヤーの表示
+    function showOverlay(text, mode) {
+        overlayMode = mode;
+        document.getElementById('msg-text').innerHTML = text;
+        
+        const btn = document.getElementById('msg-btn');
+        if (mode === "correct") {
+            btn.innerText = "次の問題へ ➔";
+            btn.style.background = "#2ecc71";
+        } else if (mode === "timeout") {
+            btn.innerText = "やり直す";
+            btn.style.background = "#e67e22";
+        } else {
+            btn.innerText = "もう一度挑戦";
+            btn.style.background = "#34495e";
+        }
+
+        document.getElementById('msg-overlay').style.display = 'flex';
+    }
+
+    // メッセージレイヤーを閉じた後のアクション
+    function closeOverlay() {
+        document.getElementById('msg-overlay').style.display = 'none';
+        
+        if (overlayMode === "correct") {
+            currentQuestionIdx++;
+            if (currentQuestionIdx < topics[currentTopic].questions.length) {
+                loadQuestion();
+            } else {
+                clearedTopics[currentTopic] = true;
+                showScreen('screen-clear');
+                document.getElementById('congrats-banner').style.display = 'block';
+            }
+        } else if (overlayMode === "timeout") {
+            loadQuestion();
+        } else {
+            startTimer();
+        }
+    }
+
+    // メニューに戻る（スタンプ反映）
+    function returnToMenu() {
+        if (clearedTopics.in) document.getElementById('btn-menu-in').classList.add('cleared');
+        if (clearedTopics.out) document.getElementById('btn-menu-out').classList.add('cleared');
+        if (clearedTopics.on) document.getElementById('btn-menu-on').classList.add('cleared');
+        if (clearedTopics.off) document.getElementById('btn-menu-off').classList.add('cleared');
+        
+        document.getElementById('congrats-banner').style.display = 'none';
+        showScreen('screen-menu');
+    }
+</script>
+</body>
+</html>
