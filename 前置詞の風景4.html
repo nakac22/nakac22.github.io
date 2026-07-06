@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>前置詞の風景④：立体と通過（through / into / over / under）</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.8; max-width: 800px; margin: 0 auto; padding: 30px; color: #333; background: #fdfdfd; }
+        h1 { border-bottom: 3px solid #2c3e50; padding-bottom: 10px; color: #2c3e50; text-align: center; }
+        h2 { color: #2980b9; margin-top: 40px; border-left: 5px solid #2980b9; padding-left: 10px; }
+        
+        /* 画面切り替え用 */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* トップメニュー */
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
+        .menu-card { border: 2px solid #2c3e50; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; background: #fff; transition: 0.2s; position: relative; }
+        .menu-card:hover { background: #f0f7fc; transform: translateY(-2px); }
+        .stamp { position: absolute; top: 10px; right: 10px; background: #e74c3c; color: white; padding: 3px 8px; border-radius: 20px; font-size: 0.8em; font-weight: bold; display: none; transform: rotate(15deg); border: 2px dashed white; }
+        .menu-card.cleared .stamp { display: block; }
+
+        .story-text { font-size: 1.15em; margin-bottom: 40px; border-bottom: 2px solid #eee; padding-bottom: 30px; }
+        
+        /* パズルUI */
+        .puzzle-container { margin-top: 30px; padding: 30px; border: 2px solid #34495e; border-radius: 10px; background: #f0f0f0; position: relative; }
+        .timer-container { font-size: 1.2em; font-weight: bold; color: #e74c3c; text-align: right; margin-bottom: 10px; }
+        .folder-container { display: flex; gap: 10px; margin: 20px 0; overflow-x: auto; padding-bottom: 10px; }
+        .folder { border: 2px solid #2c3e50; padding: 15px; width: 170px; min-height: 120px; text-align: center; background: #fff; border-radius: 8px; flex-shrink: 0; }
+        .folder-label { font-size: 0.85em; font-weight: bold; display: block; margin-bottom: 10px; color: #2c3e50; border-bottom: 2px solid #bdc3c7; padding-bottom: 3px; background: #eaedf1; border-radius: 3px; }
+        .drop-zone { min-height: 60px; background: #fafafa; border: 1px dashed #ccc; border-radius: 4px; padding: 5px; }
+        
+        /* 単語カード */
+        .word-pool { margin: 20px 0; padding: 15px; background: #fff; border-radius: 6px; border: 1px solid #ddd; min-height: 50px; }
+        .word-card { background: #fff; border: 1px solid #333; padding: 10px 15px; margin: 5px; cursor: pointer; display: inline-block; border-radius: 4px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); font-weight: bold; font-size: 1.05em; }
+        .word-card:hover { background: #e8f4f8; }
+        
+        .nav-button { padding: 15px 30px; font-size: 1.1em; cursor: pointer; background: #2980b9; color: white; border: none; border-radius: 5px; font-weight: bold; display: inline-block; }
+        .nav-button:hover { background: #3498db; }
+        
+        /* メッセージ通知用オーバーレイ */
+        .msg-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 10; flex-direction: column; justify-content: center; align-items: center; text-align: center; border-radius: 8px; }
+        .msg-text { font-size: 1.5em; font-weight: bold; margin-bottom: 20px; }
+
+        /* コングラッチュレーション横断幕 */
+        .banner { display: none; background: linear-gradient(45deg, #f1c40f, #e67e22); color: white; padding: 40px; text-align: center; border-radius: 10px; margin-top: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); animation: pop 0.5s ease-out; }
+        .banner h2 { color: white; border: none; margin: 0 0 20px 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        @keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <h1>前置詞の風景④：立体と通過</h1>
+
+    <!-- 1. トップメニュー画面 -->
+    <div id="screen-menu" class="screen active">
+        <p style="text-align: center; font-size: 1.2em; color: #555;">空間を通り抜け、飛び込み、弧を描いて超え、包み込まれるダイナミックな動きを体感しよう！</p>
+        <div class="menu-grid">
+            <div class="menu-card" id="btn-menu-through" onclick="startTopic('through')">
+                <span class="stamp">✅ クリア!</span>
+                <h3>1. THROUGH</h3>
+                <p>トンネルのような3D空間を入り口から出口まで「貫通する」動き</p>
+            </div>
+            <div class="menu-card" id="btn-menu-into" onclick="startTopic('into')">
+                <span class="stamp">✅ クリア!</span>
+                <h3>2. INTO</h3>
+                <p>外の世界から、囲まれた空間の内部へ勢いよく「進入する」動き</p>
+            </div>
+            <div class="menu-card" id="btn-menu-over" onclick="startTopic('over')">
+                <span class="stamp">✅ クリア!</span>
+                <h3>3. OVER</h3>
+                <p>虹のように弧を描いて何かを「超える」、または全体を「覆う」感覚</p>
+            </div>
+            <div class="menu-card" id="btn-menu-under" onclick="startTopic('under')">
+                <span class="stamp">✅ クリア!</span>
+                <h3>4. UNDER</h3>
+                <p>何かの真下にあり、その支配や影響をべったり受けている「影響下」の感覚</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 解説画面 -->
+    <div id="screen-story" class="screen">
+        <div id="story-content"></div>
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="nav-button" onclick="goToPuzzle()">意味順パズルに挑戦する</button>
+        </div>
+    </div>
+
+    <!-- 3. パズル画面 -->
+    <div id="screen-puzzle" class="screen">
+        <div class="puzzle-container">
+            <div id="msg-overlay" class="msg-overlay" style="display: flex;">
+                <div class="msg-text" id="msg-text"></div>
+                <button class="nav-button" id="msg-btn" onclick="closeOverlay()">次へ進む</button>
+            </div>
+
+            <div class="timer-container">⏳ 残り時間: <span id="timer-sec">10</span>秒</div>
+            <h3 id="puzzle-title">第 1 問</h3>
+            <p id="puzzle-japanese" style="font-size: 1.2em; font-weight: bold; color: #2c3e50;"></p>
+            
+            <div class="folder-container" id="folder-wrapper">
+                <!-- ここにフォルダが動的に生成されます -->
+            </div>
+            
+            <div class="word-pool" id="word-pool-wrapper">
+                <!-- ここに単語カードが動的に生成されます -->
+            </div>
+
+            <button class="nav-button" id="check-btn" onclick="checkAnswer()">答え合わせ</button>
+        </div>
+    </div>
+
+    <!-- 4. コングラッチュレーション横断幕画面 -->
+    <div id="screen-clear" class="screen">
+        <div class="banner" id="congrats-banner">
+            <h2>🎉 前置詞全4弾・完全制覇！！！ 🎉</h2>
+            <p style="font-size: 1.3em; margin-bottom: 30px;">すべての風景があなたの英語脳に刻まれました！素晴らしい旅の完結です！</p>
+            <button class="nav-button" style="background: #2c3e50;" onclick="returnToMenu()">トップ画面に戻る</button>
+        </div>
+    </div>
+
+<script>
+    const topics = {
+        through: {
+            title: "1. THROUGH：トンネルのような3D空間を入り口から出口まで「貫通する」動き",
+            html: `
+                <h2>THROUGH：三次元の空間をザザザッと「通り抜ける」</h2>
+                <div class="story-text">
+                    <p><strong>through</strong> のイメージは、ズバリ「<strong>トンネルを通り抜ける</strong>」です。内部に障害物や濃密な空間（森、空気、群衆など）がある3Dの立体を、入り口からザザザッと突き進んで、反対側の出口からスポンと抜ける一連の動的なプロセスを指します。</p>
+                    <p>トンネルを抜ける（<em>through the tunnel</em>）のほか、1月から12月までを駆け抜けるような時間の経過、または誰か・何かという「媒介・手段」を経由して目的を達成する（<em>through hard work</em>：努力を通じて）風景にも使われます。</p>
+                    <p><strong>【日常生活に溢れる THROUGH の10の風景】</strong></p>
+                    <ol>
+                        <li>The train went through the tunnel.（列車はトンネル（という3D空間）を通り抜けた。）</li>
+                        <li>We walked through the green forest.（私たちは緑の森（という木々が密集した空間）を通り抜けて歩いた。）</li>
+                        <li>Light comes through the glass window.（光がガラス窓（という物質の内部）を透過して入ってくる。）</li>
+                        <li>He learned English through hard work.（彼は猛勉強（という濃密なプロセス）を通じて英語を身につけた。）</li>
+                        <li>I read through the long book.（私はその長い本を頭からお尻まで（読み通して）読破した。）</li>
+                        <li>She saw the world through glasses.（彼女はメガネ（というレンズの向こう）を通して世界を見た。）</li>
+                        <li>The river flows through the city.（川がその都市（の真ん中を貫くように）流れている。）</li>
+                        <li>We stay open from Monday through Friday.（月曜から金曜（を丸ごと突き抜けて）まで営業しています。）</li>
+                        <li>He got the job through his friend.（彼は友人の紹介（というルート）を経由して仕事を得た。）</li>
+                        <li>Don't look directly through the telescope.（望遠鏡（の筒のなか）を通して直接見てはいけません。）</li>
+                    </ol>
+                </div>
+            `,
+            questions: [
+                { jp: "列車はトンネルを通り抜けました。", en: "The train went through the tunnel", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["The train", "went", "through the tunnel"] },
+                { jp: "光が窓から入ってきます。", en: "Light comes through the window", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Light", "comes", "through the window"] },
+                { jp: "彼は努力を通じて英語を学びました。", en: "He learned English through hard work", folders: ["①だれが・何が", "②どうする・どうだ", "③だれに・何に", "④どこで・いつ・おまけ"], cards: ["He", "learned", "English", "through hard work"] },
+                { jp: "私たちはその森を歩き抜けましたか？", en: "Did we walk through the forest", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Did", "we", "walk", "through the forest"], isQuestion: true },
+                { jp: "望遠鏡をのぞいて見てはいけません。（禁止命令文）", en: "Don't look through the telescope", folders: ["②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Don't look", "through the telescope"] }
+            ]
+        },
+        into: {
+            title: "2. INTO：外の世界から、囲まれた空間の内部へ勢いよく「進入する」動き",
+            html: `
+                <h2>INTO：矢印が枠の中に「グサッと入る」エネルギー</h2>
+                <div class="story-text">
+                    <p><strong>into</strong> は、方向を表す <em>to</em> と 内部を表す <em>in</em> が合体した言葉です。外側にいたキャラクターが、境界線を飛び越えて「<strong>中へグサッと入り込む（進入する）</strong>」という、強い勢いや変化を伴います。</p>
+                    <p>部屋の中に飛び込む（<em>run into the room</em>）といった物理的な動きはもちろん、水が氷に「変化する（性質の枠内に突入する）」状態の激変、あるいは車が壁に「衝突する（めり込む）」ような衝撃の風景も <strong>into</strong> で生き生きと描かれます。</p>
+                    <p><strong>【日常生活に溢れる INTO の10の風景】</strong></p>
+                    <ol>
+                        <li>She walked into the classroom.（彼女は教室の（外から中へと）歩いて入っていった。）</li>
+                        <li>He jumped into the cold swimming pool.（彼は冷たいプールの中へと（勢いよく）飛び込んだ。）</li>
+                        <li>Ice turns into water when it melts.（氷は溶けると水（という別の状態の中）へと変化する。）</li>
+                        <li>The car crashed into a big tree.（車が大きな木（の中へめり込むように）衝突した。）</li>
+                        <li>Please translate this into English.（これを英語（という言語の世界のなか）に翻訳してください。）</li>
+                        <li>We ran into an old friend at the mall.（私たちはモールで偶然古い友人に（ぶつかるように）出くわした。）</li>
+                        <li>He put his hands into his pockets.（彼は両手をポケット（という袋の中）に入れた。）</li>
+                        <li>The actors came onto the stage and stepped into the spotlight.（俳優たちが舞台に現れ、スポットライト（の光の枠の中）へ進んだ。）</li>
+                        <li>Don't get into trouble during the trip.（旅行中にトラブル（という厄介な状態の枠）に巻き込まれないように。）</li>
+                        <li>They burst into laughter after the joke.（そのジョークの後、彼らはドッと笑い出した（笑いの状態に突入した）。）</li>
+                    </ol>
+                </div>
+            `,
+            questions: [
+                { jp: "彼女は教室へ歩いて入っていきました。", en: "She walked into the classroom", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["She", "walked", "into the classroom"] },
+                { jp: "彼は冷たいプールに飛び込みました。", en: "He jumped into the cold pool", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["He", "jumped", "into the cold pool"] },
+                { jp: "これを英語に翻訳してください。", en: "Please translate this into English", folders: ["丁寧な合図", "②どうする・どうだ", "③だれに・何に", "④どこで・いつ・おまけ"], cards: ["Please", "translate", "this", "into English"] },
+                { jp: "その車は木に衝突しましたか？", en: "Did the car crash into a tree", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Did", "the car", "crash", "into a tree"], isQuestion: true },
+                { jp: "彼は両手をポケットに入れました。", en: "He put his hands into his pockets", folders: ["①だれが・何が", "②どうする・どうだ", "③だれに・何に", "④どこで・いつ・おまけ"], cards: ["He", "put", "his hands", "into his pockets"] }
+            ]
+        },
+        over: {
+            title: "3. OVER：虹のように弧を描いて何かを「超える」、または全体を「覆う」感覚",
+            html: `
+                <h2>OVER：障害物を飛び越える「放物線」と、全体を包む「覆い」</h2>
+                <div class="story-text">
+                    <p><strong>over</strong> のコアイメージは、対象の「<strong>上をまたぐように弧（放物線）を描く</strong>」ことです。ただ上にある（<em>above</em>）のと違い、何かを飛び越えるダイナミックな動き、あるいは上空を覆い尽くすような広がりを感じさせます。</p>
+                    <p>フェンスを飛び越える（<em>jump over the fence</em>）、危機を乗り越える（<em>get over the problem</em>）といった「超越」のほか、机の上にハンカチを広げて「全体を覆う（カバーする）」風景や、100人「を超える（<em>over 100 people</em>）」という基準超えの風景もすべて <strong>over</strong> です。</p>
+                    <p><strong>【日常生活に溢れる OVER の10の風景】</strong></p>
+                    <ol>
+                        <li>The dog jumped over the fence.（犬はフェンスを（弧を描いてコロンと）飛び越えた。）</li>
+                        <li>A beautiful rainbow is over the mountain.（美しい虹が山の上に（アーチをかけて）かかっている。）</li>
+                        <li>She spread a blanket over the sleeping baby.（彼女は眠っている赤ん坊の上に（覆うように）毛布を広げた。）</li>
+                        <li>He will get over the difficult problem.（彼はその難しい問題を（壁を乗り越えるように）克服するだろう。）</li>
+                        <li>There are over fifty students in the room.（部屋には50人を超える（基準のラインを上回る）生徒がいる。）</li>
+                        <li>The plane flew over the city.（飛行機が都市の上空を（横切って飛んで）いった。）</li>
+                        <li>They traveled all over the world.（彼らは世界中（をくまなく覆いつくすように）旅した。）</li>
+                        <li>The long winter is finally over.（長い冬がようやく（放物線を描ききって）終わった。）</li>
+                        <li>Please do it over again from the beginning.（最初からもう一度（全体をひっくり返して）やり直してください。）</li>
+                        <li>We talked about the plan over coffee.（私たちはコーヒーを（囲んで飲みながら）その計画について話した。）</li>
+                    </ol>
+                </div>
+            `,
+            questions: [
+                { jp: "その犬はフェンスを飛び越えました。", en: "The dog jumped over the fence", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["The dog", "jumped", "over the fence"] },
+                { jp: "飛行機が都市の上空を飛びました。", en: "The plane flew over the city", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["The plane", "flew", "over the city"] },
+                { jp: "彼はその問題を乗り越えるでしょう。", en: "He will get over the problem", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["He", "will get over", "the problem"] },
+                { jp: "山の上に虹が見えますか？", en: "Can you see a rainbow over the mountain", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "③だれに・何に", "④どこで・いつ・おまけ"], cards: ["Can", "you", "see", "a rainbow", "over the mountain"], isQuestion: true },
+                { jp: "彼らは世界中を旅しましたか？", en: "Did they travel all over the world", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Did", "they", "travel", "all over the world"], isQuestion: true }
+            ]
+        },
+        under: {
+            title: "4. UNDER：何かの真下にあり、その支配や影響をべったり受けている「影響下」の感覚",
+            html: `
+                <h2>UNDER：上のものに見下ろされる「影響・コントロール下」の空間</h2>
+                <div class="story-text">
+                    <p><strong>under</strong> のコアイメージは、何かの「<strong>垂直な真下</strong>」です。単に位置が下であるだけでなく、上の存在から影を落とされたり、包み込まれたりして、その「<strong>支配や影響をダイレクトに受けている</strong>」というニュアンスが強く働きます。</p>
+                    <p>木の下で涼む（<em>under the tree</em>：木の影の影響下）という風景から、建設中の状態（<em>under construction</em>：建設というプロセスの影響下）、コントロールされている状態（<em>under control</em>）、あるいは特定のプレッシャーを受けている風景まで、すべて上からの力に身を置いている姿を表します。</p>
+                    <p><strong>【日常生活に溢れる UNDER の10の風景】</strong></p>
+                    <ol>
+                        <li>The cat is sleeping under the table.（猫がテーブルの真下（の守られた空間）で眠っている。）</li>
+                        <li>We took a rest under a big tree.（私たちは大きな木の下（という日陰の影響下）で休憩した。）</li>
+                        <li>The road is currently under construction.（その道路は現在、建設（という工事の影響下）にあります。）</li>
+                        <li>Everything is under control now.（すべては今、制御下（コントロールの影響下）にあります。）</li>
+                        <li>She works well under pressure.（彼女はプレッシャー（という上からの重圧）の下でもうまく仕事ができる。）</li>
+                        <li>Children under twelve cannot enter this room.（12歳未満（12という基準の真下）の子供はこの部屋に入れません。）</li>
+                        <li>He hid the letter under the book.（彼はその手紙を本の下（に隠して）置いた。）</li>
+                        <li>The ship passed under the bridge.（船は橋の下（をくぐって）通過した。）</li>
+                        <li>We live under the same sky.（私たちは同じ空の下（という巨大な屋根の下）で生きている。）</li>
+                        <li>The temperature fell under zero last night.（昨夜、気温はゼロ度（という基準ライン）を下回った。）</li>
+                    </ol>
+                </div>
+            `,
+            questions: [
+                { jp: "猫がテーブルの下で眠っています。", en: "The cat is sleeping under the table", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["The cat", "is sleeping", "under the table"] },
+                { jp: "私たちは大きな木の下で休憩しました。", en: "We took a rest under a big tree", folders: ["①だれが・何が", "②どうする・どうだ", "③だれに・何に", "④どこで・いつ・おまけ"], cards: ["We", "took", "a rest", "under a big tree"] },
+                { jp: "その道路は工事中（建設の下）ですか？", en: "Is the road under construction", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Is", "the road", "under construction"], isQuestion: true },
+                { jp: "船は橋の下を通過しました。", en: "The ship passed under the bridge", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["The ship", "passed", "under the bridge"] },
+                { jp: "彼は本の下に手紙を隠しましたか？", en: "Did he hide the letter under the book", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "③だれに・何に", "④どこで・いつ・おまけ"], cards: ["Did", "he", "hide", "the letter", "under the book"], isQuestion: true }
+            ]
+        }
+    };
+
+    let currentTopic = "";
+    let currentQuestionIdx = 0;
+    let timerInterval = null;
+    let timeLeft = 10;
+    let overlayMode = ""; 
+    const clearedTopics = { through: false, into: false, over: false, under: false };
+
+    function shuffleArray(array) {
+        let shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        if (shuffled.length > 1 && JSON.stringify(array) === JSON.stringify(shuffled)) {
+            return shuffleArray(array);
+        }
+        return shuffled;
+    }
+
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function startTopic(topicKey) {
+        currentTopic = topicKey;
+        currentQuestionIdx = 0;
+        document.getElementById('story-content').innerHTML = topics[topicKey].html;
+        showScreen('screen-story');
+        window.scrollTo(0,0);
+    }
+
+    function goToPuzzle() {
+        showScreen('screen-puzzle');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        document.getElementById('msg-overlay').style.display = 'none';
+        clearInterval(timerInterval);
+        timeLeft = 10;
+        document.getElementById('timer-sec').innerText = timeLeft;
+
+        const qData = topics[currentTopic].questions[currentQuestionIdx];
+        document.getElementById('puzzle-title').innerText = `第 ${currentQuestionIdx + 1} 問 / 全5問`;
+        document.getElementById('puzzle-japanese').innerText = qData.jp;
+
+        const wrapper = document.getElementById('folder-wrapper');
+        wrapper.innerHTML = "";
+        
+        let foldersToCreate = [...qData.folders];
+        if(qData.isQuestion && !foldersToCreate.includes("質問の合図")) {
+            foldersToCreate.unshift("質問の合図");
+        }
+
+        foldersToCreate.forEach((fLabel, idx) => {
+            const folderDiv = document.createElement('div');
+            folderDiv.className = 'folder';
+            folderDiv.innerHTML = `
+                <span class="folder-label">${fLabel}</span>
+                <div class="drop-zone" id="zone-${idx}"></div>
+            `;
+            wrapper.appendChild(folderDiv);
+        });
+
+        const pool = document.getElementById('word-pool-wrapper');
+        pool.innerHTML = "";
+        
+        let shuffledCards = shuffleArray(qData.cards);
+
+        shuffledCards.forEach(cardText => {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'word-card';
+            cardDiv.innerText = cardText;
+            cardDiv.onclick = function() { moveCard(this); };
+            pool.appendChild(cardDiv);
+        });
+
+        startTimer();
+    }
+
+    function moveCard(card) {
+        const parent = card.parentElement;
+        if (parent.classList.contains('drop-zone')) {
+            document.getElementById('word-pool-wrapper').appendChild(card);
+        } else {
+            const zones = document.querySelectorAll('.drop-zone');
+            for (let z of zones) {
+                if (z.children.length === 0) {
+                    z.appendChild(card);
+                    break;
+                }
+            }
+        }
+    }
+
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer-sec').innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                showOverlay("⏳ タイムアップ！<br>もう一度この問題に挑戦しよう！", "timeout");
+            }
+        }, 1000);
+    }
+
+    function checkAnswer() {
+        clearInterval(timerInterval);
+        const qData = topics[currentTopic].questions[currentQuestionIdx];
+        
+        const zones = document.querySelectorAll('.drop-zone');
+        let userWords = [];
+        zones.forEach(z => {
+            if(z.children.length > 0) {
+                userWords.push(z.innerText.trim());
+            }
+        });
+
+        const userSentence = userWords.join(" ").toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~?]/g,"");
+        const correctSentence = qData.en.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~?]/g,"");
+
+        if (userSentence === correctSentence) {
+            window.speechSynthesis.cancel();
+            
+            const utter = new SpeechSynthesisUtterance(qData.en);
+            utter.lang = 'en-US';
+            utter.rate = 0.9;
+            window.speechSynthesis.speak(utter);
+
+            showOverlay(`🎉 正解です！<br><span style="font-size:1.2em; color:#2980b9;">"${qData.en}"</span>`, "correct");
+        } else {
+            showOverlay("おっと、並べ方が違うか、まだカードが残っているみたい。<br>もう一度考えてみよう！", "wrong");
+        }
+    }
+
+    function showOverlay(text, mode) {
+        overlayMode = mode;
+        document.getElementById('msg-text').innerHTML = text;
+        
+        const btn = document.getElementById('msg-btn');
+        if (mode === "correct") {
+            btn.innerText = "次の問題へ ➔";
+            btn.style.background = "#2ecc71";
+        } else if (mode === "timeout") {
+            btn.innerText = "やり直す";
+            btn.style.background = "#e67e22";
+        } else {
+            btn.innerText = "もう一度挑戦";
+            btn.style.background = "#34495e";
+        }
+
+        document.getElementById('msg-overlay').style.display = 'flex';
+    }
+
+    function closeOverlay() {
+        document.getElementById('msg-overlay').style.display = 'none';
+        
+        if (overlayMode === "correct") {
+            currentQuestionIdx++;
+            if (currentQuestionIdx < topics[currentTopic].questions.length) {
+                loadQuestion();
+            } else {
+                clearedTopics[currentTopic] = true;
+                showScreen('screen-clear');
+                document.getElementById('congrats-banner').style.display = 'block';
+            }
+        } else if (overlayMode === "timeout") {
+            loadQuestion();
+        } else {
+            startTimer();
+        }
+    }
+
+    function returnToMenu() {
+        if (clearedTopics.through) document.getElementById('btn-menu-through').classList.add('cleared');
+        if (clearedTopics.into) document.getElementById('btn-menu-into').classList.add('cleared');
+        if (clearedTopics.over) document.getElementById('btn-menu-over').classList.add('cleared');
+        if (clearedTopics.under) document.getElementById('btn-menu-under').classList.add('cleared');
+        
+        document.getElementById('congrats-banner').style.display = 'none';
+        showScreen('screen-menu');
+    }
+</script>
+</body>
+</html>
