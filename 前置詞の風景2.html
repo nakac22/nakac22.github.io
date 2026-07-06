@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>前置詞の風景②：to / for と from / toward</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.8; max-width: 800px; margin: 0 auto; padding: 30px; color: #333; background: #fdfdfd; }
+        h1 { border-bottom: 3px solid #2c3e50; padding-bottom: 10px; color: #2c3e50; text-align: center; }
+        h2 { color: #2980b9; margin-top: 40px; border-left: 5px solid #2980b9; padding-left: 10px; }
+        
+        /* 画面切り替え用 */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* トップメニュー */
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
+        .menu-card { border: 2px solid #2c3e50; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; background: #fff; transition: 0.2s; position: relative; }
+        .menu-card:hover { background: #f0f7fc; transform: translateY(-2px); }
+        .stamp { position: absolute; top: 10px; right: 10px; background: #e74c3c; color: white; padding: 3px 8px; border-radius: 20px; font-size: 0.8em; font-weight: bold; display: none; transform: rotate(15deg); border: 2px dashed white; }
+        .menu-card.cleared .stamp { display: block; }
+
+        .story-text { font-size: 1.15em; margin-bottom: 40px; border-bottom: 2px solid #eee; padding-bottom: 30px; }
+        
+        /* パズルUI */
+        .puzzle-container { margin-top: 30px; padding: 30px; border: 2px solid #34495e; border-radius: 10px; background: #f0f0f0; position: relative; }
+        .timer-container { font-size: 1.2em; font-weight: bold; color: #e74c3c; text-align: right; margin-bottom: 10px; }
+        .folder-container { display: flex; gap: 10px; margin: 20px 0; overflow-x: auto; padding-bottom: 10px; }
+        .folder { border: 2px solid #2c3e50; padding: 15px; width: 170px; min-height: 120px; text-align: center; background: #fff; border-radius: 8px; flex-shrink: 0; }
+        .folder-label { font-size: 0.85em; font-weight: bold; display: block; margin-bottom: 10px; color: #2c3e50; border-bottom: 2px solid #bdc3c7; padding-bottom: 3px; background: #eaedf1; border-radius: 3px; }
+        .drop-zone { min-height: 60px; background: #fafafa; border: 1px dashed #ccc; border-radius: 4px; padding: 5px; }
+        
+        /* 単語カード */
+        .word-pool { margin: 20px 0; padding: 15px; background: #fff; border-radius: 6px; border: 1px solid #ddd; min-height: 50px; }
+        .word-card { background: #fff; border: 1px solid #333; padding: 10px 15px; margin: 5px; cursor: pointer; display: inline-block; border-radius: 4px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); font-weight: bold; font-size: 1.05em; }
+        .word-card:hover { background: #e8f4f8; }
+        
+        .nav-button { padding: 15px 30px; font-size: 1.1em; cursor: pointer; background: #2980b9; color: white; border: none; border-radius: 5px; font-weight: bold; display: inline-block; }
+        .nav-button:hover { background: #3498db; }
+        
+        /* アラートの代わりに使うメッセージ通知用オーバーレイ */
+        .msg-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 10; flex-direction: column; justify-content: center; align-items: center; text-align: center; border-radius: 8px; }
+        .msg-text { font-size: 1.5em; font-weight: bold; margin-bottom: 20px; }
+
+        /* コングラッチュレーション横断幕 */
+        .banner { display: none; background: linear-gradient(45deg, #f1c40f, #e67e22); color: white; padding: 40px; text-align: center; border-radius: 10px; margin-top: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); animation: pop 0.5s ease-out; }
+        .banner h2 { color: white; border: none; margin: 0 0 20px 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        @keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <h1>前置詞の風景②：to / for と from / toward</h1>
+
+    <!-- 1. トップメニュー画面 -->
+    <div id="screen-menu" class="screen active">
+        <p style="text-align: center; font-size: 1.2em; color: #555;">学びたい前置詞を選んで、深淵なる世界観をのぞいてみよう！</p>
+        <div class="menu-grid">
+            <div class="menu-card" id="btn-menu-to" onclick="startTopic('to')">
+                <span class="stamp">✅ クリア!</span>
+                <h3>1. TO</h3>
+                <p>矢印が目的地に「到達」する感覚</p>
+            </div>
+            <div class="menu-card" id="btn-menu-for" onclick="startTopic('for')">
+                <span class="stamp">✅ クリア!</span>
+                <h3>2. FOR</h3>
+                <p>気持ちがそちらを「向いている」感覚</p>
+            </div>
+            <div class="menu-card" id="btn-menu-from" onclick="startTopic('from')">
+                <span class="stamp">✅ クリア!</span>
+                <h3>3. FROM</h3>
+                <p>すべての物事が始まる「出発点」</p>
+            </div>
+            <div class="menu-card" id="btn-menu-toward" onclick="startTopic('toward')">
+                <span class="stamp">✅ クリア!</span>
+                <h3>4. TOWARD</h3>
+                <p>結果はともかく「その方向へ進む」感覚</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 解説画面 -->
+    <div id="screen-story" class="screen">
+        <div id="story-content"></div>
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="nav-button" onclick="goToPuzzle()">意味順パズルに挑戦する</button>
+        </div>
+    </div>
+
+    <!-- 3. パズル画面 -->
+    <div id="screen-puzzle" class="screen">
+        <div class="puzzle-container">
+            <!-- 演出用メッセージレイヤー（アラートの代わり） -->
+            <div id="msg-overlay" class="msg-overlay" style="display: flex;">
+                <div class="msg-text" id="msg-text"></div>
+                <button class="nav-button" id="msg-btn" onclick="closeOverlay()">次へ進む</button>
+            </div>
+
+            <div class="timer-container">⏳ 残り時間: <span id="timer-sec">10</span>秒</div>
+            <h3 id="puzzle-title">第 1 問</h3>
+            <p id="puzzle-japanese" style="font-size: 1.2em; font-weight: bold; color: #2c3e50;"></p>
+            
+            <div class="folder-container" id="folder-wrapper">
+                <!-- ここにフォルダが動的に生成されます -->
+            </div>
+            
+            <div class="word-pool" id="word-pool-wrapper">
+                <!-- ここに単語カードが動的に生成されます -->
+            </div>
+
+            <button class="nav-button" id="check-btn" onclick="checkAnswer()">答え合わせ</button>
+        </div>
+    </div>
+
+    <!-- 4. コングラッチュレーション横断幕画面 -->
+    <div id="screen-clear" class="screen">
+        <div class="banner" id="congrats-banner">
+            <h2>🎉 コングラッチュレーション！ 🎉</h2>
+            <p style="font-size: 1.3em; margin-bottom: 30px;">この前置詞の本質をマスターしました！</p>
+            <button class="nav-button" style="background: #2c3e50;" onclick="returnToMenu()">トップ画面に戻る</button>
+        </div>
+    </div>
+
+<script>
+    // --- データ定義（意味順に則った厳密なカード・フォルダ分割） ---
+    const topics = {
+        to: {
+            title: "1. TO：矢印が目的地に「到達」する感覚",
+            html: `
+                <h2>TO：目的地への到達</h2>
+                <div class="story-text">
+                    <p>英語の <strong>to</strong> をイメージするとき、頭の中に一本の「矢印」を描いてみてください。そしてその矢印の先端は、単に方向を指しているだけでなく、しっかりと標的に突き刺さっています。そう、<strong>to</strong> の本質は「<strong>目的地への到達・密着</strong>」です。途中で立ち止まることなく、最後まで行き着くエネルギーを持っています。</p>
+                    <p>この「到達」は、場所だけでなく、人や状態にも使われます。<em>go to the station</em> なら駅にしっかりと到着しますし、<em>give a gift to her</em> ならプレゼントが彼女の手元に確実に届きます。さらに、<em>Welcome to Japan</em> も「ようこそ日本へ（到達してくれてありがとう）」というニュアンスだからこそ <strong>to</strong> が使われるのです。</p>
+                    <p>また、状態の限界に到達することもあります。<em>to my surprise</em>（驚いたことには）は、自分の感情が「驚き」という地点まで到達したことを意味します。常に「最後の一歩まで届いている」感覚、それが <strong>to</strong> の正体です。</p>
+                    <p><strong>【日常生活に溢れる TO の10の風景】</strong></p>
+                    <ol>
+                        <li>I go to school by train.（私は電車で学校（という目的地）に行く。）</li>
+                        <li>He sent a letter to his mother.（彼は母親に手紙を送った（手元に届いた）。）</li>
+                        <li>Welcome to our city!（私たちの街へようこそ（到着おめでとう）！）</li>
+                        <li>Listen to the music.（音楽に耳を（ぴったり密着させて）傾けなさい。）</li>
+                        <li>The temperature rose to 30 degrees.（気温が30度まで（達して）上がった。）</li>
+                        <li>She is kind to everyone.（彼女は誰に対しても（優しさが届くように）親切だ。）</li>
+                        <li>To my surprise, he passed the exam.（驚いたことに（驚きの地点に達して）、彼は試験に受かった。）</li>
+                        <li>This is the key to the door.（これはドア（を開ける目的地）への鍵だ。）</li>
+                        <li>From morning to night.（朝から夜（という終着点）まで。）</li>
+                        <li>Face to face.（顔と顔を（ぴったり向かい合わせて）。）</li>
+                    </ol>
+                </div>
+            `,
+            questions: [
+                { jp: "私は電車で学校に行きます。", en: "I go to school by train", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["I", "go", "to school by train"] },
+                { jp: "彼は母親に手紙を送った（母親に届いた）。", en: "He sent a letter to his mother", folders: ["①だれが・何が", "②どうする・どうだ", "③だれに・何に", "④どこで・いつ・おまけ"], cards: ["He", "sent", "a letter", "to his mother"] },
+                { jp: "音楽に耳を傾けなさい。（命令文）", en: "Listen to the music", folders: ["②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Listen", "to the music"] },
+                { jp: "彼女はみんなに親切ですか？", en: "Is she kind to everyone", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Is", "she", "kind", "to everyone"], isQuestion: true },
+                { jp: "あなたはその音楽を聞きましたか？", en: "Did you listen to the music", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Did", "you", "listen", "to the music"], isQuestion: true }
+            ]
+        },
+        for: {
+            title: "2. FOR：気持ちがそちらを「向いている」感覚",
+            html: `
+                <h2>FOR：方向と目的への意識</h2>
+                <div class="story-text">
+                    <p><strong>to</strong> が目的地に「到達」しているのに対し、<strong>for</strong> は「<strong>そっちの方向を向いている（視線・意識が向いている）</strong>」という感覚です。まだ現地には届いていないかもしれません。しかし、心や体がその対象にロックオンされている状態を表します。ここから「〜のために」「〜を目指して」という意味が生まれます。</p>
+                    <p>例えば、駅で <em>This train is for Tokyo.</em> というアナウンスを聞きます。これは「東京方面行きの電車（東京を向いて走る電車）」という意味です。また、<em>buy a gift for her</em> は、彼女のことを「想って（意識を向けて）」プレゼントを買う風景です。彼女にまだ手渡していなくても、買う時点で意識が向いていれば <strong>for</strong> になります。</p>
+                    <p>何かのために身構えたり、準備したりするのも、意識がそこに向いているからです（<em>ready for school</em>）。「届いているか」ではなく、「そこを見つめているか」。これが <strong>for</strong> の温かいニュアンスです。</p>
+                    <p><strong>【日常生活に溢れる FOR の10の風景】</strong></p>
+                    <ol>
+                        <li>This train is for Tokyo.（この電車は東京（方面）行きです。）</li>
+                        <li>I bought this book for you.（あなたのために（意識を向けて）この本を買いました。）</li>
+                        <li>She left for Paris this morning.（彼女は今朝、パリを目指して（向かって）出発した。）</li>
+                        <li>Thank you for your help.（手伝ってくれたことに対して（感謝の意識を向けて）ありがとう。）</li>
+                        <li>Are you ready for dinner?（夕食の（方向への）準備はいいですか？）</li>
+                        <li>I have lived here for three years.（3年間という（期間に焦点を当てて）ここに住んでいる。）</li>
+                        <li>What is this tool for?（この道具は何の（目的の）ためのものですか？）</li>
+                        <li>He is looking for his keys.（彼は鍵を探している（視線を求めて向けている）。）</li>
+                        <li>She works for a big company.（彼女は大企業（のため・所属）に勤めている。）</li>
+                        <li>It is difficult for me.（それは私（の視点からすると）にとって難しい。）</li>
+                    </ol>
+                </div>
+            `,
+            questions: [
+                { jp: "この電車は東京行きです。", en: "This train is for Tokyo", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["This train", "is", "for Tokyo"] },
+                { jp: "私はあなたのためにこの本を買いました。", en: "I bought this book for you", folders: ["①だれが・何が", "②どうする・どうだ", "③だれに・何に", "④どこで・いつ・おまけ"], cards: ["I", "bought", "this book", "for you"] },
+                { jp: "彼は鍵を探しています（鍵に意識を向けている）。", en: "He is looking for his keys", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["He", "is looking", "for his keys"] },
+                { jp: "あなたは夕食の準備はできていますか？", en: "Are you ready for dinner", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Are", "you", "ready", "for dinner"], isQuestion: true },
+                { jp: "彼女は今朝パリに向けて出発しましたか？", en: "Did she leave for Paris this morning", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Did", "she", "leave", "for Paris this morning"], isQuestion: true }
+            ]
+        },
+        from: {
+            title: "3. FROM：すべての物事が始まる「出発点」",
+            html: `
+                <h2>FROM：起点と分離の風景</h2>
+                <div class="story-text">
+                    <p><strong>to</strong> が矢印の「終着点」なら、<strong>from</strong> は矢印の「<strong>出発点（起点）</strong>」です。すべての動きや変化が、どこから始まったのかというルーツを示します。ここから離れていくという「分離」のエネルギーも持っています。</p>
+                    <p><em>I am from Japan.</em> は、自分の生まれ育った「起点」が日本であるという意味です。また、<em>The store is open from 9 AM.</em> なら、時間のスタート地点が午前9時であることを示します。何かが作られる原材料を表す際、形がすっかり変わってしまう場合に <strong>from</strong> を使う（<em>Wine is made from grapes.</em>）のも、ブドウという「出発点」から変化の旅を経てワインになった、というニュアンスだからです。</p>
+                    <p>何かから身を守って遠ざける（<em>protect from danger</em>）のも、危険という起点から離すという意味になります。すべての物語の「はじまりの場所」、それが <strong>from</strong> です。</p>
+                    <p><strong>【日常生活に溢れる FROM の10の風景】</strong></p>
+                    <ol>
+                        <li>I am from Japan.（私は日本（が出発点・出身）です。）</li>
+                        <li>He walked from the station to the office.（彼は駅から（起点）オフィスまで歩いた。）</li>
+                        <li>The shop is open from 9 AM.（その店は午前9時（からスタート）開店している。）</li>
+                        <li>I received a letter from her.（彼女から（差出人の起点）手紙を受け取った。）</li>
+                        <li>Wine is made from grapes.（ワインはブドウから（姿を変える起点）作られる。）</li>
+                        <li>Please protect your eyes from the sun.（太陽（という原因）から目を守りなさい。）</li>
+                        <li>The situation is different from before.（状況は以前とは（起点から離れて）違っている。）</li>
+                        <li>He graduated from high school.（彼は高校から（離れて・卒業して）出た。）</li>
+                        <li>I can see the mountain from here.（ここから（視線の起点）あの山が見える。）</li>
+                        <li>Where are you from?（あなたはどこの（起点の）ご出身ですか？）</li>
+                    </ol>
+                </div>
+            `,
+            questions: [
+                { jp: "私は日本出身です。", en: "I am from Japan", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["I", "am", "from Japan"] },
+                { jp: "私は彼女から手紙を受け取った。", en: "I received a letter from her", folders: ["①だれが・何が", "②どうする・どうだ", "③だれに・何に", "④どこで・いつ・おまけ"], cards: ["I", "received", "a letter", "from her"] },
+                { jp: "ここからあの山が見えます。", en: "I can see the mountain from here", folders: ["①だれが・何が", "②どうする・どうだ", "③だれに・何に", "④どこで・いつ・おまけ"], cards: ["I", "can see", "the mountain", "from here"] },
+                { jp: "その店は午前9時から開いていますか？", en: "Is the shop open from 9 AM", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Is", "the shop", "open", "from 9 AM"], isQuestion: true },
+                { jp: "あなたは彼女からの手紙を受け取りましたか？", en: "Did you receive a letter from her", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "③だれに・何に", "④どこで・いつ・おまけ"], cards: ["Did", "you", "receive", "a letter", "from her"], isQuestion: true }
+            ]
+        },
+        toward: {
+            title: "4. TOWARD：結果はともかく「その方向へ進む」感覚",
+            html: `
+                <h2>TOWARD：方向への接近とプロセス</h2>
+                <div class="story-text">
+                    <p><strong>toward</strong>（または towards）は、<strong>for</strong> や <strong>to</strong> によく似ていますが、より「<strong>物理的な動きの方向</strong>」に焦点を当てた言葉です。「到達したかどうか（to）」は問題ではなく、また「単に意識がそっちを向いている（for）」だけでもなく、「<strong>その方向に向かってじりじりと近づいているプロセス</strong>」そのものを描写します。</p>
+                    <p><em>He ran toward the river.</em> と言えば、彼が川の方向へ向かって走っていった姿が鮮明に見えます（実際に川に飛び込んだか、途中で止まったかは分かりません）。また、この「じわじわと近づく」感覚は、時間や目標にも使われます。<em>toward midnight</em> なら「真夜中に向かって（時間が近づく頃）」となり、<em>working toward a goal</em> なら「目標に向かって一歩一歩進んでいる」というひたむきな風景になります。</p>
+                    <p>結果ではなく、その方向に進んでいる「最中の風景」を切り取る。それが <strong>toward</strong> の持つダイナミックな特徴です。</p>
+                    <p><strong>【日常生活に溢れる TOWARD の10の風景】</strong></p>
+                    <ol>
+                        <li>He ran toward the river.（彼は川の方向へ向かって走った。）</li>
+                        <li>The child walked toward his mother.（子供が母親のほうへ向かって歩いた。）</li>
+                        <li>It started to rain toward evening.（夕方に近づく（向かう）頃、雨が降り始めた。）</li>
+                        <li>We are working toward a common goal.（私たちは共通の目標に向かって（進んで）働いている。）</li>
+                        <li>She turned her face toward the window.（彼女は窓の方向へ顔を向けた。）</li>
+                        <li>The boat drifted toward the island.（ボートが島の方へ向かって漂流した。）</li>
+                        <li>His attitude toward learning changed.（学びに対する（向ける）彼の態度が変わった。）</li>
+                        <li>Steps toward peace.（平和へ向かう（近づくための）一歩。）</li>
+                        <li>They are driving toward the mountains.（彼らは山の方へ向かってドライブしている。）</li>
+                        <li>The clock is moving toward midnight.（時計の針が真夜中に向かって進んでいる。）</li>
+                    </ol>
+                </div>
+            `,
+            questions: [
+                { jp: "彼は川の方向へ向かって走った。", en: "He ran toward the river", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["He", "ran", "toward the river"] },
+                { jp: "私たちは共通の目標に向かって働いている。", en: "We are working toward a common goal", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["We", "are working", "toward a common goal"] },
+                { jp: "彼女は窓の方向に顔を向けましたか？", en: "Did she turn her face toward the window", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "③だれに・何に", "④どこで・いつ・おまけ"], cards: ["Did", "she", "turn", "her face", "toward the window"], isQuestion: true },
+                { jp: "子供が母親のほうへ向かって歩いた。", en: "The child walked toward his mother", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["The child", "walked", "toward his mother"] },
+                { jp: "彼らは山の方へ向かってドライブしていますか？", en: "Are they driving toward the mountains", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Are", "they", "driving", "toward the mountains"], isQuestion: true }
+            ]
+        }
+    };
+
+    // 状態管理変数
+    let currentTopic = "";
+    let currentQuestionIdx = 0;
+    let timerInterval = null;
+    let timeLeft = 10;
+    let overlayMode = ""; // "correct", "timeout", "wrong"
+    const clearedTopics = { to: false, for: false, from: false, toward: false };
+
+    // --- 確実なシャッフルアルゴリズム (Fisher-Yates) ---
+    function shuffleArray(array) {
+        let shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        if (shuffled.length > 1 && JSON.stringify(array) === JSON.stringify(shuffled)) {
+            return shuffleArray(array);
+        }
+        return shuffled;
+    }
+
+    // --- 画面遷移コントロール ---
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    // 1. メメニュー ➔ 解説
+    function startTopic(topicKey) {
+        currentTopic = topicKey;
+        currentQuestionIdx = 0;
+        document.getElementById('story-content').innerHTML = topics[topicKey].html;
+        showScreen('screen-story');
+        window.scrollTo(0,0);
+    }
+
+    // 2. 解説 ➔ パズル画面へ進む
+    function goToPuzzle() {
+        showScreen('screen-puzzle');
+        loadQuestion();
+    }
+
+    // --- パズルロジック ---
+    function loadQuestion() {
+        document.getElementById('msg-overlay').style.display = 'none';
+        clearInterval(timerInterval);
+        timeLeft = 10;
+        document.getElementById('timer-sec').innerText = timeLeft;
+
+        const qData = topics[currentTopic].questions[currentQuestionIdx];
+        document.getElementById('puzzle-title').innerText = `第 ${currentQuestionIdx + 1} 問 / 全5問`;
+        document.getElementById('puzzle-japanese').innerText = qData.jp;
+
+        // フォルダ生成
+        const wrapper = document.getElementById('folder-wrapper');
+        wrapper.innerHTML = "";
+        
+        let foldersToCreate = [...qData.folders];
+        if(qData.isQuestion && !foldersToCreate.includes("質問の合図")) {
+            foldersToCreate.unshift("質問の合図");
+        }
+
+        foldersToCreate.forEach((fLabel, idx) => {
+            const folderDiv = document.createElement('div');
+            folderDiv.className = 'folder';
+            folderDiv.innerHTML = `
+                <span class="folder-label">${fLabel}</span>
+                <div class="drop-zone" id="zone-${idx}"></div>
+            `;
+            wrapper.appendChild(folderDiv);
+        });
+
+        // 単語カードの配置
+        const pool = document.getElementById('word-pool-wrapper');
+        pool.innerHTML = "";
+        
+        let shuffledCards = shuffleArray(qData.cards);
+
+        shuffledCards.forEach(cardText => {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'word-card';
+            cardDiv.innerText = cardText;
+            cardDiv.onclick = function() { moveCard(this); };
+            pool.appendChild(cardDiv);
+        });
+
+        startTimer();
+    }
+
+    // カード移動処理
+    function moveCard(card) {
+        const parent = card.parentElement;
+        if (parent.classList.contains('drop-zone')) {
+            document.getElementById('word-pool-wrapper').appendChild(card);
+        } else {
+            const zones = document.querySelectorAll('.drop-zone');
+            for (let z of zones) {
+                if (z.children.length === 0) {
+                    z.appendChild(card);
+                    break;
+                }
+            }
+        }
+    }
+
+    // タイマー開始
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer-sec').innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                showOverlay("⏳ タイムアップ！<br>もう一度この問題に挑戦しよう！", "timeout");
+            }
+        }, 1000);
+    }
+
+    // 答え合わせ
+    function checkAnswer() {
+        clearInterval(timerInterval);
+        const qData = topics[currentTopic].questions[currentQuestionIdx];
+        
+        const zones = document.querySelectorAll('.drop-zone');
+        let userWords = [];
+        zones.forEach(z => {
+            if(z.children.length > 0) {
+                userWords.push(z.innerText.trim());
+            }
+        });
+
+        const userSentence = userWords.join(" ").toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~?]/g,"");
+        const correctSentence = qData.en.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~?]/g,"");
+
+        if (userSentence === correctSentence) {
+            window.speechSynthesis.cancel();
+            
+            const utter = new SpeechSynthesisUtterance(qData.en);
+            utter.lang = 'en-US';
+            utter.rate = 0.9;
+            window.speechSynthesis.speak(utter);
+
+            showOverlay(`🎉 正解です！<br><span style="font-size:1.2em; color:#2980b9;">"${qData.en}"</span>`, "correct");
+            
+        } else {
+            showOverlay("おっと、並べ方が違うか、まだカードが残っているみたい。<br>もう一度考えてみよう！", "wrong");
+        }
+    }
+
+    // メッセージレイヤーの表示
+    function showOverlay(text, mode) {
+        overlayMode = mode;
+        document.getElementById('msg-text').innerHTML = text;
+        
+        const btn = document.getElementById('msg-btn');
+        if (mode === "correct") {
+            btn.innerText = "次の問題へ ➔";
+            btn.style.background = "#2ecc71";
+        } else if (mode === "timeout") {
+            btn.innerText = "やり直す";
+            btn.style.background = "#e67e22";
+        } else {
+            btn.innerText = "もう一度挑戦";
+            btn.style.background = "#34495e";
+        }
+
+        document.getElementById('msg-overlay').style.display = 'flex';
+    }
+
+    // メッセージレイヤーを閉じた後のアクション
+    function closeOverlay() {
+        document.getElementById('msg-overlay').style.display = 'none';
+        
+        if (overlayMode === "correct") {
+            currentQuestionIdx++;
+            if (currentQuestionIdx < topics[currentTopic].questions.length) {
+                loadQuestion();
+            } else {
+                clearedTopics[currentTopic] = true;
+                showScreen('screen-clear');
+                document.getElementById('congrats-banner').style.display = 'block';
+            }
+        } else if (overlayMode === "timeout") {
+            loadQuestion();
+        } else {
+            startTimer();
+        }
+    }
+
+    // メニューに戻る（スタンプ反映）
+    function returnToMenu() {
+        if (clearedTopics.to) document.getElementById('btn-menu-to').classList.add('cleared');
+        if (clearedTopics.for) document.getElementById('btn-menu-for').classList.add('cleared');
+        if (clearedTopics.from) document.getElementById('btn-menu-from').classList.add('cleared');
+        if (clearedTopics.toward) document.getElementById('btn-menu-toward').classList.add('cleared');
+        
+        document.getElementById('congrats-banner').style.display = 'none';
+        showScreen('screen-menu');
+    }
+</script>
+</body>
+</html>
