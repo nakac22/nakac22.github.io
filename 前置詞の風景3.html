@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>前置詞の風景③：at / by と with / about</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.8; max-width: 800px; margin: 0 auto; padding: 30px; color: #333; background: #fdfdfd; }
+        h1 { border-bottom: 3px solid #2c3e50; padding-bottom: 10px; color: #2c3e50; text-align: center; }
+        h2 { color: #2980b9; margin-top: 40px; border-left: 5px solid #2980b9; padding-left: 10px; }
+        
+        /* 画面切り替え用 */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* トップメニュー */
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
+        .menu-card { border: 2px solid #2c3e50; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; background: #fff; transition: 0.2s; position: relative; }
+        .menu-card:hover { background: #f0f7fc; transform: translateY(-2px); }
+        .stamp { position: absolute; top: 10px; right: 10px; background: #e74c3c; color: white; padding: 3px 8px; border-radius: 20px; font-size: 0.8em; font-weight: bold; display: none; transform: rotate(15deg); border: 2px dashed white; }
+        .menu-card.cleared .stamp { display: block; }
+
+        .story-text { font-size: 1.15em; margin-bottom: 40px; border-bottom: 2px solid #eee; padding-bottom: 30px; }
+        
+        /* パズルUI */
+        .puzzle-container { margin-top: 30px; padding: 30px; border: 2px solid #34495e; border-radius: 10px; background: #f0f0f0; position: relative; }
+        .timer-container { font-size: 1.2em; font-weight: bold; color: #e74c3c; text-align: right; margin-bottom: 10px; }
+        .folder-container { display: flex; gap: 10px; margin: 20px 0; overflow-x: auto; padding-bottom: 10px; }
+        .folder { border: 2px solid #2c3e50; padding: 15px; width: 170px; min-height: 120px; text-align: center; background: #fff; border-radius: 8px; flex-shrink: 0; }
+        .folder-label { font-size: 0.85em; font-weight: bold; display: block; margin-bottom: 10px; color: #2c3e50; border-bottom: 2px solid #bdc3c7; padding-bottom: 3px; background: #eaedf1; border-radius: 3px; }
+        .drop-zone { min-height: 60px; background: #fafafa; border: 1px dashed #ccc; border-radius: 4px; padding: 5px; }
+        
+        /* 単語カード */
+        .word-pool { margin: 20px 0; padding: 15px; background: #fff; border-radius: 6px; border: 1px solid #ddd; min-height: 50px; }
+        .word-card { background: #fff; border: 1px solid #333; padding: 10px 15px; margin: 5px; cursor: pointer; display: inline-block; border-radius: 4px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); font-weight: bold; font-size: 1.05em; }
+        .word-card:hover { background: #e8f4f8; }
+        
+        .nav-button { padding: 15px 30px; font-size: 1.1em; cursor: pointer; background: #2980b9; color: white; border: none; border-radius: 5px; font-weight: bold; display: inline-block; }
+        .nav-button:hover { background: #3498db; }
+        
+        /* メッセージ通知用オーバーレイ */
+        .msg-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 10; flex-direction: column; justify-content: center; align-items: center; text-align: center; border-radius: 8px; }
+        .msg-text { font-size: 1.5em; font-weight: bold; margin-bottom: 20px; }
+
+        /* コングラッチュレーション横断幕 */
+        .banner { display: none; background: linear-gradient(45deg, #f1c40f, #e67e22); color: white; padding: 40px; text-align: center; border-radius: 10px; margin-top: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); animation: pop 0.5s ease-out; }
+        .banner h2 { color: white; border: none; margin: 0 0 20px 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        @keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <h1>前置詞の風景③：at / by と with / about</h1>
+
+    <!-- 1. トップメニュー画面 -->
+    <div id="screen-menu" class="screen active">
+        <p style="text-align: center; font-size: 1.2em; color: #555;">位置と近接の世界観をマスターして、言葉の距離感を掴もう！</p>
+        <div class="menu-grid">
+            <div class="menu-card" id="btn-menu-at" onclick="startTopic('at')">
+                <span class="stamp">✅ クリア!</span>
+                <h3>1. AT</h3>
+                <p>地図を上から見下ろした「1点」を指さす感覚</p>
+            </div>
+            <div class="menu-card" id="btn-menu-by" onclick="startTopic('by')">
+                <span class="stamp">✅ クリア!</span>
+                <h3>2. BY</h3>
+                <p>すぐ隣に寄り添う「近接」と、手段の感覚</p>
+            </div>
+            <div class="menu-card" id="btn-menu-with" onclick="startTopic('with')">
+                <span class="stamp">✅ クリア!</span>
+                <h3>3. WITH</h3>
+                <p>空間や道具、心を共にする「つながり」</p>
+            </div>
+            <div class="menu-card" id="btn-menu-about" onclick="startTopic('about')">
+                <span class="stamp">✅ クリア!</span>
+                <h3>4. ABOUT</h3>
+                <p>中心のまわりをうろうろ「周辺」を漂う感覚</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 解説画面 -->
+    <div id="screen-story" class="screen">
+        <div id="story-content"></div>
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="nav-button" onclick="goToPuzzle()">意味順パズルに挑戦する</button>
+        </div>
+    </div>
+
+    <!-- 3. パズル画面 -->
+    <div id="screen-puzzle" class="screen">
+        <div class="puzzle-container">
+            <div id="msg-overlay" class="msg-overlay" style="display: flex;">
+                <div class="msg-text" id="msg-text"></div>
+                <button class="nav-button" id="msg-btn" onclick="closeOverlay()">次へ進む</button>
+            </div>
+
+            <div class="timer-container">⏳ 残り時間: <span id="timer-sec">10</span>秒</div>
+            <h3 id="puzzle-title">第 1 問</h3>
+            <p id="puzzle-japanese" style="font-size: 1.2em; font-weight: bold; color: #2c3e50;"></p>
+            
+            <div class="folder-container" id="folder-wrapper">
+                <!-- ここにフォルダが動的に生成されます -->
+            </div>
+            
+            <div class="word-pool" id="word-pool-wrapper">
+                <!-- ここに単語カードが動的に生成されます -->
+            </div>
+
+            <button class="nav-button" id="check-btn" onclick="checkAnswer()">答え合わせ</button>
+        </div>
+    </div>
+
+    <!-- 4. コングラッチュレーション横断幕画面 -->
+    <div id="screen-clear" class="screen">
+        <div class="banner" id="congrats-banner">
+            <h2>🎉 ステージ③ クリア！ 🎉</h2>
+            <p style="font-size: 1.3em; margin-bottom: 30px;">位置と近接のイメージが完全にあなたのものになりました！</p>
+            <button class="nav-button" style="background: #2c3e50;" onclick="returnToMenu()">トップ画面に戻る</button>
+        </div>
+    </div>
+
+<script>
+    const topics = {
+        at: {
+            title: "1. AT：地図を上から見下ろした「1点」を指さす感覚",
+            html: `
+                <h2>AT：鋭いピンポイントの「点」</h2>
+                <div class="story-text">
+                    <p><strong>at</strong> のコアイメージは、ターゲットを狙い撃つような「<strong>ピンポイントの点</strong>」です。空間的な広がり（in）や、表面（on）のことは気にせず、地図を上から見て「そこにピンを打つ」感覚を思い浮かべてください。</p>
+                    <p>例えば、駅の中にいることを強調したい時は <em>in the station</em> ですが、待ち合わせ場所として「駅というスポット」を指す時は <em>at the station</em> になります。この「点」のイメージは時間にも応用され、時計の針がぴったりそこを指す「時刻」には必ず <strong>at</strong> が使われます（<em>at 8:30</em>）。</p>
+                    <p>さらに、視線や感情が一箇所に集中する時も <strong>at</strong> の出番です。<em>look at</em>（〜をじっと見つめる）、<em>smile at</em>（〜に向けて微笑む）など、すべて「標的に照準を合わせてロックオンしている風景」なのです。</p>
+                    <p><strong>【日常生活に溢れる AT の10の風景】</strong></p>
+                    <ol>
+                        <li>I will meet you at the station.（駅（というスポット・点）で会いましょう。）</li>
+                        <li>The school starts at 8:30 AM.（学校は午前8時30分（という時間の点）に始まる。）</li>
+                        <li>Look at that beautiful bird.（あの美しい鳥を（視線を一点に集中させて）見て。）</li>
+                        <li>She smiled at the baby.（彼女は赤ちゃんに（照準を合わせて）微笑んだ。）</li>
+                        <li>He is good at playing tennis.（彼はテニス（という分野の1点）が得意だ。）</li>
+                        <li>We arrived at the airport on time.（私たちは時間通りに空港（という地点）に到着した。）</li>
+                        <li>I was surprised at the news.（私はそのニュース（という引き金の一点）に驚いた。）</li>
+                        <li>Turn left at the next corner.（次の角（という目印の点）で左に曲がりなさい。）</li>
+                        <li>There is someone at the door.（ドアのところ（というピンポイントの場所）に誰かいます。）</li>
+                        <li>Prices are stable at the moment.（現時点（という時間の1点）では物価は安定している。）</li>
+                    </ol>
+                </div>
+            `,
+            questions: [
+                { jp: "私は駅であなたに会います。", en: "I will meet you at the station", folders: ["①だれが・何が", "②どうする・どうだ", "③だれに・何に", "④どこで・いつ・おまけ"], cards: ["I", "will meet", "you", "at the station"] },
+                { jp: "学校は午前8時30分に始まります。", en: "The school starts at 8:30 AM", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["The school", "starts", "at 8:30 AM"] },
+                { jp: "あの美しい鳥を見なさい。（命令文）", en: "Look at that beautiful bird", folders: ["②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Look", "at that beautiful bird"] },
+                { jp: "あなたはテニスが得意ですか？", en: "Are you good at playing tennis", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Are", "you", "good", "at playing tennis"], isQuestion: true },
+                { jp: "彼女は赤ちゃんに微笑みましたか？", en: "Did she smile at the baby", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Did", "she", "smile", "at the baby"], isQuestion: true }
+            ]
+        },
+        by: {
+            title: "2. BY：すぐ隣に寄り添う「近接」と、手段の感覚",
+            html: `
+                <h2>BY：すぐそばにある「おとなり」の空間</h2>
+                <div class="story-text">
+                    <p><strong>by</strong> の本質は、手を伸ばせばすぐに届くような「<strong>すぐそば（近接）</strong>」です。ただ近くにあるだけでなく、「それがあるおかげで、何か影響を受けられるほど近い」という絶妙な距離感を持っています。</p>
+                    <p>場所を表すときは、<em>sit by me</em>（私のすぐ隣に座る）のように使われます。この「すぐ近く」という感覚が時間に転じると、「その時間を超えない、すぐ手前の境界線」＝「〜までに」という意味になります（<em>by tomorrow</em>）。</p>
+                    <p>さらに、何かを達成するための「手段・方法」としてもお馴染みです。<em>by train</em>（電車を利用して）や <em>by bus</em>（バスを利用して）も、その手段の「すぐそばにピタッと張り付いて、その力を借りる」という風景から生まれているのです。</p>
+                    <p><strong>【日常生活に溢れる BY の10の風景】</strong></p>
+                    <ol>
+                        <li>Come and sit by me.（こっちに来て、私のすぐ隣に座りなさい。）</li>
+                        <li>I have to finish it by tomorrow.（明日（という期限のすぐ手前）までにそれを終えなければならない。）</li>
+                        <li>We travelled around Japan by train.（私たちは電車（という手段）を使って日本を旅した。）</li>
+                        <li>Did they come here by bus?（彼らはバスでここに来ましたか？）</li>
+                        <li>This book was written by Shakespeare.（この本はシェイクスピア（という行為の主体）によって書かれた。）</li>
+                        <li>He grabbed me by the arm.（彼は私の腕（という部分）を掴んだ。）</li>
+                        <li>The school is by the river.（その学校は川のすぐそばにあります。）</li>
+                        <li>I pay the bill by credit card.（私はクレジットカード（という手段）で勘定を支払う。）</li>
+                        <li>Step by step, you will improve.（一歩ずつ（一歩に次ぐ一歩の近接で）、あなたは上達するでしょう。）</li>
+                        <li>Little by little, the snow melted.（少しずつ、雪は溶けていった。）</li>
+                    </ol>
+                </div>
+            `,
+            questions: [
+                { jp: "私の隣に来て座りなさい。（命令文）", en: "Come and sit by me", folders: ["②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Come and sit", "by me"] },
+                { jp: "私は明日までにそれを終えなければならない。", en: "I have to finish it by tomorrow", folders: ["①だれが・何が", "②どうする・どうだ", "③だれに・何に", "④どこで・いつ・おまけ"], cards: ["I", "have to finish", "it", "by tomorrow"] },
+                { jp: "私たちは電車で日本を旅した。", en: "We travelled around Japan by train", folders: ["①だれが・何が", "②どうする・どうだ", "③だれに・何に", "④どこで・いつ・おまけ"], cards: ["We", "travelled", "around Japan", "by train"] },
+                { jp: "あなたは明日までに宿題を終えられますか？", en: "Can you finish the homework by tomorrow", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "③だれに・何に", "④どこで・いつ・おまけ"], cards: ["Can", "you", "finish", "the homework", "by tomorrow"], isQuestion: true },
+                { jp: "彼らはバスでここに来ましたか？", en: "Did they come here by bus", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Did", "they", "come here", "by bus"], isQuestion: true }
+            ]
+        },
+        with: {
+            title: "3. WITH：空間や道具、心を共にする「つながり」",
+            html: `
+                <h2>WITH：一緒の空間にいる「付随・つながり」</h2>
+                <div class="story-text">
+                    <p><strong>with</strong> は、人でも物でも、同じ空間に「<strong>一緒にいる・つながっている</strong>」感覚を表します。単に並んでいるだけでなく、何かしらの関わりや繋がりを持って共にある風景です。</p>
+                    <p>最もわかりやすいのは <em>with my family</em>（家族と一緒に）のような「同伴」です。これが道具に応用されると、<em>with this knife</em>（このナイフを使って）となります。手と道具が「一体となって繋がっている」からこそ <strong>with</strong> なのです。</p>
+                    <p>また、心の中に感情を一緒に抱えている状態（<em>with a smile</em>：笑顔を伴って）など、すべて「セットでくっついている」という温かい一体感を示します。</p>
+                    <p><strong>【日常生活に溢れる WITH の10の風景】</strong></p>
+                    <ol>
+                        <li>I went to the park with my family.（家族と一緒に公園に行った。）</li>
+                        <li>Please cut the cake with this knife.（このナイフ（という道具を手に一体化させて）でケーキを切りなさい。）</li>
+                        <li>She greeted us with a smile.（彼女は笑顔を（心に携えて）私たちを迎えた。）</li>
+                        <li>Do you live with your family?（あなたは家族と一緒に住んでいますか？）</li>
+                        <li>Do they eat ramen with chopsticks?（彼らは箸（という道具を繋げて）でラーメンを食べますか？）</li>
+                        <li>I am angry with him.（私は彼に対して（私の怒りの矛先が彼と結びついて）怒っている。）</li>
+                        <li>He was trembling with fear.（彼は恐怖（という感情を伴って）で震えていた。）</li>
+                        <li>A girl with long hair came in.（長い髪をした（長い髪を身にまとった）女の子が入ってきた。）</li>
+                        <li>I agree with your opinion.（私はあなたの意見に（自分の意見を重ね合わせて）同意します。）</li>
+                        <li>Handle this glass with care.（このグラスは注意（という意識を伴わせたい状態）して扱いなさい。）</li>
+                    </ol>
+                </div>
+            `,
+            questions: [
+                { jp: "私は家族と一緒に公園に行きました。", en: "I went to the park with my family", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["I", "went to the park", "with my family"] },
+                { jp: "このナイフでケーキを切りなさい。（命令文）", en: "Cut the cake with this knife", folders: ["②どうする・どうだ", "③だれに・何に", "④どこで・いつ・おまけ"], cards: ["Cut", "the cake", "with this knife"] },
+                { jp: "彼女は笑顔で私たちを迎えた。", en: "She greeted us with a smile", folders: ["①だれが・何が", "②どうする・どうだ", "③だれに・何に", "④どこで・いつ・おまけ"], cards: ["She", "greeted", "us", "with a smile"] },
+                { jp: "あなたは家族と一緒に住んでいますか？", en: "Do you live with your family", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Do", "you", "live", "with your family"], isQuestion: true },
+                { jp: "彼らは箸（ハシ）でラーメンを食べますか？", en: "Do they eat ramen with chopsticks", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "③だれに・何に", "④どこで・いつ・おまけ"], cards: ["Do", "they", "eat", "ramen", "with chopsticks"], isQuestion: true }
+            ]
+        },
+        about: {
+            title: "4. ABOUT：中心のまわりをうろうろ「周辺」を漂う感覚",
+            html: `
+                <h2>ABOUT：まわりを取り囲む「周辺・おおよそ」</h2>
+                <div class="story-text">
+                    <p><strong>about</strong> と言えば「〜について」という訳でお馴染みですが、その根本にあるイメージは、ある中心の「<strong>まわりをうろうろと取り囲んでいる周辺</strong>」です。核心のド真ん中を突くのではなく、その周辺を漂っている風景です。</p>
+                    <p>例えば、<em>about our future plans</em>（将来の計画について）は、計画の周辺にあるストーリーやアイデアを「あれこれと周辺を巡りながら話す」感覚です。また、この「周辺」の感覚は、数字や時間にも直接使われ、<em>at about 2 PM</em>（午後2時ごろ）は2時の前後うろうろを意味します。</p>
+                    <p>目的もなくそのエリアを「うろうろ歩き回る（<em>about the park</em>）」という表現も、この本来のリアルな風景から生まれています。</p>
+                    <p><strong>【日常生活に溢れる ABOUT の10の風景】</strong></p>
+                    <ol>
+                        <li>We talked about our future plans.（私たちは将来の計画（の周辺あれこれ）について話した。）</li>
+                        <li>The meeting starts at about 2 PM.（会議は午後2時ごろ（の周辺の時間）に始まる。）</li>
+                        <li>He was walking about the park.（彼は公園のあちこちを（うろうろと）歩き回っていた。）</li>
+                        <li>What do you think about the book?（あなたはその本についてどう思いますか？）</li>
+                        <li>Were they talking about the new car?（彼らは新しい車について話していましたか？）</li>
+                        <li>I am worried about the test.（私はテスト（のことが頭の周辺をぐるぐる回って）心配だ。）</li>
+                        <li>Tell me about your hometown.（あなたの故郷（の周辺にまつわる色々なこと）について教えてください。）</li>
+                        <li>It takes about thirty minutes.（（およそ）30分ほどかかります。）</li>
+                        <li>She is crazy about anime.（彼女はアニメのことに（頭のまわりが占領されるほど）夢中だ。）</li>
+                        <li>How about going out for lunch?（昼食に出かけるのは（提案の周辺の選択肢として）どうですか？）</li>
+                    </ol>
+                </div>
+            `,
+            questions: [
+                { jp: "私たちは将来の計画について話した。", en: "We talked about our future plans", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["We", "talked", "about our future plans"] },
+                { jp: "会議は午後2時ごろに始まります。", en: "The meeting starts at about 2 PM", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["The meeting", "starts", "at about 2 PM"] },
+                { jp: "彼は公園のあちこちを歩き回っていた。", en: "He was walking about the park", folders: ["①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["He", "was walking", "about the park"] },
+                { jp: "あなたはその本についてどう思いますか？", en: "What do you think about the book", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["What", "do you", "think", "about the book"], isQuestion: true },
+                { jp: "彼らは新しい車について話していましたか？", en: "Were they talking about the new car", folders: ["質問の合図", "①だれが・何が", "②どうする・どうだ", "④どこで・いつ・おまけ"], cards: ["Were", "they", "talking", "about the new car"], isQuestion: true }
+            ]
+        }
+    };
+
+    let currentTopic = "";
+    let currentQuestionIdx = 0;
+    let timerInterval = null;
+    let timeLeft = 10;
+    let overlayMode = ""; 
+    const clearedTopics = { at: false, by: false, with: false, about: false };
+
+    function shuffleArray(array) {
+        let shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        if (shuffled.length > 1 && JSON.stringify(array) === JSON.stringify(shuffled)) {
+            return shuffleArray(array);
+        }
+        return shuffled;
+    }
+
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function startTopic(topicKey) {
+        currentTopic = topicKey;
+        currentQuestionIdx = 0;
+        document.getElementById('story-content').innerHTML = topics[topicKey].html;
+        showScreen('screen-story');
+        window.scrollTo(0,0);
+    }
+
+    function goToPuzzle() {
+        showScreen('screen-puzzle');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        document.getElementById('msg-overlay').style.display = 'none';
+        clearInterval(timerInterval);
+        timeLeft = 10;
+        document.getElementById('timer-sec').innerText = timeLeft;
+
+        const qData = topics[currentTopic].questions[currentQuestionIdx];
+        document.getElementById('puzzle-title').innerText = `第 ${currentQuestionIdx + 1} 問 / 全5問`;
+        document.getElementById('puzzle-japanese').innerText = qData.jp;
+
+        const wrapper = document.getElementById('folder-wrapper');
+        wrapper.innerHTML = "";
+        
+        let foldersToCreate = [...qData.folders];
+        if(qData.isQuestion && !foldersToCreate.includes("質問の合図")) {
+            foldersToCreate.unshift("質問の合図");
+        }
+
+        foldersToCreate.forEach((fLabel, idx) => {
+            const folderDiv = document.createElement('div');
+            folderDiv.className = 'folder';
+            folderDiv.innerHTML = `
+                <span class="folder-label">${fLabel}</span>
+                <div class="drop-zone" id="zone-${idx}"></div>
+            `;
+            wrapper.appendChild(folderDiv);
+        });
+
+        const pool = document.getElementById('word-pool-wrapper');
+        pool.innerHTML = "";
+        
+        let shuffledCards = shuffleArray(qData.cards);
+
+        shuffledCards.forEach(cardText => {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'word-card';
+            cardDiv.innerText = cardText;
+            cardDiv.onclick = function() { moveCard(this); };
+            pool.appendChild(cardDiv);
+        });
+
+        startTimer();
+    }
+
+    function moveCard(card) {
+        const parent = card.parentElement;
+        if (parent.classList.contains('drop-zone')) {
+            document.getElementById('word-pool-wrapper').appendChild(card);
+        } else {
+            const zones = document.querySelectorAll('.drop-zone');
+            for (let z of zones) {
+                if (z.children.length === 0) {
+                    z.appendChild(card);
+                    break;
+                }
+            }
+        }
+    }
+
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer-sec').innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                showOverlay("⏳ タイムアップ！<br>もう一度この問題に挑戦しよう！", "timeout");
+            }
+        }, 1000);
+    }
+
+    function checkAnswer() {
+        clearInterval(timerInterval);
+        const qData = topics[currentTopic].questions[currentQuestionIdx];
+        
+        const zones = document.querySelectorAll('.drop-zone');
+        let userWords = [];
+        zones.forEach(z => {
+            if(z.children.length > 0) {
+                userWords.push(z.innerText.trim());
+            }
+        });
+
+        const userSentence = userWords.join(" ").toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~?]/g,"");
+        const correctSentence = qData.en.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~?]/g,"");
+
+        if (userSentence === correctSentence) {
+            window.speechSynthesis.cancel();
+            
+            const utter = new SpeechSynthesisUtterance(qData.en);
+            utter.lang = 'en-US';
+            utter.rate = 0.9;
+            window.speechSynthesis.speak(utter);
+
+            showOverlay(`🎉 正解です！<br><span style="font-size:1.2em; color:#2980b9;">"${qData.en}"</span>`, "correct");
+        } else {
+            showOverlay("おっと、並べ方が違うか、まだカードが残っているみたい。<br>もう一度考えてみよう！", "wrong");
+        }
+    }
+
+    function showOverlay(text, mode) {
+        overlayMode = mode;
+        document.getElementById('msg-text').innerHTML = text;
+        
+        const btn = document.getElementById('msg-btn');
+        if (mode === "correct") {
+            btn.innerText = "次の問題へ ➔";
+            btn.style.background = "#2ecc71";
+        } else if (mode === "timeout") {
+            btn.innerText = "やり直す";
+            btn.style.background = "#e67e22";
+        } else {
+            btn.innerText = "もう一度挑戦";
+            btn.style.background = "#34495e";
+        }
+
+        document.getElementById('msg-overlay').style.display = 'flex';
+    }
+
+    function closeOverlay() {
+        document.getElementById('msg-overlay').style.display = 'none';
+        
+        if (overlayMode === "correct") {
+            currentQuestionIdx++;
+            if (currentQuestionIdx < topics[currentTopic].questions.length) {
+                loadQuestion();
+            } else {
+                clearedTopics[currentTopic] = true;
+                showScreen('screen-clear');
+                document.getElementById('congrats-banner').style.display = 'block';
+            }
+        } else if (overlayMode === "timeout") {
+            loadQuestion();
+        } else {
+            startTimer();
+        }
+    }
+
+    function returnToMenu() {
+        if (clearedTopics.at) document.getElementById('btn-menu-at').classList.add('cleared');
+        if (clearedTopics.by) document.getElementById('btn-menu-by').classList.add('cleared');
+        if (clearedTopics.with) document.getElementById('btn-menu-with').classList.add('cleared');
+        if (clearedTopics.about) document.getElementById('btn-menu-about').classList.add('cleared');
+        
+        document.getElementById('congrats-banner').style.display = 'none';
+        showScreen('screen-menu');
+    }
+</script>
+</body>
+</html>
