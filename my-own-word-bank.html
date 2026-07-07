@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wordbook OS 2.0</title>
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --bg-color: #F5F7FA;
+            --card-bg: #FFFFFF;
+            --text-color: #333333;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Sans-Serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 16px;
+        }
+        .container { max-width: 500px; margin: 0 auto; }
+        h1 { text-align: center; font-size: 1.5rem; margin-bottom: 20px; color: var(--primary-color); }
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        h2 { font-size: 1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+        .badge { background: var(--primary-color); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; }
+        
+        /* 超具体的な手順案内 */
+        .guide-box {
+            background: #F8FAFC; border: 1px solid #E2E8F0; padding: 14px; border-radius: 8px;
+            font-size: 0.85rem; margin-bottom: 12px; color: #475569;
+        }
+        .guide-box ol { padding-left: 18px; margin-top: 6px; }
+        .guide-box li { margin-bottom: 8px; line-height: 1.4; }
+        .highlight-text { color: #E11D48; font-weight: bold; background: #FFE4E6; padding: 1px 4px; border-radius: 4px; }
+        .key-link { display: inline-block; font-weight: bold; margin-bottom: 10px; color: var(--primary-color); text-decoration: underline; font-size: 0.95rem; }
+        
+        .key-input-container { display: flex; gap: 8px; }
+        
+        /* トピック */
+        .topic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .topic-label {
+            display: flex; align-items: center; padding: 10px;
+            background: #F0F2F5; border-radius: 8px; cursor: pointer; font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        .topic-label:has(input:checked) { background: #E1EDFB; border: 1px solid var(--primary-color); }
+        .topic-label input { margin-right: 8px; }
+        
+        /* 入力エリア */
+        .search-box { display: flex; gap: 8px; }
+        input[type="text"], input[type="password"] {
+            flex: 1; padding: 12px; border: 2px solid #DDD; border-radius: 8px; font-size: 1rem;
+        }
+        button {
+            padding: 12px 20px; background: var(--primary-color); color: white;
+            border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
+        }
+        button:disabled { background: #CCCCCC; }
+
+        /* 結果表示 */
+        .loading { text-align: center; color: #666; font-weight: bold; padding: 10px; display: none; }
+        .result-block { border-bottom: 1px dashed #CBD5E1; padding-bottom: 15px; margin-bottom: 15px; }
+        .result-block:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+        .word-header { font-size: 1.2rem; margin-bottom: 4px; }
+        .sentence-box {
+            display: flex; align-items: flex-start; justify-content: space-between;
+            background: #F0F4F8; padding: 14px; border-radius: 8px; margin-top: 8px;
+        }
+        .english-text { font-size: 1.1rem; font-weight: 600; color: #1A1A1A; flex: 1; padding-right: 8px; }
+        .japanese-text { font-size: 0.95rem; color: #555; margin-top: 6px; border-top: 1px dashed #CBD5E1; padding-top: 6px; }
+        .speaker-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; padding: 0 4px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>My Wordbook OS 2.0</h1>
+
+    <!-- 0. APIキー設定（超具体ナビ） -->
+    <div class="card">
+        <h2><span class="badge">必須</span> 無料APIキーの設定（初回のみ）</h2>
+        
+        <div class="guide-box">
+            <a class="key-link" href="https://aistudio.google.com/" target="_blank">➔ 【ここをタップして鍵のページを開く】</a><br>
+            <strong>📱 スマホでの見つけ方手順：</strong>
+            <ol>
+                <li>リンク先でGoogleアカウントにログインし、規約同意のチェックを入れて進みます。</li>
+                <li>画面の左上にある<span class="highlight-text">「三本線のマーク（メニュー）」</span>をタップします。</li>
+                <li>メニューの中に現れる、鍵のマークがついた<span class="highlight-text">「Get API key」</span>（または Create API key）をタップします。</li>
+                <li>次の画面で、青いボタンの<span class="highlight-text">「Create API key」</span>を押すと、長い英数字（AIzaSy...）が発行されるので<span class="highlight-text">「Copy」</span>します。（何かをダウンロードする必要はありません）</li>
+            </ol>
+        </div>
+
+        <div class="key-input-container">
+            <input type="password" id="apiKeyInput" placeholder="コピーしたキー（AIzaSy...）をここに貼り付け">
+            <button onclick="saveApiKey()">保存</button>
+        </div>
+    </div>
+
+    <!-- 1. トピック選択 -->
+    <div class="card">
+        <h2><span class="badge">選択</span> 興味のあるトピック（複数選択可）</h2>
+        <div class="topic-grid">
+            <label class="topic-label"><input type="checkbox" value="日常・ライフスタイル" checked> 日常・ライフ</label>
+            <label class="topic-label"><input type="checkbox" value="ファッション・カルチャー"> ファッション</label>
+            <label class="topic-label"><input type="checkbox" value="スポーツ・アクティビティ"> スポーツ</label>
+            <label class="topic-label"><input type="checkbox" value="ビジネス・社会・教養"> ビジネス・教養</label>
+        </div>
+    </div>
+
+    <!-- 2. 単語入力 -->
+    <div class="card">
+        <h2><span class="badge">入力</span> 学びたい英単語</h2>
+        <div class="search-box">
+            <input type="text" id="wordInput" placeholder="例: contextualize, inevitable">
+            <button id="generateBtn" onclick="generateSentence()">生成</button>
+        </div>
+    </div>
+
+    <!-- 3. ローディング & 結果表示 -->
+    <div class="loading" id="loadingText">AIが自分事の例文を構築中... 🧠</div>
+    <div class="card" id="resultCard" style="display: none;">
+        <div id="resultContent"></div>
+    </div>
+</div>
+
+<script>
+window.onload = function() {
+    const savedKey = localStorage.getItem('user_gemini_api_key');
+    if (savedKey) {
+        document.getElementById('apiKeyInput').value = savedKey;
+    }
+};
+
+function saveApiKey() {
+    const key = document.getElementById('apiKeyInput').value.trim();
+    if (!key) {
+        alert("キーを入力してください。");
+        return;
+    }
+    localStorage.setItem('user_gemini_api_key', key);
+    alert("APIキーを安全に保存しました！これ以降はすぐにお使いいただけます。");
+}
+
+async function generateSentence() {
+    const apiKey = localStorage.getItem('user_gemini_api_key');
+    if (!apiKey) {
+        alert("最初に「無料APIキーの設定」を行ってください。");
+        return;
+    }
+
+    const word = document.getElementById('wordInput').value.trim();
+    if (!word) {
+        alert("単語を入力してください。");
+        return;
+    }
+
+    const checkedTopics = Array.from(document.querySelectorAll('.topic-grid input:checked')).map(el => el.value);
+    if (checkedTopics.length === 0) {
+        alert("トピックを最低1つ選択してください。");
+        return;
+    }
+
+    const generateBtn = document.getElementById('generateBtn');
+    const loadingText = document.getElementById('loadingText');
+    const resultCard = document.getElementById('resultCard');
+    const resultContent = document.getElementById('resultContent');
+    
+    generateBtn.disabled = true;
+    loadingText.style.display = 'block';
+    resultCard.style.display = 'none';
+
+    const prompt = `
+ユーザーが入力した英単語について、以下の【条件】を厳格に守って、指定された各文脈トピックに応じた「単語の意味」「英語例文」「その日本語訳」を出力してください。
+
+【対象単語】: ${word}
+【選択された文脈トピック】: ${JSON.stringify(checkedTopics)}
+
+【条件】:
+1. 各トピックに対して、例文の主語は必ず「I」または「my〜」にすること（学習者が自分事として捉えられるようにするため）。
+2. 例文は、指定されたトピックに関連した、日常的かつリアルで「覚える価値のある、生きた表現」にすること。客観的な事実の羅列ではなく、話者の経験、感情、あるいは解釈（event construal）が滲み出る自然な英文にすること。
+3. 出力は、以下のJSONフォーマットのみ（マークダウンの \`\`\`json 等は一切不要）にしてください。
+
+{
+  "meaning": "単語の共通する日本語の意味",
+  "results": [
+    {
+      "topic": "トピック名（例：ファッション・カルチャー）",
+      "english": "生成した英語例文",
+      "japanese": "例文の自然な日本語訳"
+    }
+  ]
+}
+`;
+
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { responseMimeType: "application/json" }
+            })
+        });
+
+        if (!response.ok) throw new Error("APIキーが無効、またはリクエストに失敗しました。");
+
+        const data = await response.json();
+        const jsonText = data.candidates[0].content.parts[0].text;
+        const result = JSON.parse(jsonText);
+
+        let htmlContent = `<div class="word-header"><strong>${word}</strong> <span style="font-size:0.9rem; color:#666;">（${result.meaning}）</span></div>`;
+        
+        result.results.forEach((item, index) => {
+            htmlContent += `
+                <div class="result-block">
+                    <div style="font-size:0.8rem; color:var(--primary-color); margin-top:8px;">💡 トピック: ${item.topic}</div>
+                    <div class="sentence-box">
+                        <div>
+                            <div class="english-text" id="speech-${index}">${item.english}</div>
+                            <div class="japanese-text">${item.japanese}</div>
+                        </div>
+                        <button class="speaker-btn" onclick="speakText('speech-${index}')">🔊</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        resultContent.innerHTML = htmlContent;
+        resultCard.style.display = 'block';
+
+    } catch (error) {
+        alert("エラーが発生しました。手順通りにキーがコピーされているか確認してください。\n" + error.message);
+    } finally {
+        generateBtn.disabled = false;
+        loadingText.style.display = 'none';
+    }
+}
+
+function speakText(elementId) {
+    const text = document.getElementById(elementId).innerText;
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.95;
+        window.speechSynthesis.speak(utterance);
+    } else {
+        alert("お使いの端末は音声読み上げに対応していません。");
+    }
+}
+</script>
+
+</body>
+</html>
