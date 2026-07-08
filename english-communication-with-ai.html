@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI［愛］のあるコミュ力特訓</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; max-width: 900px; margin: 0 auto; padding: 20px; background: #fafafa; color: #333; }
+        h1 { color: #c0392b; border-bottom: 3px solid #e74c3c; padding-bottom: 10px; margin-bottom: 5px; font-size: 26px; }
+        .subtitle { color: #7f8c8d; font-size: 14px; margin-bottom: 25px; font-weight: bold; }
+        .form-group { margin-bottom: 22px; background: #fff; padding: 18px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #eef2f5; }
+        label { font-weight: bold; display: block; margin-bottom: 8px; color: #34495e; font-size: 15px; }
+        select, input[type="text"] { width: 100%; padding: 10px 12px; border: 1px solid #ccd1d9; border-radius: 4px; box-sizing: border-box; font-size: 15px; color: #444; background-color: #fcfdfd; }
+        select:focus, input[type="text"]:focus { border-color: #e74c3c; outline: none; background-color: #fff; }
+        .radio-group { display: block; margin-top: 5px; }
+        .radio-label { display: inline-block; margin-right: 15px; font-size: 14px; cursor: pointer; color: #555; }
+        .radio-label input { margin-right: 5px; }
+        button { background: #e74c3c; color: #fff; border: none; padding: 14px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; transition: background 0.2s; box-shadow: 0 2px 4px rgba(231,76,60,0.2); }
+        button:hover { background: #c0392b; }
+        .result-area { margin-top: 30px; display: none; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .result-title-bar { display: block; margin-bottom: 8px; }
+        .result-title { font-weight: bold; color: #2c3e50; font-size: 16px; float: left; }
+        textarea { width: 100%; height: 350px; padding: 15px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; font-family: 'Courier New', Courier, monospace; font-size: 13px; box-sizing: border-box; line-height: 1.5; color: #1e293b; resize: vertical; }
+        .copy-btn { background: #2ecc71; margin-top: 12px; box-shadow: 0 2px 4px rgba(46,204,113,0.2); }
+        .copy-btn:hover { background: #27ae60; }
+        .instruction { background: #fdf2f2; border-left: 4px solid #e74c3c; padding: 15px; margin-bottom: 25px; border-radius: 0 6px 6px 0; font-size: 14px; color: #2c3e50; }
+        .instruction ol { margin: 5px 0 0 20px; padding: 0; }
+        .instruction li { margin-bottom: 4px; }
+        .clearfix::after { content: ""; clear: both; display: table; }
+    </style>
+</head>
+<body>
+
+    <h1>AI［愛］のあるコミュ力特訓 🦾🔥</h1>
+    <div class="subtitle">〜マシンガントークを阻止せよ！Wordに貼れる復習メモ付き英会話ジェネレーター〜</div>
+    
+    <div class="instruction">
+        <strong>【特訓の手順】</strong>
+        <ol>
+            <li>以下の条件を選択・入力し、<strong>「特訓プロンプトを生成する」</strong>をクリックします。</li>
+            <li>生成されたプロンプトをコピーして、ChatGPTやClaudeなどのAIに貼り付けて会話をスタート！</li>
+            <li>終了したいときは、チャット上で <strong>[Finish]</strong> とだけ入力すると、AIが自動的に「Wordにそのまま貼れる愛のある日本語フィードバック」を出力します。</li>
+        </ol>
+    </div>
+
+    <div class="form-group">
+        <label for="level">1. 英語レベル (English Level):</label>
+        <select id="level">
+            <option value="Beginner (Clear, simple words, CEFR A2)">初級 (簡単な単語と短い文章 / CEFR A2レベル)</option>
+            <option value="Intermediate (Natural yet plain and clear, CEFR B1/B2)" selected>中級 (平易で伝わりやすいグローバル英語 / CEFR B1-B2レベル)</option>
+            <option value="Advanced (Academic/Professional discussion, CEFR C1)">上級 (学術的・論理的なディスカッション / CEFR C1レベル)</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="topic">2. 会話のトピック (Topic):</label>
+        <select id="topic" onchange="toggleCustomTopic()">
+            <option value="Casual small talk about daily life and hobbies">日常会話・趣味（雑談）</option>
+            <option value="Chatting with a colleague during a coffee break at an international conference">国際学会の休憩時間での同僚との立ち話</option>
+            <option value="Discussing current academic trends and research interests">最近の学術的トレンドや関心のある研究について</option>
+            <option value="Shopping, ordering food, and asking for directions while traveling">旅行先での買い物・注文・道のり</option>
+            <option value="Custom">自由入力（下にトピックを入力）</option>
+        </select>
+    </div>
+
+    <div class="form-group" id="custom-topic-group" style="display: none;">
+        <label for="custom-topic">自由入力トピック (英語または日本語で具体的に):</label>
+        <input type="text" id="custom-topic" placeholder="例: 生成AIが英語教育に与える影響についての議論">
+    </div>
+
+    <div class="form-group">
+        <label for="persona">3. AIのペルソナ・話し方 (Persona & Voice):</label>
+        <select id="persona">
+            <option value="A friendly colleague with clear, standard English.">親しみやすい同僚（標準的でクリアな英語）</option>
+            <option value="A supportive and polite university professor.">親切で丁寧な大学教授</option>
+            <option value="A relaxed and chatty friend.">リラックスした話し好きの友人</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>4. 英語のバリエーション (English Variation - オプション):</label>
+        <div class="radio-group">
+            <label class="radio-label"><input type="radio" name="accent" value="Standard Global English" checked> 標準的なグローバル英語</label>
+            <label class="radio-label"><input type="radio" name="accent" value="American English style"> アメリカ英語風</label>
+            <label class="radio-label"><input type="radio" name="accent" value="British English style"> イギリス英語風</label>
+        </div>
+    </div>
+
+    <button type="button" onclick="generatePrompt()">特訓プロンプトを生成する</button>
+
+    <div class="result-area" id="result-area">
+        <div class="result-title-bar clearfix">
+            <div class="result-title">生成されたプロンプト（以下をすべてコピーしてください）</div>
+        </div>
+        <textarea id="prompt-output" readonly></textarea>
+        <button type="button" class="copy-btn" onclick="copyPrompt()">プロンプトをクリップボードにコピー</button>
+    </div>
+
+    <script>
+        function toggleCustomTopic() {
+            const topicSelect = document.getElementById('topic');
+            const customGroup = document.getElementById('custom-topic-group');
+            if (topicSelect.value === 'Custom') {
+                customGroup.style.display = 'block';
+            } else {
+                customGroup.style.display = 'none';
+            }
+        }
+
+        function generatePrompt() {
+            const level = document.getElementById('level').value;
+            let topic = document.getElementById('topic').value;
+            if (topic === 'Custom') {
+                topic = document.getElementById('custom-topic').value || 'A flexible and interesting topic';
+            }
+            const persona = document.getElementById('persona').value;
+            
+            const accentRadios = document.getElementsByName('accent');
+            let accent = 'Standard Global English';
+            for (const radio of accentRadios) {
+                if (radio.checked) {
+                    accent = radio.value;
+                }
+            }
+
+            const promptTemplate = `You are an excellent AI English conversation partner. Please roleplay based on the following settings to help me practice my speaking and interaction skills.
+
+### Settings
+- **Your Persona**: \${persona}
+- **My English Level**: \${level}
+- **Topic**: \${topic}
+- **Target English Type**: Plain, clear, and globally accessible English (\${accent}). Avoid overly regional idioms or excessively complex vocabulary; focus on practical, effective, and comprehensible communication for international settings.
+
+### Strict Rules for the Conversation
+1. **Never speak too much**: Limit your response to a maximum of 2 or 3 sentences. Keep it concise so I have more opportunities to talk and interact.
+2. **One turn, one question**: Always end your response with exactly one natural question to pass the turn back to me.
+3. **No corrections during the chat**: Do not correct my grammar or vocabulary while the conversation is ongoing. Just keep the chat flowing naturally like a real conversation.
+4. **Language**: Speak ONLY in English during the conversation.
+
+### How to Finish & Feedback
+- The conversation continues until I type "**[Finish]**".
+- When I type "[Finish]", stop the roleplay immediately and provide a structured review in **Japanese**.
+- Ensure the formatting is clean, clear, and easy to read when copied and pasted into Microsoft Word. Use the following format for your final response:
+
+---
+# 🛠️ AI［愛］のあるコミュ力特訓 フィードバック
+
+## 1. 総評 (Overall Feedback)
+[今回の会話のキャッチボールに対するポジティブなフィードバックや、良かった点、会話の継続性について優しく解説してください。]
+
+## 2. 私の発言のブラッシュアップ表現 (Phrases to Polish)
+[私の発言の中で、より自然で、かつ「平易で伝わりやすい（国際学会や日常会話で重宝する）」表現への修正案を、以下の形式で箇条書きでリストアップしてください。]
+
+■ 元の文：[私の発言した英文]
+■ 改善案：[より平易で伝わりやすい自然な英文]
+■ 解説 ：[なぜその方が良いかの簡単な日本語解説や、ニュアンスの違い]
+
+■ 元の文：...
+■ 改善案：...
+■ 解説 ：...
+
+## 3. 今回のトピックで覚えておくと便利な表現 (Useful Vocabulary & Phrases)
+[今回の会話トピックに関連して、同僚との会話や学会の立ち話でそのまま使える便利なフレーズや語彙を3〜5個、使い方の解説付きでリストアップしてください。]
+
+■ 重要フレーズ：[英単語・表現]
+■ 日本語訳  ：[意味]
+■ 使い方・例文：[学会や日常会話での使い方、ニュアンス、簡単な例文]
+
+---
+
+If you understand, please start the conversation now by greeting me naturally based on your persona and the topic, ending with your first question.`;
+
+            let finalPrompt = promptTemplate
+                .replace('\${persona}', persona)
+                .replace('\${level}', level)
+                .replace('\${topic}', topic)
+                .replace('\${accent}', accent);
+
+            document.getElementById('prompt-output').value = finalPrompt;
+            document.getElementById('result-area').style.display = 'block';
+            document.getElementById('result-area').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function copyPrompt() {
+            const copyText = document.getElementById('prompt-output');
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            document.execCommand('copy');
+            alert('プロンプトをコピーしました！AI（ChatGPT/Claude等）に貼り付けて特訓を始めてください。');
+        }
+    </script>
+</body>
+</html>
