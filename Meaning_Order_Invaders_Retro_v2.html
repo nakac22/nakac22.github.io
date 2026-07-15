@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meaning Order Invaders Retro Prototype</title>
+<style>
+body{margin:0;background:linear-gradient(#09111f,#000);font-family:Arial,sans-serif;color:#fff;overflow:hidden}
+.screen{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh}
+h1{color:#6cf;text-shadow:0 0 10px #6cf}
+button{padding:12px 24px;font-size:20px;border-radius:10px;border:none;cursor:pointer}
+canvas{display:none;background:linear-gradient(#0b1b33,#000)}
+#hud{display:none;justify-content:space-between;padding:8px 12px;background:#111}
+#controls{display:none;position:fixed;bottom:10px;left:0;right:0;text-align:center}
+.ctrl{font-size:24px;margin:0 8px}
+.card{background:#111}
+.scorelist{max-width:400px}
+</style>
+</head>
+<body>
+
+<div id="title" class="screen">
+<h1>MEANING ORDER INVADERS</h1>
+<p>意味順で撃ち落とせ！</p>
+<div class="scorelist">
+<h3>High Scores</h3>
+<ol id="scores"></ol>
+</div>
+<button onclick="startGame()">START</button>
+</div>
+
+<div id="hud">
+<div>Score: <span id="score">0</span></div>
+<div>Life: <span id="life">3</span></div>
+</div>
+
+<canvas id="game" width="900" height="600"></canvas>
+
+<div id="controls">
+<button class="ctrl" onclick="move(-30)">◀</button>
+<button class="ctrl" onclick="fire()">FIRE</button>
+<button class="ctrl" onclick="move(30)">▶</button>
+</div>
+
+<script>
+const cvs=document.getElementById("game");
+const ctx=cvs.getContext("2d");
+
+const data=[
+["I","play","baseball"],
+["She","likes","dogs"],
+["We","went","to Kyoto"],
+["My brother","plays","soccer","every day"],
+["I","usually","play","baseball","after school"]
+];
+
+let score=0,life=3,current=0,expected=0;
+let words=[],bullets=[],player={x:450,y:560};
+let running=false;
+
+function showScores(){
+ let s=JSON.parse(localStorage.getItem("moi_scores")||"[]");
+ document.getElementById("scores").innerHTML=
+ s.map(v=>`<li>${v}</li>`).join("");
+}
+showScores();
+
+function startGame(){
+ document.getElementById("title").style.display="none";
+ document.getElementById("hud").style.display="flex";
+ document.getElementById("controls").style.display="block";
+ cvs.style.display="block";
+
+ score=0; life=3; current=0;
+ running=true;
+ loadSentence();
+}
+
+function loadSentence(){
+ const sent=data[current % data.length];
+ expected=0;
+ words=[];
+
+ let cols=[];
+ for(let i=0;i<sent.length;i++) cols.push(i);
+ cols.sort(()=>Math.random()-0.5);
+
+ for(let i=0;i<sent.length;i++){
+   words.push({
+      text:sent[i],
+      order:i,
+      x:80+cols[i]*140,
+      y:40+Math.random()*60,
+      speed:0.4+Math.random()*0.5,
+      hit:false
+   });
+ }
+}
+
+function move(dx){player.x=Math.max(30,Math.min(cvs.width-30,player.x+dx));}
+function fire(){if(running) bullets.push({x:player.x,y:player.y});}
+
+document.addEventListener("keydown",e=>{
+ if(e.key==="ArrowLeft")move(-30);
+ if(e.key==="ArrowRight")move(30);
+ if(e.key===" ")fire();
+});
+
+function gameOver(){
+ running=false;
+
+ let scores=JSON.parse(localStorage.getItem("moi_scores")||"[]");
+ scores.push(score);
+ scores.sort((a,b)=>b-a);
+ scores=scores.slice(0,10);
+ localStorage.setItem("moi_scores",JSON.stringify(scores));
+
+ document.getElementById("title").style.display="flex";
+ document.getElementById("hud").style.display="none";
+ document.getElementById("controls").style.display="none";
+ cvs.style.display="none";
+ showScores();
+}
+
+function speak(t){
+ if("speechSynthesis" in window){
+   let u=new SpeechSynthesisUtterance(t);
+   u.lang="en-US";
+   speechSynthesis.speak(u);
+ }
+}
+
+function update(){
+ if(!running) return;
+
+ words.forEach(w=>{
+   if(!w.hit) w.y+=w.speed;
+   if(w.y>520){
+     life--;
+     loadSentence();
+   }
+ });
+
+ bullets.forEach(b=>b.y-=10);
+
+ bullets.forEach((b,bi)=>{
+   words.forEach(w=>{
+     if(w.hit) return;
+
+     const width=Math.max(90,ctx.measureText(w.text).width+30);
+
+     if(b.x>w.x && b.x<w.x+width &&
+        b.y>w.y && b.y<w.y+40){
+
+        if(w.order===expected){
+           w.hit=true;
+           expected++;
+           score+=20;
+
+           if(expected===words.length){
+              score+=100;
+              speak(data[current % data.length].join(" "));
+              current++;
+              setTimeout(loadSentence,700);
+           }
+        }else{
+           life--;
+        }
+
+        bullets.splice(bi,1);
+     }
+   });
+ });
+
+ bullets=bullets.filter(b=>b.y>-20);
+
+ if(life<=0) gameOver();
+
+ document.getElementById("score").textContent=score;
+ document.getElementById("life").textContent=life;
+}
+
+function draw(){
+ ctx.clearRect(0,0,cvs.width,cvs.height);
+
+ words.forEach(w=>{
+   if(w.hit) return;
+
+   ctx.font="24px Arial";
+   const width=Math.max(90,ctx.measureText(w.text).width+30);
+
+   ctx.fillStyle="#1a2744";
+   ctx.strokeStyle="#6cf";
+   ctx.lineWidth=2;
+
+   ctx.fillRect(w.x,w.y,width,40);
+   ctx.strokeRect(w.x,w.y,width,40);
+
+   ctx.fillStyle="#fff";
+   ctx.fillText(w.text,w.x+15,w.y+27);
+ });
+
+ ctx.fillStyle="#ff0";
+ bullets.forEach(b=>ctx.fillRect(b.x-2,b.y,4,12));
+
+ ctx.fillStyle="#6cf";
+ ctx.beginPath();
+ ctx.moveTo(player.x,player.y);
+ ctx.lineTo(player.x-20,player.y+25);
+ ctx.lineTo(player.x+20,player.y+25);
+ ctx.fill();
+}
+
+function loop(){
+ update();
+ draw();
+ requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
