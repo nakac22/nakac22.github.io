@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meaning Order Invaders α</title>
+<style>
+body{margin:0;background:#08111f;color:#fff;font-family:Arial,sans-serif;overflow:hidden}
+#menu,#gameover{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center}
+button{padding:12px 18px;font-size:18px;border:none;border-radius:10px;cursor:pointer}
+#ui{display:none}
+#hud{display:flex;justify-content:space-around;background:#111;padding:6px;font-size:14px}
+#rail{text-align:center;background:#16233a;padding:6px}
+.slot{display:inline-block;border:1px solid #6cf;padding:4px 8px;border-radius:8px;margin:2px}
+.done{background:#2d7;color:#000}
+canvas{display:block}
+#controls{position:fixed;bottom:8px;left:0;right:0;text-align:center}
+#controls button{min-width:80px}
+</style>
+</head>
+<body>
+
+<div id="menu">
+<h1>Meaning Order Invaders α</h1>
+<p>意味順で撃ち落とせ！</p>
+<p id="best"></p>
+<button onclick="start()">START</button>
+</div>
+
+<div id="ui">
+<div id="hud">
+<div>Score <span id="score">0</span></div>
+<div>Combo <span id="combo">0</span></div>
+<div>Life <span id="life">3</span></div>
+</div>
+<div id="rail">
+<span class="slot" id="s0">だれ</span>
+<span class="slot" id="s1">いつ</span>
+<span class="slot" id="s2">する</span>
+<span class="slot" id="s3">なに</span>
+<span class="slot" id="s4">どこ</span>
+</div>
+<canvas id="cv"></canvas>
+<div id="controls">
+<button onclick="mv(-40)">◀</button>
+<button onclick="shoot()">FIRE</button>
+<button onclick="mv(40)">▶</button>
+</div>
+</div>
+
+<script>
+const DATA=[
+{c:["I","play","baseball"],r:["だれ","する","なに"]},
+{c:["She","likes","dogs"],r:["だれ","する","なに"]},
+{c:["I","study","English"],r:["だれ","する","なに"]},
+{c:["We","went","to Kyoto"],r:["だれ","する","どこ"]},
+{c:["I","usually","play","soccer"],r:["だれ","いつ","する","なに"]},
+{c:["My father","works","in Nagoya"],r:["だれ","する","どこ"]}
+];
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+let W,H,p,b=[],w=[],exp=0,idx=0,score=0,combo=0,life=3,run=false;
+
+function resize(){
+W=innerWidth;H=innerHeight-120;
+cv.width=W;cv.height=H;
+if(p)p.y=H-40;
+}
+addEventListener('resize',resize);
+
+function start(){
+document.getElementById('menu').style.display='none';
+document.getElementById('ui').style.display='block';
+resize();
+score=0;combo=0;life=3;idx=0;
+p={x:W/2,y:H-40};run=true;
+load();
+}
+
+function load(){
+document.querySelectorAll('.slot').forEach(x=>x.classList.remove('done'));
+exp=0;w=[];
+let s=DATA[idx%DATA.length];
+let pos=[...Array(s.c.length).keys()].sort(()=>Math.random()-0.5);
+s.c.forEach((t,i)=>{
+w.push({t,r:s.r[i],o:i,x:20+pos[i]*(W/(s.c.length+1)),y:40,sd:.4+Math.random()*.3,h:false});
+});
+}
+
+function rolei(r){return ["だれ","いつ","する","なに","どこ"].indexOf(r)}
+function mv(d){if(p) p.x=Math.max(20,Math.min(W-20,p.x+d))}
+function shoot(){if(run && p) b.push({x:p.x,y:p.y})}
+
+document.addEventListener('keydown',e=>{
+if(e.key=="ArrowLeft")mv(-40);
+if(e.key=="ArrowRight")mv(40);
+if(e.key==" ")shoot();
+});
+
+function update(){
+if(!run || !p)return; // ★ pがない状態（開始前）でのバグ防止
+w.forEach(x=>{if(!x.h)x.y+=x.sd;if(x.y>H-70){life--;combo=0;load();}});
+b.forEach(x=>x.y-=10);
+
+b.forEach((bb,bi)=>{
+w.forEach(x=>{
+if(x.h)return;
+let ww=Math.max(80,ctx.measureText(x.t).width+30);
+if(bb.x>x.x&&bb.x<x.x+ww&&bb.y>x.y&&bb.y<x.y+40){
+if(x.o===exp){
+x.h=true;exp++;combo++;score+=20+combo;
+let ri=rolei(x.r); if(ri>=0) document.getElementById('s'+ri).classList.add('done');
+if(exp===w.length){score+=100;idx++;load();}
+}else{life--;combo=0;}
+b.splice(bi,1);
+}
+})
+})
+if(life<=0){
+run=false;
+localStorage.setItem('moi_best',Math.max(score,+(localStorage.getItem('moi_best')||0)));
+location.reload();
+}
+// UI表示の修正
+document.getElementById('score').textContent=score;
+document.getElementById('combo').textContent=combo;
+document.getElementById('life').textContent=life;
+}
+
+function draw(){
+ctx.clearRect(0,0,W,H);
+if(!run || !p) return; // ★ pがない状態（開始前）でのバグ防止
+
+ctx.font=(W<500?"16px":"22px")+" Arial";
+w.forEach(x=>{
+if(x.h)return;
+let ww=Math.max(80,ctx.measureText(x.t).width+30);
+ctx.fillStyle="#1b2944";ctx.fillRect(x.x,x.y,ww,40);
+ctx.strokeStyle="#6cf";ctx.strokeRect(x.x,x.y,ww,40);
+ctx.fillStyle="#fff";ctx.fillText(x.t,x.x+10,x.y+25);
+});
+ctx.fillStyle="yellow";b.forEach(x=>ctx.fillRect(x.x-2,x.y,4,10));
+ctx.fillStyle="#6cf";
+ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-16,p.y+20);ctx.lineTo(p.x+16,p.y+20);ctx.fill();
+}
+
+(function loop(){update();draw();requestAnimationFrame(loop)})();
+resize();
+document.getElementById('best').textContent="Best Score: "+(localStorage.getItem('moi_best')||0);
+</script>
+</body></html>
