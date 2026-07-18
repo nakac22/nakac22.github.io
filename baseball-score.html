@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>野球スコア</title>
+    
+    <!-- スマホのホーム画面追加時のアイコン設定（野球ボールデザイン） -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23fff' stroke='%23ccc' stroke-width='2'/><path d='M25 15 C 40 30, 40 70, 25 85' fill='none' stroke='%23e53935' stroke-width='3' stroke-dasharray='2 3'/><path d='M75 15 C 60 30, 60 70, 75 85' fill='none' stroke='%23e53935' stroke-width='3' stroke-dasharray='2 3'/></svg>">
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #111; color: #fff; padding: 5px; min-height: 100vh; display: flex; flex-direction: column; font-size: 14px; }
+        
+        /* 9回電光掲示板風スコアボード */
+        .scoreboard-container { background: #000; border: 2px solid #333; border-radius: 6px; padding: 4px; margin-bottom: 5px; overflow-x: auto; }
+        .score-table { width: 100%; border-collapse: collapse; text-align: center; font-family: monospace; font-size: 0.85rem; }
+        .score-table th, .score-table td { border: 1px solid #222; padding: 4px 2px; min-width: 20px; }
+        .score-table th { color: #aaa; font-weight: normal; }
+        .team-row td:first-child { font-weight: bold; text-align: left; padding-left: 4px; width: 85px; font-size: 0.8rem; }
+        .current-cell { background: #222; color: #ffeb3b; }
+        .total-cell { font-weight: bold; color: #00ff00; font-size: 1rem; min-width: 25px; }
+
+        /* 攻守表示バッジ */
+        .status-badge { display: inline-block; padding: 1px 4px; font-size: 0.65rem; border-radius: 3px; font-weight: normal; margin-left: 3px; }
+        .badge-attack { background: #c62828; color: #fff; }
+        .badge-defense { background: #1565c0; color: #fff; }
+
+        /* カウント＆グラウンドエリア */
+        .main-display { display: flex; height: 32vh; margin-bottom: 5px; gap: 5px; }
+        .bso-container { width: 28%; background: #222; border-radius: 6px; padding: 5px; display: flex; flex-direction: column; justify-content: space-around; border: 1px solid #333; }
+        .bso-row { display: flex; align-items: center; gap: 5px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+        .dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #444; background: #000; }
+        .dot.b-on { background: #4caf50; border-color: #4caf50; }
+        .dot.s-on { background: #ff9800; border-color: #ff9800; }
+        .dot.o-on { background: #f44336; border-color: #f44336; }
+
+        .field { width: 72%; background: #1b5e20; border-radius: 6px; position: relative; border: 1px solid #333; }
+        .base { position: absolute; width: 26px; height: 26px; background: #fff; border: 2px solid #999; transform: rotate(45deg); transition: background 0.2s; cursor: pointer; }
+        .base.runner { background: #ffeb3b; border-color: #fbc02d; box-shadow: 0 0 8px #ffeb3b; }
+        #first-base { top: 45%; right: 12%; }
+        #second-base { top: 12%; left: 44%; }
+        #third-base { top: 45%; left: 12%; }
+        #home-plate { position: absolute; bottom: 8%; left: 45%; width: 20px; height: 20px; background: #eee; transform: rotate(45deg); }
+
+        /* 情報表示ボックス */
+        .info-overlay-box { position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,0.75); padding: 3px 6px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #555; }
+        .pitcher-info-box { position: absolute; top: 40%; left: 32%; text-align: center; background: rgba(0,0,0,0.8); padding: 4px 6px; border-radius: 4px; border: 1px solid #444; min-width: 75px; cursor: pointer; }
+        .p-name { font-size: 0.75rem; color: #64b5f6; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .p-count { font-size: 1.4rem; font-weight: bold; color: #fff; line-height: 1.1; }
+        .p-warn { color: #ffeb3b; }
+        .p-danger { color: #f44336; text-shadow: 0 0 6px #f44336; }
+
+        /* 操作パネル */
+        .controls { display: flex; flex-direction: column; gap: 5px; position: relative; }
+        .row { display: flex; gap: 5px; }
+        .btn { flex: 1; background: #2a2a2a; color: #fff; border: none; padding: 11px 0; font-size: 1rem; font-weight: bold; border-radius: 6px; box-shadow: 0 3px #000; cursor: pointer; text-align: center; }
+        .btn:active { transform: translateY(1px); box-shadow: 0 2px #000; }
+        
+        .mode-title { font-size: 0.75rem; color: #aaa; padding-left: 2px; font-weight: bold; margin-top: 2px; }
+        .btn-pitch { background: #1565c0; box-shadow: 0 3px #0d47a1; font-size: 1.2rem; padding: 12px 0; }
+        .btn-score-up { background: #2e7d32; box-shadow: 0 3px #1b5e20; }
+        .btn-score-down { background: #c62828; box-shadow: 0 3px #5f0909; }
+        
+        /* ポップアップ式サブメニュー */
+        .submenu-overlay { display: none; position: absolute; bottom: 0; left: 0; width: 100%; background: #222; border: 2px solid #555; border-radius: 8px 8px 0 0; padding: 10px; gap: 5px; grid-template-columns: repeat(2, 1fr); z-index: 10; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); }
+        .submenu-overlay button { background: #3a3a3a; color: #fff; border: 1px solid #555; padding: 12px; font-size: 1rem; font-weight: bold; border-radius: 6px; cursor: pointer; }
+
+        /* タブ切り替えスタッツエリア */
+        .stats-container { flex: 1; background: #1a1a1a; border-radius: 6px; border: 1px solid #333; margin-top: 5px; display: flex; flex-direction: column; overflow: hidden; }
+        .tabs { display: flex; background: #252525; border-bottom: 1px solid #333; }
+        .tab { flex: 1; padding: 6px; text-align: center; font-size: 0.85rem; font-weight: bold; cursor: pointer; color: #aaa; }
+        .tab.active { background: #1a1a1a; color: #fff; border-bottom: 2px solid #0288d1; }
+        .tab-content { padding: 5px; flex: 1; overflow-y: auto; display: none; }
+        .tab-content.active { display: block; }
+
+        .stats-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: center; }
+        .stats-table th, .stats-table td { padding: 4px; border-bottom: 1px solid #2a2a2a; }
+        .stats-table th { background: #222; color: #aaa; }
+        .stats-table input[type="text"] { width: 100%; background: #333; color: #fff; border: 1px solid #444; border-radius: 3px; padding: 2px; font-size: 0.8rem; text-align: center; }
+        .active-row { background: rgba(2, 136, 209, 0.2); }
+    </style>
+</head>
+<body>
+
+    <!-- スコアボード -->
+    <div class="scoreboard-container">
+        <table class="score-table">
+            <thead>
+                <tr>
+                    <th>チーム(タップで攻守切替)</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th class="total-cell">R</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="team-row" id="row-top" onclick="setAttackSide(true)">
+                    <td><span id="name-label-top">自軍(先攻)</span><span id="badge-top" class="status-badge badge-attack">攻撃中</span></td>
+                    <td id="t1" onclick="event.stopPropagation(); directScoreEdit('top',1)">-</td><td id="t2" onclick="event.stopPropagation(); directScoreEdit('top',2)">-</td><td id="t3" onclick="event.stopPropagation(); directScoreEdit('top',3)">-</td><td id="t4" onclick="event.stopPropagation(); directScoreEdit('top',4)">-</td><td id="t5" onclick="event.stopPropagation(); directScoreEdit('top',5)">-</td><td id="t6" onclick="event.stopPropagation(); directScoreEdit('top',6)">-</td><td id="t7" onclick="event.stopPropagation(); directScoreEdit('top',7)">-</td><td id="t8" onclick="event.stopPropagation(); directScoreEdit('top',8)">-</td><td id="t9" onclick="event.stopPropagation(); directScoreEdit('top',9)">-</td>
+                    <td id="total-top" class="total-cell">0</td>
+                </tr>
+                <tr class="team-row" id="row-bot" onclick="setAttackSide(false)">
+                    <td><span id="name-label-bot">相手(後攻)</span><span id="badge-bot" class="status-badge badge-defense">守備中</span></td>
+                    <td id="b1" onclick="event.stopPropagation(); directScoreEdit('bot',1)">-</td><td id="b2" onclick="event.stopPropagation(); directScoreEdit('bot',2)">-</td><td id="b3" onclick="event.stopPropagation(); directScoreEdit('bot',3)">-</td><td id="b4" onclick="event.stopPropagation(); directScoreEdit('bot',4)">-</td><td id="b5" onclick="event.stopPropagation(); directScoreEdit('bot',5)">-</td><td id="b6" onclick="event.stopPropagation(); directScoreEdit('bot',6)">-</td><td id="b7" onclick="event.stopPropagation(); directScoreEdit('bot',7)">-</td><td id="b8" onclick="event.stopPropagation(); directScoreEdit('bot',8)">-</td><td id="b9" onclick="event.stopPropagation(); directScoreEdit('bot',9)">-</td>
+                    <td id="total-bot" class="total-cell">0</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- カウント＆グラウンドエリア -->
+    <div class="main-display">
+        <!-- BSO -->
+        <div class="bso-container">
+            <div class="bso-row" onclick="countB()"><span>B</span><div class="dot" id="b1"></div><div class="dot" id="b2"></div><div class="dot" id="b3"></div></div>
+            <div class="bso-row" onclick="countS()"><span>S</span><div class="dot" id="s1"></div><div class="dot" id="s2"></div></div>
+            <div class="bso-row" onclick="countO()"><span>O</span><div class="dot" id="o1"></div><div class="dot" id="o2"></div></div>
+        </div>
+
+        <!-- グラウンド -->
+        <div class="field">
+            <div id="field-info-text" class="info-overlay-box" onclick="switchTab('tab-batters')">自軍攻撃中: 1番</div>
+            <div id="second-base" class="base" onclick="toggleRunner(2)"></div>
+            <div id="first-base" class="base" onclick="toggleRunner(1)"></div>
+            <div id="third-base" class="base" onclick="toggleRunner(3)"></div>
+            <div id="home-plate"></div>
+            
+            <div class="pitcher-info-box" onclick="switchTab('tab-pitchers')">
+                <div id="active-p-name" class="p-name">先発投手</div>
+                <div id="pitch-num" class="p-count">0</div>
+                <div style="font-size:0.5rem; color:#aaa;">味方投手球数</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 動的コントロールパネル -->
+    <div class="controls">
+        <div id="panel-mode-title" class="mode-title">【自軍の攻撃】モード</div>
+        <div class="row">
+            <button id="main-action-btn" class="btn btn-pitch" onclick="handleMainAction()">一球送る</button>
+            <button class="btn btn-score-up" onclick="addScore(1)">得点 +1</button>
+            <button class="btn btn-score-down" onclick="addScore(-1)">得点 -1</button>
+        </div>
+        <div class="row">
+            <button id="quick-left-btn" class="btn" onclick="handleQuickLeft()">ヒット ▾</button>
+            <button id="quick-mid-btn" class="btn" onclick="handleQuickMid()">凡打/三振 ▾</button>
+            <button id="quick-right-btn" class="btn" onclick="handleQuickRight()">四球</button>
+            <button class="btn" style="background:#555; font-size:0.85rem;" onclick="clearBso()">カウント清算</button>
+        </div>
+
+        <!-- ヒット選択サブメニュー -->
+        <div id="hit-menu" class="submenu-overlay">
+            <button onclick="recordMyBatterResult('単打')">単打</button>
+            <button onclick="recordMyBatterResult('二塁打')">二塁打</button>
+            <button onclick="recordMyBatterResult('三塁打')">三塁打</button>
+            <button onclick="recordMyBatterResult('本塁打')">本塁打(HR)</button>
+            <button onclick="closeSubmenu()" style="grid-column: span 2; background:#555; padding:8px;">キャンセル</button>
+        </div>
+
+        <!-- 凡打選択サブメニュー -->
+        <div id="out-menu" class="submenu-overlay" style="grid-template-columns: repeat(3, 1fr);">
+            <button onclick="recordMyBatterResult('ゴロアウト')">ゴロ</button>
+            <button onclick="recordMyBatterResult('フライアウト')">フライ</button>
+            <button onclick="recordMyBatterResult('三振')" style="background:#7f0000;">三振</button>
+            <button onclick="closeSubmenu()" style="grid-column: span 3; background:#555; padding:8px;">キャンセル</button>
+        </div>
+    </div>
+
+    <!-- 下部データ管理 -->
+    <div class="stats-container">
+        <div class="tabs">
+            <div id="t-batters" class="tab active" onclick="switchTab('tab-batters')">自軍打順成績</div>
+            <div id="t-pitchers" class="tab" onclick="switchTab('tab-pitchers')">味方投手成績</div>
+            <div id="t-config" class="tab" style="max-width:50px; background:#333;" onclick="switchTab('tab-config')">設定</div>
+        </div>
+
+        <div id="tab-batters" class="tab-content active">
+            <table class="stats-table">
+                <thead>
+                    <tr><th>順</th><th>選手名</th><th>打席</th><th>安打</th><th>三振</th><th>四球</th><th>結果履歴</th></tr>
+                </thead>
+                <tbody id="batter-list-body"></tbody>
+            </table>
+        </div>
+
+        <div id="tab-pitchers" class="tab-content">
+            <table class="stats-table">
+                <thead>
+                    <tr><th>起用</th><th>投手名</th><th>球数</th><th>奪三振</th><th>与四球</th><th>操作</th></tr>
+                </thead>
+                <tbody id="pitcher-list-body"></tbody>
+            </table>
+            <button class="btn" style="margin:5px; padding:6px; font-size:0.8rem; background:#0288d1; width:auto;" onclick="addNewPitcher()">＋ 継投(投手を追加)</button>
+        </div>
+
+        <div id="tab-config" class="tab-content" style="padding:10px; text-align:center;">
+            <div style="margin-bottom:10px;"><button class="btn" style="background:#673ab7;" onclick="manualInningChange()">強制チェンジ(次イニングへ)</button></div>
+            <button class="btn btn-danger" style="font-size:0.9rem;" onclick="resetAllGame()">全データを完全リセット</button>
+        </div>
+    </div>
+
+    <script>
+        let game = {
+            inning: 1, isTop: true, isMyAttack: true,
+            b: 0, s: 0, o: 0,
+            scores: { top: [0,0,0,0,0,0,0,0,0], bot: [0,0,0,0,0,0,0,0,0] },
+            runners: { 1: false, 2: false, 3: false },
+            currentBatterIdx: 0, batters: [], pitchers: [], activePitcherIdx: 0
+        };
+
+        for(let i=1; i<=9; i++) {
+            game.batters.push({ id: i, name: `選手${i}`, pa: 0, hits: 0, so: 0, bb: 0, history: [] });
+        }
+        game.pitchers.push({ id: 1, name: `先発投手`, pitches: 0, so: 0, bb: 0, active: true });
+
+        window.onload = function() {
+            game.isMyAttack = confirm("自軍は「先攻（表の攻撃）」ですか？\n【OK】= 先攻\n【キャンセル】= 後攻");
+            let labelTop = document.getElementById('name-label-top');
+            let labelBot = document.getElementById('name-label-bot');
+            if(game.isMyAttack) { labelTop.innerText = "自軍(先攻)"; labelBot.innerText = "相手(後攻)"; } 
+            else { labelTop.innerText = "相手(先攻)"; labelBot.innerText = "自軍(後攻)"; }
+            refreshAllViews();
+        };
+
+        function setAttackSide(isTopRowClicked) {
+            if(isTopRowClicked) { game.isMyAttack = (document.getElementById('name-label-top').innerText.includes("自軍")); } 
+            else { game.isMyAttack = (document.getElementById('name-label-bot').innerText.includes("自軍")); }
+            if(game.isTop !== isTopRowClicked) {
+                game.isTop = isTopRowClicked; game.b = 0; game.s = 0; game.o = 0; clearAllRunners();
+            }
+            refreshAllViews();
+        }
+
+        function refreshAllViews() {
+            updateScoreboardView();
+            updateBsoView();
+            updateFieldAndPanel();
+            renderBatters();
+            renderPitchers();
+            updateVisualRunners();
+        }
+
+        function updateFieldAndPanel() {
+            let badgeTop = document.getElementById('badge-top');
+            let badgeBot = document.getElementById('badge-bot');
+            if(game.isTop) {
+                badgeTop.innerText = "攻撃中"; badgeTop.className = "status-badge badge-attack";
+                badgeBot.innerText = "守備中"; badgeBot.className = "status-badge badge-defense";
+                game.isMyAttack = document.getElementById('name-label-top').innerText.includes("自軍");
+            } else {
+                badgeTop.innerText = "守備中"; badgeTop.className = "status-badge badge-defense";
+                badgeBot.innerText = "攻撃中"; badgeBot.className = "status-badge badge-attack";
+                game.isMyAttack = document.getElementById('name-label-bot').innerText.includes("自軍");
+            }
+
+            let infoText = document.getElementById('field-info-text');
+            let modeTitle = document.getElementById('panel-mode-title');
+            let mainBtn = document.getElementById('main-action-btn');
+            let qLeft = document.getElementById('quick-left-btn');
+            let qMid = document.getElementById('quick-mid-btn');
+            let qRight = document.getElementById('quick-right-btn');
+
+            if(game.isMyAttack) {
+                infoText.innerText = `自軍攻撃中: ${game.currentBatterIdx + 1}番 (${game.batters[game.currentBatterIdx].name})`;
+                modeTitle.innerText = "【自軍の攻撃】打席結果を入力してください";
+                mainBtn.innerText = "一球送る"; mainBtn.style.background = "#444"; mainBtn.style.boxShadow = "0 3px #222";
+                qLeft.innerText = "ヒット ▾"; qMid.innerText = "凡打/三振 ▾"; qRight.innerText = "四球";
+            } else {
+                infoText.innerText = `相手の攻撃中 (味方守備)`;
+                modeTitle.innerText = "【味方の守備】投球・アウトを記録してください";
+                mainBtn.innerHTML = "投球<br>(球数 ＋1)"; mainBtn.style.background = "#1565c0"; mainBtn.style.boxShadow = "0 3px #0d47a1";
+                qLeft.innerText = "相手凡打"; qMid.innerText = "奪三振"; qRight.innerText = "与四球";
+            }
+
+            let p = game.pitchers[game.activePitcherIdx];
+            if(p) {
+                document.getElementById('active-p-name').innerText = p.name;
+                let pNumEl = document.getElementById('pitch-num'); pNumEl.innerText = p.pitches;
+                pNumEl.classList.remove('p-warn', 'p-danger');
+                if(p.pitches >= 70) pNumEl.classList.add('p-danger');
+                else if(p.pitches >= 60) pNumEl.classList.add('p-warn');
+            }
+        }
+
+        function handleMainAction() { if(game.isMyAttack) { countS(); } else { addPitch(); } }
+        function handleQuickLeft() { if(game.isMyAttack) { openSubmenu('hit-menu'); } else { recordDefenseResult('凡打'); } }
+        function handleQuickMid() { if(game.isMyAttack) { openSubmenu('out-menu'); } else { recordDefenseResult('三振'); } }
+        function handleQuickRight() { if(game.isMyAttack) { recordMyBatterResult('四球'); } else { recordDefenseResult('四球'); } }
+
+        function processWalkAdvance() {
+            if (game.runners[1] && game.runners[2] && game.runners[3]) {
+                addScore(1);
+                alert("押し出し四球！1点追加！");
+            } else if (game.runners[1] && game.runners[2]) {
+                game.runners[3] = true;
+            } else if (game.runners[1]) {
+                game.runners[2] = true;
+            } else {
+                game.runners[1] = true;
+            }
+            updateVisualRunners();
+        }
+
+        function recordMyBatterResult(resultType) {
+            closeSubmenu();
+            let b = game.batters[game.currentBatterIdx];
+            b.pa++; b.history.push(resultType);
+
+            if(['単打','二塁打','三塁打','本塁打'].includes(resultType)) {
+                b.hits++; game.b = 0; game.s = 0;
+                if(resultType === '単打') {
+                    if(game.runners[3]) addScore(1);
+                    game.runners[3] = game.runners[2];
+                    game.runners[2] = game.runners[1];
+                    game.runners[1] = true;
+                }
+                if(resultType === '二塁打') {
+                    if(game.runners[3]) addScore(1); if(game.runners[2]) addScore(1);
+                    game.runners[3] = game.runners[1]; game.runners[2] = true; game.runners[1] = false;
+                }
+                if(resultType === '三塁打') {
+                    if(game.runners[3]) addScore(1); if(game.runners[2]) addScore(1); if(game.runners[1]) addScore(1);
+                    game.runners[3] = true; game.runners[2] = false; game.runners[1] = false;
+                }
+                if(resultType === '本塁打') {
+                    let hrScores = 1;
+                    if(game.runners[1]) hrScores++; if(game.runners[2]) hrScores++; if(game.runners[3]) hrScores++;
+                    addScore(hrScores);
+                    alert(`ホームラン！ ${hrScores}点 追加！`);
+                    clearAllRunners();
+                }
+            } else if(['ゴロアウト','フライアウト'].includes(resultType)) {
+                game.b = 0; game.s = 0; countO();
+            } else if(resultType === '三振') {
+                b.so++; game.b = 0; game.s = 0; countO();
+            } else if(resultType === '四球') {
+                b.bb++; game.b = 0; game.s = 0;
+                processWalkAdvance();
+            }
+
+            game.currentBatterIdx = (game.currentBatterIdx + 1) % 9;
+            refreshAllViews();
+        }
+
+        function recordDefenseResult(type) {
+            addPitch();
+            let p = game.pitchers[game.activePitcherIdx];
+
+            if(type === '三振') {
+                p.so++; game.b = 0; game.s = 0; countO();
+            } else if(type === '四球') {
+                p.bb++; game.b = 0; game.s = 0;
+                processWalkAdvance();
+            } else if(type === '凡打') {
+                game.b = 0; game.s = 0; countO();
+            }
+            refreshAllViews();
+        }
+
+        function changeInningSide() {
+            alert("3アウト。チェンジします。");
+            game.b = 0; game.s = 0; game.o = 0; clearAllRunners();
+            game.isTop = !game.isTop;
+            if(game.isTop) game.inning++;
+            if(game.inning > 9) game.inning = 1;
+            refreshAllViews();
+        }
+
+        function manualInningChange() { if(confirm("強制的に次のイニングへ進めますか？")) { changeInningSide(); } }
+        function addPitch() { if(game.pitchers[game.activePitcherIdx]) { game.pitchers[game.activePitcherIdx].pitches++; updateFieldAndPanel(); renderPitchers(); } }
+        function countB() { game.b++; if(game.b >= 4) { if(game.isMyAttack) recordMyBatterResult('四球'); else recordDefenseResult('四球'); } updateBsoView(); }
+        function countS() { game.s++; if(game.s >= 3) { if(game.isMyAttack) recordMyBatterResult('三振'); else recordDefenseResult('三振'); } updateBsoView(); }
+        function countO() { game.o++; if(game.o >= 3) { changeInningSide(); } updateBsoView(); }
+        
+        function clearBso() { game.b = 0; game.s = 0; updateBsoView(); }
+        
+        function toggleRunner(base) { 
+            game.runners[base] = !game.runners[base]; 
+            updateVisualRunners();
+        }
+        function updateVisualRunners() {
+            [1,2,3].forEach(b => {
+                let el = document.getElementById(`${b===1?'first':b===2?'second':'third'}-base`);
+                if(el) el.classList.toggle('runner', game.runners[b]);
+            });
+        }
+        function clearAllRunners() { game.runners = { 1: false, 2: false, 3: false }; updateVisualRunners(); }
+        
+        function closeSubmenu() { document.querySelectorAll('.submenu-overlay').forEach(m => m.style.display = 'none'); }
+        function openSubmenu(menuId) { closeSubmenu(); document.getElementById(menuId).style.display = 'grid'; }
+
+        function updateBsoView() {
+            for(let i=1; i<=3; i++) document.getElementById(`b${i}`).classList.toggle('b-on', game.b >= i);
+            for(let i=1; i<=2; i++) document.getElementById(`s${i}`).classList.toggle('s-on', game.s >= i);
+            for(let i=1; i<=2; i++) document.getElementById(`o${i}`).classList.toggle('o-on', game.o >= i);
+        }
+
+        function updateScoreboardView() {
+            let totalTop = 0, totalBot = 0;
+            for(let i=1; i<=9; i++) {
+                let tVal = game.scores.top[i-1]; let bVal = game.scores.bot[i-1];
+                document.getElementById(`t${i}`).innerText = (i < game.inning || (i===game.inning && !game.isTop)) ? tVal : (i===game.inning && game.isTop ? tVal : '-');
+                document.getElementById(`b${i}`).innerText = (i < game.inning) ? bVal : (i===game.inning && !game.isTop ? bVal : '-');
+                if(i <= game.inning) { totalTop += tVal; if(!(i===game.inning && game.isTop)) totalBot += bVal; }
+                document.getElementById(`t${i}`).classList.remove('current-cell'); document.getElementById(`b${i}`).classList.remove('current-cell');
+                if(i === game.inning) document.getElementById(game.isTop ? `t${i}` : `b${i}`).classList.add('current-cell');
+            }
+            document.getElementById('total-top').innerText = totalTop; document.getElementById('total-bot').innerText = totalBot;
+        }
+
+        function addScore(val) {
+            let idx = game.inning - 1; if(idx > 8) return;
+            if(game.isTop) game.scores.top[idx] = Math.max(0, game.scores.top[idx] + val);
+            else game.scores.bot[idx] = Math.max(0, game.scores.bot[idx] + val);
+            updateScoreboardView();
+        }
+
+        function directScoreEdit(team, inn) {
+            let current = team === 'top' ? game.scores.top[inn-1] : game.scores.bot[inn-1];
+            let res = prompt(`${inn}回${team==='top'?'表':'裏'}の得点を直接入力:`, current);
+            if(res !== null && !isNaN(res)) {
+                if(team === 'top') game.scores.top[inn-1] = Math.max(0, parseInt(res));
+                else game.scores.bot[inn-1] = Math.max(0, parseInt(res));
+                updateScoreboardView();
+            }
+        }
+
+        function addNewPitcher() {
+            let num = game.pitchers.length + 1;
+            let name = prompt(`交代する投手の名前を入力してください:`, `${num}番手投手`);
+            if(!name) return;
+            game.pitchers.forEach(p => p.active = false);
+            game.pitchers.push({ id: num, name: name, pitches: 0, so: 0, bb: 0, active: true });
+            game.activePitcherIdx = game.pitchers.length - 1;
+            refreshAllViews();
+        }
+
+        function changeActivePitcher(idx) {
+            game.pitchers.forEach((p, i) => p.active = (i === idx));
+            game.activePitcherIdx = idx;
+            refreshAllViews();
+        }
+
+        function renderBatters() {
+            let html = '';
+            game.batters.forEach((b, i) => {
+                let isActive = (i === game.currentBatterIdx && game.isMyAttack) ? 'class="active-row"' : '';
+                html += `<tr ${isActive}>
+                    <td onclick="game.currentBatterIdx=${i}; refreshAllViews();" style="color:#0288d1; font-weight:bold; cursor:pointer;">${b.id}</td>
+                    <td><input type="text" value="${b.name}" onchange="game.batters[i].name=this.value; updateFieldAndPanel();"></td>
+                    <td>${b.pa}</td><td>${b.hits}</td><td>${b.so}</td><td>${b.bb}</td>
+                    <td style="font-size:0.65rem; text-align:left; color:#999;">${b.history.join(',')}</td>
+                </tr>`;
+            });
+            document.getElementById('batter-list-body').innerHTML = html;
+        }
+
+        function renderPitchers() {
+            let html = '';
+            game.pitchers.forEach((p, i) => {
+                let isChecked = p.active ? 'checked' : '';
+                let isActive = p.active ? 'class="active-row"' : '';
+                html += `<tr ${isActive}>
+                    <td><input type="radio" name="active_p" ${isChecked} onchange="changeActivePitcher(${i})"></td>
+                    <td><input type="text" value="${p.name}" onchange="game.pitchers[i].name=this.value; updateFieldAndPanel();"></td>
+                    <td style="font-weight:bold;">${p.pitches}</td><td>${p.so}</td><td>${p.bb}</td>
+                    <td><button style="padding:2px 5px; font-size:0.7rem; background:#444; color:#fff;" onclick="deletePitcher(${i})">削除</button></td>
+                </tr>`;
+            });
+            document.getElementById('pitcher-list-body').innerHTML = html;
+        }
+
+        function deletePitcher(idx) {
+            if(game.pitchers.length <= 1) return;
+            if(confirm("この投手の記録を削除しますか？")) {
+                game.pitchers.splice(idx, 1); game.activePitcherIdx = 0; game.pitchers[0].active = true; refreshAllViews();
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            if(tabId === 'tab-batters') document.getElementById('t-batters').classList.add('active');
+            if(tabId === 'tab-pitchers') document.getElementById('t-pitchers').classList.add('active');
+            if(tabId === 'tab-config') document.getElementById('t-config').classList.add('active');
+        }
+
+        function resetAllGame() { if(confirm("完全初期化しますか？")) { location.reload(); } }
+    </script>
+</body>
+</html>
