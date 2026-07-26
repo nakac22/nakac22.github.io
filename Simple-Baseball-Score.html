@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>シンプル野球スコア</title>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: #121212; 
+            color: #fff; 
+            padding: 10px; 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+        }
+
+        /* チーム設定エリア */
+        .setting-card {
+            background: #1e1e1e;
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #333;
+        }
+        .setting-card label { font-weight: bold; font-size: 0.95rem; color: #ccc; }
+        .toggle-btn {
+            background: #333;
+            color: #aaa;
+            border: 1px solid #555;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .toggle-btn.active {
+            background: #0288d1;
+            color: #fff;
+            border-color: #0288d1;
+        }
+
+        /* スコアボード */
+        .scoreboard-container { 
+            background: #000; 
+            border: 2px solid #333; 
+            border-radius: 8px; 
+            padding: 6px; 
+            overflow-x: auto; 
+        }
+        .score-table { width: 100%; border-collapse: collapse; text-align: center; font-family: monospace; font-size: 0.9rem; }
+        .score-table th, .score-table td { border: 1px solid #222; padding: 8px 2px; min-width: 24px; }
+        .score-table th { color: #888; font-weight: normal; }
+        .team-row td:first-child { 
+            font-weight: bold; 
+            text-align: left; 
+            padding-left: 6px; 
+            width: 75px; 
+            font-size: 0.85rem; 
+            color: #ddd;
+        }
+        .current-cell { background: #332b00; color: #ffeb3b; font-weight: bold; }
+        .total-cell { font-weight: bold; color: #00e676; font-size: 1.1rem; min-width: 32px; }
+
+        /* 現在のイニング＆攻撃チーム表示 */
+        .status-card {
+            background: #1e1e1e;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+        .inning-title { font-size: 1.2rem; font-weight: bold; color: #ffeb3b; margin-bottom: 4px; }
+        .attacking-team { font-size: 1rem; color: #aaa; }
+        .attacking-team span { color: #fff; font-weight: bold; font-size: 1.1rem; }
+
+        /* イニング切り替えボタン */
+        .inning-controls { display: flex; gap: 10px; }
+        .btn-inning {
+            flex: 1;
+            background: #333;
+            color: #fff;
+            border: none;
+            padding: 12px 0;
+            font-size: 0.95rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .btn-inning:active { background: #444; }
+
+        /* 点数増減ボタン（メイン） */
+        .score-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+        .btn-score {
+            width: 100%;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px #000;
+        }
+        .btn-score:active { transform: translateY(2px); box-shadow: 0 2px #000; }
+        
+        .btn-plus {
+            background: #2e7d32;
+            color: #fff;
+            padding: 24px 0;
+            font-size: 1.8rem;
+        }
+        .btn-minus {
+            background: #c62828;
+            color: #fff;
+            padding: 16px 0;
+            font-size: 1.3rem;
+        }
+
+        /* リセットボタン */
+        .reset-container { text-align: center; margin-top: 10px; }
+        .btn-reset {
+            background: transparent;
+            color: #888;
+            border: 1px solid #444;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. 自軍の先攻/後攻 選択 -->
+    <div class="setting-card">
+        <label>自軍の攻撃順:</label>
+        <button id="toggle-order" class="toggle-btn active" onclick="toggleMyOrder()">先攻（表）</button>
+    </div>
+
+    <!-- 2. スコアボード -->
+    <div class="scoreboard-container">
+        <table class="score-table">
+            <thead>
+                <tr>
+                    <th>チーム</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th class="total-cell">R</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="team-row">
+                    <td id="label-top">自軍</td>
+                    <td id="t1">-</td><td id="t2">-</td><td id="t3">-</td><td id="t4">-</td><td id="t5">-</td><td id="t6">-</td><td id="t7">-</td><td id="t8">-</td><td id="t9">-</td>
+                    <td id="total-top" class="total-cell">0</td>
+                </tr>
+                <tr class="team-row">
+                    <td id="label-bot">相手</td>
+                    <td id="b1">-</td><td id="b2">-</td><td id="b3">-</td><td id="b4">-</td><td id="b5">-</td><td id="b6">-</td><td id="b7">-</td><td id="b8">-</td><td id="b9">-</td>
+                    <td id="total-bot" class="total-cell">0</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 3. イニング進行表示 -->
+    <div class="status-card">
+        <div id="inning-display" class="inning-title">1回 表</div>
+        <div class="attacking-team">攻撃中: <span id="attacking-team-name">自軍</span></div>
+    </div>
+
+    <!-- 4. イニング送り・戻し -->
+    <div class="inning-controls">
+        <button class="btn-inning" onclick="prevInning()">◀ 前のイニング</button>
+        <button class="btn-inning" onclick="nextInning()">次のイニング ▶</button>
+    </div>
+
+    <!-- 5. 得点 ➕ ➖ ボタン -->
+    <div class="score-controls">
+        <button class="btn-score btn-plus" onclick="addScore(1)">
+            ➕ 得点追加 (+1)
+        </button>
+        <button class="btn-score btn-minus" onclick="addScore(-1)">
+            ➖ 修正・点数を減らす (-1)
+        </button>
+    </div>
+
+    <!-- リセット -->
+    <div class="reset-container">
+        <button class="btn-reset" onclick="resetGame()">試合データをリセット</button>
+    </div>
+
+    <script>
+        // デフォルト値
+        let gameState = {
+            isMyFirst: true,
+            currentInning: 1,
+            isTop: true,
+            scores: {
+                top: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                bot: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+            }
+        };
+
+        // データの保存
+        function saveData() {
+            localStorage.setItem('baseball_score_data', JSON.stringify(gameState));
+        }
+
+        // データの復元
+        function loadData() {
+            const saved = localStorage.getItem('baseball_score_data');
+            if (saved) {
+                try {
+                    gameState = JSON.parse(saved);
+                } catch(e) {
+                    console.error("データの復元に失敗しました", e);
+                }
+            }
+        }
+
+        // 先攻・後攻の切替
+        function toggleMyOrder() {
+            gameState.isMyFirst = !gameState.isMyFirst;
+            saveData();
+            updateView();
+        }
+
+        // 得点の加算・減算
+        function addScore(val) {
+            let idx = gameState.currentInning - 1;
+            if (gameState.isTop) {
+                gameState.scores.top[idx] = Math.max(0, gameState.scores.top[idx] + val);
+            } else {
+                gameState.scores.bot[idx] = Math.max(0, gameState.scores.bot[idx] + val);
+            }
+            saveData();
+            updateView();
+        }
+
+        // 次のイニング（半回）へ進む
+        function nextInning() {
+            if (gameState.isTop) {
+                gameState.isTop = false;
+            } else {
+                if (gameState.currentInning < 9) {
+                    gameState.currentInning++;
+                    gameState.isTop = true;
+                }
+            }
+            saveData();
+            updateView();
+        }
+
+        // 前のイニング（半回）へ戻る
+        function prevInning() {
+            if (!gameState.isTop) {
+                gameState.isTop = true;
+            } else {
+                if (gameState.currentInning > 1) {
+                    gameState.currentInning--;
+                    gameState.isTop = false;
+                }
+            }
+            saveData();
+            updateView();
+        }
+
+        // 全体の表示更新
+        function updateView() {
+            // トグルボタンの状態
+            const btn = document.getElementById('toggle-order');
+            if (gameState.isMyFirst) {
+                btn.innerText = "先攻（表）";
+                btn.classList.add('active');
+            } else {
+                btn.innerText = "後攻（裏）";
+                btn.classList.remove('active');
+            }
+
+            // チーム名ラベル更新
+            const topName = gameState.isMyFirst ? "自軍" : "相手";
+            const botName = gameState.isMyFirst ? "相手" : "自軍";
+            document.getElementById('label-top').innerText = topName + "(表)";
+            document.getElementById('label-bot').innerText = botName + "(裏)";
+
+            // 現在の攻撃チーム名
+            const currentAttacker = gameState.isTop ? topName : botName;
+            document.getElementById('attacking-team-name').innerText = currentAttacker;
+            document.getElementById('inning-display').innerText = `${gameState.currentInning}回 ${gameState.isTop ? '表' : '裏'}`;
+
+            // スコアボード描画
+            let totalTop = 0;
+            let totalBot = 0;
+
+            for (let i = 1; i <= 9; i++) {
+                let tEl = document.getElementById(`t${i}`);
+                let bEl = document.getElementById(`b${i}`);
+
+                // ハイライト解除
+                tEl.classList.remove('current-cell');
+                bEl.classList.remove('current-cell');
+
+                // 表の表示判定
+                if (i < gameState.currentInning || (i === gameState.currentInning && !gameState.isTop)) {
+                    tEl.innerText = gameState.scores.top[i - 1];
+                    totalTop += gameState.scores.top[i - 1];
+                } else if (i === gameState.currentInning && gameState.isTop) {
+                    tEl.innerText = gameState.scores.top[i - 1];
+                    tEl.classList.add('current-cell');
+                    totalTop += gameState.scores.top[i - 1];
+                } else {
+                    tEl.innerText = '-';
+                }
+
+                // 裏の表示判定
+                if (i < gameState.currentInning) {
+                    bEl.innerText = gameState.scores.bot[i - 1];
+                    totalBot += gameState.scores.bot[i - 1];
+                } else if (i === gameState.currentInning && !gameState.isTop) {
+                    bEl.innerText = gameState.scores.bot[i - 1];
+                    bEl.classList.add('current-cell');
+                    totalBot += gameState.scores.bot[i - 1];
+                } else {
+                    bEl.innerText = '-';
+                }
+            }
+
+            document.getElementById('total-top').innerText = totalTop;
+            document.getElementById('total-bot').innerText = totalBot;
+        }
+
+        // 試合リセット
+        function resetGame() {
+            if (confirm("試合データをリセットして最初からやり直しますか？")) {
+                gameState = {
+                    isMyFirst: true,
+                    currentInning: 1,
+                    isTop: true,
+                    scores: {
+                        top: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        bot: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+                    }
+                };
+                localStorage.removeItem('baseball_score_data');
+                updateView();
+            }
+        }
+
+        // 起動時処理：保存データを読み込んで描画
+        loadData();
+        updateView();
+    </script>
+</body>
+</html>
