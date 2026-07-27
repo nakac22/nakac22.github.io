@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ニホンゴ・クエスト 1 - 多層的日本語観への誘い</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --text-color: #1e293b;
+            --primary-color: #8b0000;
+            --accent-color: #dc2626;
+            --border-color: #cbd5e1;
+            --card-bg: #ffffff;
+            --stamp-active: #3f6b5a;
+            --stamp-empty: #94a3b8;
+            --success-bg: #f0fdf4;
+            --success-border: #3f6b5a;
+            --error-bg: #fef2f2;
+            --error-border: #dc2626;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.8;
+            padding: 30px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 850px;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            position: relative;
+            min-height: 650px;
+        }
+
+        .avatar-container {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .avatar-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #fef2f2;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            font-size: 2.4rem;
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            font-weight: 800;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #64748b;
+            margin-bottom: 35px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+
+        p { margin-bottom: 18px; }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s, transform 0.1s;
+            display: inline-block;
+        }
+
+        .btn:hover { background-color: #991b1b; }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled {
+            background-color: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .nav-menu {
+            position: absolute;
+            top: 35px;
+            right: 40px;
+        }
+        .nav-menu .btn-nav {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            background: transparent;
+            color: #64748b;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .nav-menu .btn-nav:hover {
+            background: #f1f5f9;
+            color: var(--primary-color);
+        }
+
+        .screen { display: none; margin-top: 20px; }
+        .screen.active { display: block; }
+
+        .intro-box {
+            background: #fdf2f2;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .quest-world-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.01);
+        }
+        .quest-world-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        .quest-world-header h3 { color: var(--primary-color); font-size: 1.3rem; font-weight: 700; }
+
+        .stamps-row {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 10px 0 20px 0;
+        }
+        .stamp-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 72px;
+        }
+        .stamp-circle {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            border: 2px dashed var(--stamp-empty);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--stamp-empty);
+            background: #fafafa;
+            transition: all 0.3s;
+            margin-bottom: 8px;
+        }
+        .stamp-box.cleared .stamp-circle {
+            border: 2px solid var(--stamp-active);
+            color: var(--stamp-active);
+            background: #f0fdf4;
+            transform: rotate(-8deg);
+        }
+        .stamp-title { font-size: 0.65rem; color: #64748b; text-align: center; font-weight: bold; line-height: 1.2; }
+
+        .level-nodes {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .level-node-btn {
+            padding: 12px;
+            font-size: 0.9rem;
+            background-color: #f8fafc;
+            color: var(--text-color);
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .level-node-btn:hover:not(:disabled) {
+            background-color: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+        .level-node-btn.cleared {
+            background-color: #edfdf2;
+            border-color: #bbf7d0;
+            color: #15803d;
+        }
+
+        .story-text-area {
+            font-size: 1.05rem;
+            background: #f8fafc;
+            padding: 30px;
+            border-radius: 10px;
+            border-left: 6px solid var(--primary-color);
+            margin-bottom: 30px;
+        }
+        .story-text-area p:last-child { margin-bottom: 0; }
+
+        .academic-badge-zone {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .academic-badge {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .academic-badge.social {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .question-zone {
+            font-weight: 700;
+            font-size: 1.15rem;
+            margin-bottom: 20px;
+            color: #0f172a;
+            background: #fff;
+            padding: 10px 0;
+        }
+        
+        .choices-zone { display: flex; flex-direction: column; gap: 14px; margin-bottom: 30px; }
+        .choice-item-btn {
+            background: #fff;
+            color: var(--text-color);
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            text-align: left;
+            padding: 18px;
+            font-size: 1.05rem;
+            width: 100%;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+            line-height: 1.5;
+        }
+        .choice-item-btn:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; }
+        .choice-item-btn.correct { background-color: #edfdf2 !important; border-color: var(--success-border) !important; font-weight: bold; color: #16a34a; }
+        .choice-item-btn.wrong { background-color: #fdf2f2 !important; border-color: var(--error-border) !important; color: #dc2626; opacity: 0.8; }
+
+        .feedback-zone { padding: 25px; border-radius: 10px; display: none; margin-top: 25px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); line-height: 1.7; }
+        .feedback-zone.correct-zone { background: var(--success-bg); border: 1px solid var(--success-border); }
+        .feedback-zone.wrong-zone { background: var(--error-bg); border: 1px solid var(--error-border); }
+        .feedback-status { font-size: 1.3rem; font-weight: bold; margin-bottom: 15px; }
+
+        .academic-bridge-content {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #cbd5e1;
+            font-size: 0.95rem;
+            color: #334155;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            #app { padding: 20px; min-height: auto; }
+            .nav-menu { position: static; text-align: right; margin-bottom: 20px; }
+            h1 { font-size: 1.8rem; }
+            .quest-world-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .level-nodes { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div id="global-nav" class="nav-menu" style="display: none;">
+        <button class="btn-nav" onclick="saveAndExit()">セーブしてマップに戻る</button>
+    </div>
+
+    <div id="screen-main" class="screen active">
+        <div class="avatar-container">
+            <img src="グッドをする俺.png" alt="Navigator" class="avatar-img" onerror="this.style.display='none'">
+        </div>
+        
+        <h1>ニホンゴ・クエスト 1</h1>
+        <div class="subtitle">〜多層的日本語観への誘い〜</div>
+
+        <div class="intro-box">
+            <strong style="color:var(--primary-color); font-size:1.1rem; display:block; margin-bottom:6px;">【Quest I: 視点と文脈の世界】テーマ</strong>
+            日本語話者は、出来事を「神の視点（客観的）」ではなく、常に「自分を取り巻く状況の渦中（場・文脈）」から捉える性質があります。英語話者が世界を切り分けてカテゴリー化するのに対し、日本語話者は関係性や流動的な文脈を重視します。Quest Iでは、その「日本語の認知文法」の基礎を順を追って体感していきましょう。
+        </div>
+
+        <h2>冒険の進捗</h2>
+        <div id="worlds-container"></div>
+
+        <div style="text-align: center; margin-top: 40px;">
+            <button onclick="resetSaveData()" style="background:#dc2626; font-size:0.8rem; padding:8px 16px;" class="btn">冒険の書（セーブデータ）をリセット</button>
+        </div>
+    </div>
+
+    <div id="screen-quest" class="screen">
+        <h2 id="quest-header-title">Level X</h2>
+        
+        <div class="story-text-area" id="story-container"></div>
+
+        <div class="question-zone" id="question-container"></div>
+
+        <div class="choices-zone" id="choices-container"></div>
+
+        <div class="feedback-zone" id="feedback-container">
+            <div class="feedback-status" id="feedback-status"></div>
+            <div id="feedback-text"></div>
+            <div style="text-align: right; margin-top: 25px;">
+                <button id="next-action-btn" class="btn" onclick="advanceQuest()">次のレベルへ進む</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const questData = {
+        id: "quest1",
+        title: "Quest I: 視点と文脈の世界",
+        levels: [
+            {
+                id: "q1_l1",
+                title: "主題を示す助詞",
+                stampLabel: "主題提示",
+                stampEmoji: "🏷️",
+                cognitive: "旧情報と舞台設定",
+                social: "共通の話題化",
+                grammar: "助詞「は」と「が」",
+                text: [
+                    "目の前にある特定の動物について友人と話す場面を想像してください。あなたはまず「これから話すテーマはこれだよ」と相手に指し示し、同じ話題の舞台に立とうとします。",
+                    "日本語において「これから話す題材（主題）を提示し、そこにスポットライトを当てる」役割を果たす助詞は、話し手と聞き手が「それについて語ろう」と合意形成をする目印となります。"
+                ],
+                question: "【問題】聞き手に対して「象という生き物」全体をトークのテーマ（主題）として提示し、その特徴を説明する文として最も自然な表現はどちらでしょう？",
+                choices: [
+                    { text: "象は、鼻が長い。", correct: true, feedback: "<strong>【解説】</strong>正解は「象は、鼻が長い。」です！ 「象は」で話のテーマ（主題）を提示し、それに対して「鼻が長い」という解説（述語）を続けています。日本語の文法では、主題（〜は）と解説の組み合わせが基本的な認知の骨組みを作ります。<div class='academic-bridge-content'>💡 **学問への架け橋**：日本語学や認知言語学では、このように話題の対象を提示する「は」の役割を**「主題（Topic）」**、それに対する記述を**「評言（Comment）」**と呼びます。</div>" },
+                    { text: "象が、鼻は長い。", correct: false, feedback: "<strong>【解説】</strong>「象が」を使うと「どの動物かというと、象こそが！」という排他的な指定になり、「鼻は長い」は他の部分は短いが鼻『は』長いという対比の意味になってしまい、一般的な説明として不自然になります。" }
+                ]
+            },
+            {
+                id: "q1_l2",
+                title: "新事象を捉える助詞",
+                stampLabel: "現象描写",
+                stampEmoji: "🌧️",
+                cognitive: "カメラ目線（現象描写）",
+                social: "現場の共有",
+                grammar: "助詞「が」",
+                text: [
+                    "窓の外を見た瞬間、予想外に雨が降り出してきた光景を想像してください。あなたは目に入った事象をそのまま口にします。",
+                    "目の前で起きた出来事や新しい発見をそのままカメラで切り取るように描写する働き（現象描写）を持つ助詞は、事前にテーマ設定をする表現とは異なり、直感的に捉えた事象を提示します。"
+                ],
+                question: "【問題】ふと外を見た瞬間、雨が降ってきたという「目の前の事象」をそのまま発見して描写するとき、空欄に入る最も適切な助詞はどちらでしょう？<br>あ、雨（  ）降ってきた！",
+                choices: [
+                    { text: "が", correct: true, feedback: "<strong>【解説】</strong>正解は「が」です！ 自分の視界に突如入ってきた事象をそのまま描写するときは、指定や発見を表す助詞「が」が最適です。<div class='academic-bridge-content'>💡 **学問への架け橋**：新しく登場した事象をカメラで撮影するようにそのまま文章化する働きを、日本語学では**「現象描写文（無主題文）」**と呼びます。</div>" },
+                    { text: "は", correct: false, feedback: "<strong>【解説】</strong>「は」にしてしまうと、「他のものは降っていないが、雨『は』降ってきた」という不自然な対比のニュアンスが生まれてしまいます。" }
+                ]
+            },
+            {
+                id: "q1_l3",
+                title: "コソアの空間感覚",
+                stampLabel: "指示詞の視点",
+                stampEmoji: "👈",
+                cognitive: "縄張り領域",
+                social: "対話者間の空間共有",
+                grammar: "指示詞（これ・それ・あれ）",
+                text: [
+                    "自分が手に持っている物、相手が手に持っている物、そして二人から離れた場所にある物を指し示す場面を想像してください。",
+                    "日本語の「こ・そ・あ」体系は、話し手と聞き手の『領分（ナワバリ）』によって使い分けられます。話し手の領域、相手の領域、両者の外という領域モデルが基盤にあります。"
+                ],
+                question: "【問題】相手（聞き手）が手に持っているノートを指して「〜見せて」と頼むとき、空欄に入る最も適切な指示詞の形はどちらでしょう？<br>（  ）ノート見せて。",
+                choices: [
+                    { text: "その", correct: true, feedback: "<strong>【解説】</strong>正解は「その」です！ 相手の領分にある対象には「そ」系統（それ・その）を使用します。<div class='academic-bridge-content'>💡 **学問への架け橋**：指示詞が現実の空間的・心理的距離を指し示す機能を言語学で**「直示（Deixis）」**と呼び、日本語では「対話者対立モデル」として整理されます。</div>" },
+                    { text: "この", correct: false, feedback: "<strong>【解説】</strong>「この」は話し手自身の領域（自分の手元や領域内）にあるものを指すため、相手が持っている場合には不自然になります。" }
+                ]
+            },
+            {
+                id: "q1_l4",
+                title: "存在の意志（あるといる）",
+                stampLabel: "有情性の識別",
+                stampEmoji: "🐱",
+                cognitive: "有情性（Animacy）",
+                social: "生命観の反映",
+                grammar: "ある / いる",
+                text: [
+                    "部屋の中に、机がポツンと置いてある光景と、猫が歩いている光景を思い浮かべてください。",
+                    "日本語では対象が「自力で動く意志を持っているか（有情物か）」によって、存在を表す動詞を明確に使い分けます。人間や動物には「いる」、植物や無生物には「ある」を原則として適用します。"
+                ],
+                question: "【問題】庭に「1匹の猫」がたたずんでいる光景を描写するとき、適切な表現はどちらでしょう？",
+                choices: [
+                    { text: "庭に猫がいる。", correct: true, feedback: "<strong>【解説】</strong>正解は「猫がいる」です！ 猫は意志を持って自律的に動く生命（有情物）として捉えるため、「いる」を選択します。<div class='academic-bridge-content'>💡 **学問への架け橋**：言語表現が対象の生命性や意思の有無を識別して文法を変化させる性質を**「有情性（Animacy）」**の文法化と呼びます。</div>" },
+                    { text: "庭に猫がある。", correct: false, feedback: "<strong>【解説】</strong>「ある」は無生物や意志を持たない対象に使うため、生きている猫に対して使用するとモノ扱いをする不自然な文になります。" }
+                ]
+            },
+            {
+                id: "q1_l5",
+                title: "内からの視点（授受表現）",
+                stampLabel: "授受動詞と視点",
+                stampEmoji: "🎁",
+                cognitive: "視点の一致（カメラ位置）",
+                social: "ウチとソトの境界",
+                grammar: "あげる / くれる",
+                text: [
+                    "友人があなたにプレゼントを渡す場面を想像してください。あなたは自分の立場（視点）からその出来事を描写します。",
+                    "日本語のやりとり（授受表現）では、「誰の視点にカメラを置いているか」が極めて厳密です。他者から自分（またはウチの人間）に向かう移動と、自分から他者に向かう移動で動詞を厳密に使い分けます。"
+                ],
+                question: "【問題】友人の田中さんが「私」に本を渡してくれたとき、私の視点から自然に表現した文の空欄に入る動詞はどちらでしょう？<br>田中さんが私に本を（  ）。",
+                choices: [
+                    { text: "くれた", correct: true, feedback: "<strong>【解説】</strong>正解は「くれた」です！ カメラの位置が「私（自分）」にあるため、外部から自分への移動を表す「くれる」が正解となります。<div class='academic-bridge-content'>💡 **学問への架け橋**：文の構造が話し手の視点（カメラワーク）に固定される制約を、日本語学では**「視点の一貫性（Empathy）」**と呼びます。</div>" },
+                    { text: "あげた", correct: false, feedback: "<strong>【解説】</strong>「あげる」は自分が起点となって他者へ差し出す動きを表すため、「他人が私に〜あげる」という文は視点が混乱し不自然になります。" }
+                ]
+            },
+            {
+                id: "q1_l6",
+                title: "視点の移動（方向性）",
+                stampLabel: "視点の移動",
+                stampEmoji: "🚶‍♂️",
+                cognitive: "空間的・心理的接近",
+                social: "親密性と視点",
+                grammar: "〜てくる / 〜ていく",
+                text: [
+                    "遠くにいた友人が、こちらに向かって歩いて接近してくる様子を観察している場面です。",
+                    "補助動詞「〜てくる」は、物理的な移動だけでなく、時間や変化、相手の関心が「話し手（自分）の領域に向かって接近してくる」という方向性を表します。"
+                ],
+                question: "【問題】向こうから友人が自分の方へ近づいて歩いてくる場面を描写するとき、最も適切な表現はどちらでしょう？",
+                choices: [
+                    { text: "友達がこちらへ歩いてきた。", correct: true, feedback: "<strong>【解説】</strong>正解は「歩いてきた」です！ 話し手（自分）の位置を基準として、そこへ向かう接近の動きには「〜てくる」が用いられます。<div class='academic-bridge-content'>💡 **学問への架け橋**：空間的・時間的な移動が話し手の基準点（Deictic Center）に引き寄せられる認知現象を**「直示的移動動詞（Deictic Motion Verbs）」**と呼びます。</div>" },
+                    { text: "友達がこちらへ歩いていった。", correct: false, feedback: "<strong>【解説】</strong>「〜ていく」は話し手の基準点から遠ざかる動きを表すため、「こちらへ（自分の方へ）」という方向性と矛盾してしまいます。" }
+                ]
+            },
+            {
+                id: "q1_l7",
+                title: "主語を省略する社会",
+                stampLabel: "文脈と省筆",
+                stampEmoji: "💬",
+                cognitive: "高文脈性（ハイコンテキスト）",
+                social: "場と空気の共有",
+                grammar: "主語の省略",
+                text: [
+                    "昼休み、同僚とお腹が空いたねと話している時、「ご飯食べた？」と尋ねる場面を想像してください。",
+                    "日本語では、発話の「場」や「状況」から自明である場合、「私」や「あなた」といった主語を明示しないのが一般的です。過剰な主語の明示は、かえって距離感や不自然さを生みます。"
+                ],
+                question: "【問題】目の前にいる同僚に対して、自然に「昼ご飯を食べたかどうか」を確認する際、最も日本語として自然な問いかけはどちらでしょう？",
+                choices: [
+                    { text: "昼ご飯、食べた？", correct: true, feedback: "<strong>【解説】</strong>正解は「昼ご飯、食べた？」です！ 対話の現場において「誰が誰に聞いているか」は明白であるため、主語（あなたは）を省く方が自然なコミュニケーションになります。<div class='academic-bridge-content'>💡 **学問への架け橋**：言語コミュニケーションにおいて、言葉そのものよりも共有された場や文脈に頼る割合が高い性質を**「ハイコンテキスト（高文脈）文化」**と呼びます。</div>" },
+                    { text: "あなたは、あなたの昼ご飯を食べましたか？", correct: false, feedback: "<strong>【解説】</strong>英語などの直訳のように「あなた」「あなたの」を過剰に補うと、非常によそよそしく機械的な印象を与えてしまいます。" }
+                ]
+            },
+            {
+                id: "q1_l8",
+                title: "配慮のグラデーション",
+                stampLabel: "敬意と距離",
+                stampEmoji: "🙇‍♂️",
+                cognitive: "社会的距離と文脈",
+                social: "人間関係の調整",
+                grammar: "敬語（ウチとソト）",
+                text: [
+                    "初対面のビジネス相手、親しい友人、家族に対して同じ「行く」という行動を伝える場面を想像してください。",
+                    "日本語の敬語は単なる礼儀作法ではなく、相手との社会的距離や関係性を正確にマッピングし、場を円滑に保つための人間関係調整装置です。"
+                ],
+                question: "【問題】社外のお客さまに対して、自社の「社長（名前：田中）」が訪問することを伝える際、適切な表現はどちらでしょう？",
+                choices: [
+                    { text: "社長の田中が伺います。", correct: true, feedback: "<strong>【解説】</strong>正解は「社長の田中が伺います。」です！ 社外の人に対しては、身内（ウチ）である社長であっても呼び捨てにし、相手を立てるために謙譲語（伺う）を使用します。<div class='academic-bridge-content'>💡 **学問への架け橋**：人間関係において自分の属するグループを「ウチ」、外部を「ソト」として言語表現を切り替える社会言語学的概念を**「ウチ・ソトの文脈」**と呼びます。</div>" },
+                    { text: "田中社長がいらっしゃいます。", correct: false, feedback: "<strong>【解説】</strong>社外のお客さまに対して自社の社長に尊敬語（いらっしゃる）を使うと、身内を高めることになり不適切となります。" }
+                ]
+            },
+            {
+                id: "q1_l9",
+                title: "言葉の余白",
+                stampLabel: "軟着陸の対話",
+                stampEmoji: "🍵",
+                cognitive: "断定の回避",
+                social: "調和的コミュニケーション",
+                grammar: "終助詞・接続助詞（〜けど、〜んですが）",
+                text: [
+                    "人に頼み事をしたり、自分の意見を述べたりするときに「ちょっとお願いがあるんだけど…」と言葉を和らげる場面です。",
+                    "日本語では文末を強く言い切らず、接続助詞「〜けど」などでぼかすことで、相手の反応を聞く余白（クッション）を作り出し、摩擦を避ける配慮を行います。"
+                ],
+                question: "【問題】駅への道を聞きたいとき、通りがかりの人に対して配慮を込めて声をかける表現として適切なのはどちらでしょう？",
+                choices: [
+                    { text: "すみません、駅に行きたいんですが…", correct: true, feedback: "<strong>【解説】</strong>正解は「〜行きたいんですが…」です！ 文末を「ですが」で開いておくことで、「教えていただけますか？」という本題を直接的に命じず、相手の自発的な協力を引き出す配慮が働きます。<div class='academic-bridge-content'>💡 **学問への架け橋**：相手の面目（フェイス）を潰さないように配慮し、押しつけを避ける発話の戦略を言語学では**「ポライトネス理論（Politeness Theory）」**と呼びます。</div>" },
+                    { text: "すみません、私を駅に行かせなさい。", correct: false, feedback: "<strong>【解説】</strong>命令形やストレートすぎる要求は、相手に圧迫感を与え、日本語の対話配慮の文脈からは大きく外れてしまいます。" }
+                ]
+            },
+            {
+                id: "q1_l10",
+                title: "日本語の世界の完成",
+                stampLabel: "文脈の統合",
+                stampEmoji: "⛩️",
+                cognitive: "場の文脈と統合",
+                social: "関係性の理解",
+                grammar: "Quest I 総復習",
+                text: [
+                    "おめでとうございます！Quest I の最終レベルに到達しました。",
+                    "日本語は、単なる記号の組み合わせではなく、話し手と聞き手が同じ「場」を共有し、視点を重ね合わせ、人間関係の距離感を測りながら紡がれる言語です。主題の提示（Lv1）、現場の描写（Lv2）、空間領域（Lv3）、生命性（Lv4）、視点の一貫性（Lv5）、接近（Lv6）、主語の文脈共有（Lv7）、社会的配慮（Lv8）、そして文末の余白（Lv9）。これらすべての認知モデルが組み合わさることで、日本語の「視点と文脈の世界」が完成します。"
+                ],
+                question: "【総合問題】見知らぬ人に親切にしてもらった出来事を、自分の視点・感情・感謝を込めて相手に自然に伝える文章として、最も完璧な認知の順序を備えているものはどちらでしょう？",
+                choices: [
+                    { text: "昨日、親切な方が道を教えてくれたんです。", correct: true, feedback: "<strong>【解説】</strong>見事な正解です！ 「親切な方が（新情報の提示）」と「教えてくれた（自分への恩恵・視点の一貫性）」、そして「〜んです（状況の共有）」が見事に調和しています。単なる客観的事実の伝達を超えて、日本語話者が持つ視点と場の世界観（OS）が完全にあなたのものになりました。<div class='academic-bridge-content'>💡 **学問への架け橋**：言語の知識とは、文法規則の丸暗記ではなく、文脈や人間関係の中で意味を構成する体系であるとする考え方を**「社会文化文法」**や**「認知文法（Cognitive Grammar）」**と呼びます。Quest I クリア、お見事でした！</div>" },
+                    { text: "昨日、ある人間が私に道を教えた。", correct: false, feedback: "<strong>【解説】</strong>これだと人間関係や恩恵の視点（〜てくれる）が完全に欠落しており、まるで実験室で人間を観察しているかのような、日本語としては極めて無機質で不自然な文章になってしまいます。" }
+                ]
+            }
+        ]
+    };
+
+    let playerProgress = { clearedLevelIds: [] };
+
+    function loadGame() {
+        const saved = localStorage.getItem('nihongo_quest_q1_save');
+        if (saved) {
+            try { playerProgress = JSON.parse(saved); } catch(e) { console.error(e); }
+        }
+    }
+
+    function saveGame() {
+        localStorage.setItem('nihongo_quest_q1_save', JSON.stringify(playerProgress));
+    }
+
+    function resetSaveData() {
+        if (confirm("これまでのQuest Iの冒険の書をリセットします。よろしいですか？")) {
+            localStorage.removeItem('nihongo_quest_q1_save');
+            playerProgress = { clearedLevelIds: [] };
+            alert("リセットしました。新たな旅を始めましょう！");
+            renderMainScreen();
+        }
+    }
+
+    function switchScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+
+        if (screenId === 'screen-main') {
+            document.getElementById('global-nav').style.display = 'none';
+        } else {
+            document.getElementById('global-nav').style.display = 'block';
+        }
+    }
+
+    function saveAndExit() {
+        saveGame();
+        renderMainScreen();
+        switchScreen('screen-main');
+    }
+
+    function renderMainScreen() {
+        loadGame();
+        const container = document.getElementById('worlds-container');
+        container.innerHTML = '';
+
+        const worldCard = document.createElement('div');
+        worldCard.className = 'quest-world-card';
+
+        const header = document.createElement('div');
+        header.className = 'quest-world-header';
+        
+        const totalLevels = questData.levels.length;
+        const clearedCount = questData.levels.filter(l => playerProgress.clearedLevelIds.includes(l.id)).length;
+        
+        header.innerHTML = `
+            <h3>${questData.title}</h3>
+            <span style="font-size:0.9rem; color:#475569; font-weight:bold;">獲得スタンプ: ${clearedCount} / ${totalLevels}</span>
+        `;
+        worldCard.appendChild(header);
+
+        const stampsRow = document.createElement('div');
+        stampsRow.className = 'stamps-row';
+        
+        questData.levels.forEach(lvl => {
+            const isLvlCleared = playerProgress.clearedLevelIds.includes(lvl.id);
+            const stampBox = document.createElement('div');
+            stampBox.className = `stamp-box ${isLvlCleared ? 'cleared' : ''}`;
+            stampBox.innerHTML = `
+                <div class="stamp-circle">${isLvlCleared ? lvl.stampEmoji : '？'}</div>
+                <div class="stamp-title">${lvl.stampLabel}</div>
+            `;
+            stampsRow.appendChild(stampBox);
+        });
+        worldCard.appendChild(stampsRow);
+
+        const nodesDiv = document.createElement('div');
+        nodesDiv.className = 'level-nodes';
+
+        questData.levels.forEach((lvl, idx) => {
+            const isLvlCleared = playerProgress.clearedLevelIds.includes(lvl.id);
+            let isLocked = false;
+            
+            if (idx > 0) {
+                const prevLvlId = questData.levels[idx - 1].id;
+                if (!playerProgress.clearedLevelIds.includes(prevLvlId)) {
+                    isLocked = true;
+                }
+            }
+
+            const nodeBtn = document.createElement('button');
+            nodeBtn.className = `level-node-btn ${isLvlCleared ? 'cleared' : ''}`;
+            
+            if (isLocked) {
+                nodeBtn.innerText = `🔒 Lv ${idx+1}`;
+                nodeBtn.disabled = true;
+            } else {
+                nodeBtn.innerText = `${isLvlCleared ? '✓ ' : ''}Level ${idx+1}`;
+                nodeBtn.onclick = () => startQuest(idx);
+            }
+            nodesDiv.appendChild(nodeBtn);
+        });
+        worldCard.appendChild(nodesDiv);
+        container.appendChild(worldCard);
+    }
+
+    let activeLevelIndex = 0;
+
+    function shuffleArray(array) {
+        const clone = [...array];
+        for (let i = clone.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const temp = clone[i];
+            clone[i] = clone[j];
+            clone[j] = temp;
+        }
+        return clone;
+    }
+
+    function startQuest(levelIndex) {
+        activeLevelIndex = levelIndex;
+        switchScreen('screen-quest');
+
+        const lvlData = questData.levels[levelIndex];
+
+        document.getElementById('quest-header-title').innerText = `Level ${levelIndex + 1} : ${lvlData.title}`;
+        
+        const storyBox = document.getElementById('story-container');
+        storyBox.innerHTML = `
+            <div class="academic-badge-zone">
+                <span class="academic-badge">中心文法: ${lvlData.grammar}</span>
+                <span class="academic-badge">認知言語学: ${lvlData.cognitive}</span>
+                <span class="academic-badge social">社会言語学: ${lvlData.social}</span>
+            </div>
+        `;
+        lvlData.text.forEach(para => {
+            const p = document.createElement('p');
+            p.innerText = para;
+            storyBox.appendChild(p);
+        });
+
+        document.getElementById('question-container').innerHTML = lvlData.question;
+        
+        const choicesBox = document.getElementById('choices-container');
+        choicesBox.innerHTML = '';
+
+        document.getElementById('feedback-container').style.display = 'none';
+
+        const indexedChoices = lvlData.choices.map((c, i) => ({ ...c, originalIndex: i }));
+        const shuffledChoices = shuffleArray(indexedChoices);
+
+        shuffledChoices.forEach((choice) => {
+            const btn = document.createElement('button');
+            btn.className = 'choice-item-btn';
+            btn.innerHTML = choice.text;
+            btn.onclick = () => selectChoice(choice.originalIndex, btn);
+            choicesBox.appendChild(btn);
+        });
+    }
+
+    function selectChoice(originalIndex, clickedBtn) {
+        const lvlData = questData.levels[activeLevelIndex];
+        const selectedChoice = lvlData.choices[originalIndex];
+
+        const buttons = document.querySelectorAll('.choice-item-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        const feedbackContainer = document.getElementById('feedback-container');
+        const statusText = document.getElementById('feedback-status');
+        const fbText = document.getElementById('feedback-text');
+        const nextBtn = document.getElementById('next-action-btn');
+
+        feedbackContainer.style.display = 'block';
+
+        if (selectedChoice.correct) {
+            clickedBtn.classList.add('correct');
+            feedbackContainer.className = "feedback-zone correct-zone";
+            statusText.innerText = "💡 正解！その通りです。";
+            fbText.innerHTML = selectedChoice.feedback;
+            nextBtn.style.display = 'inline-block';
+
+            if (!playerProgress.clearedLevelIds.includes(lvlData.id)) {
+                playerProgress.clearedLevelIds.push(lvlData.id);
+                saveGame();
+            }
+        } else {
+            clickedBtn.classList.add('wrong');
+            feedbackContainer.className = "feedback-zone wrong-zone";
+            statusText.innerText = "🔍 もう一度、日本語話者の視点と場面をイメージしてみよう";
+            fbText.innerHTML = selectedChoice.feedback;
+            nextBtn.style.display = 'none';
+
+            setTimeout(() => {
+                buttons.forEach(b => {
+                    if (!b.classList.contains('wrong')) b.disabled = false;
+                });
+            }, 1500);
+        }
+    }
+
+    function advanceQuest() {
+        const lvlData = questData.levels[activeLevelIndex];
+        alert(`『${lvlData.stampLabel}』のスタンプを獲得しました！`);
+        saveAndExit();
+    }
+
+    window.onload = () => {
+        renderMainScreen();
+    };
+</script>
+
+</body>
+</html>
