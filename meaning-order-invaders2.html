@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Meaning Order Invaders 中級編</title>
+<style>
+body{
+  margin:0;
+  background:#050b14;
+  color:#fff;
+  font-family:'Courier New', Arial, sans-serif;
+  overflow:hidden;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+#menu,#gameover{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  background: radial-gradient(circle, #0f2038 0%, #050b14 100%);
+  padding: 20px;
+  box-sizing: border-box;
+  text-align: center;
+  z-index: 100;
+}
+#gameover {
+  display: none;
+}
+h1 {
+  font-size: 28px;
+  color: #6cf;
+  text-shadow: 0 0 10px #6cf, 0 0 20px #24a;
+  margin-bottom: 5px;
+}
+.subtitle {
+  font-size: 16px;
+  color: #2d7;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+#stamps-container {
+  background: rgba(16, 35, 58, 0.8);
+  border: 2px solid #34a;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 25px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.5);
+}
+.stamps-title {
+  font-size: 14px;
+  color: #fa0;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.stamp-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.stamp-card {
+  background: #111;
+  border: 1px dashed #555;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #888;
+  transition: all 0.3s;
+}
+.stamp-card.active {
+  border: 1px solid #2d7;
+  background: #042410;
+  color: #fff;
+  text-shadow: 0 0 5px #2d7;
+  box-shadow: inset 0 0 5px rgba(45,215,112,0.3);
+}
+.stamp-icon {
+  font-size: 18px;
+  margin-bottom: 2px;
+}
+button{
+  padding: 14px 28px;
+  font-size: 20px;
+  font-weight: bold;
+  background: #2d7;
+  color: #000;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 0 15px #2d7;
+  transition: transform 0.1s;
+}
+button:active {
+  transform: scale(0.95);
+}
+#ui{display:none}
+#hud{
+  display:flex;
+  justify-content:space-around;
+  background:#0a0f1d;
+  border-bottom: 2px solid #16233a;
+  padding:8px;
+  font-size:14px;
+  font-weight: bold;
+}
+#hud span {
+  color: #fa0;
+}
+#rail{
+  text-align:center;
+  background:#111a2e;
+  border-bottom: 1px solid #34a;
+  padding:8px 4px;
+}
+.slot{
+  display:inline-block;
+  border:2px solid #24a;
+  background: #0a1220;
+  color: #579;
+  padding:5px 10px;
+  border-radius:8px;
+  margin:2px;
+  font-size: 13px;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+.slot.done{
+  background:#2d7;
+  color:#000;
+  border-color: #fff;
+  box-shadow: 0 0 10px #2d7;
+}
+canvas{display:block}
+#controls{
+  position:fixed;
+  bottom: 12px;
+  left:0;
+  right:0;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  padding: 0 25px; 
+}
+#controls button{
+  flex: 1;
+  max-width: 110px;
+  min-height: 54px;
+  font-size: 22px;
+  background: #1b2e4c;
+  color: #6cf;
+  border: 2px solid #34a;
+  box-shadow: 0 4px 0 #101c30;
+  touch-action: manipulation;
+  user-select: none;
+}
+#controls button:active {
+  background: #24406b;
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #101c30;
+}
+#controls button:nth-child(2) {
+  background: #c33;
+  color: #fff;
+  border-color: #f55;
+  box-shadow: 0 4px 0 #822;
+}
+#controls button:nth-child(2):active {
+  background: #d44;
+  box-shadow: 0 2px 0 #822;
+}
+.go-title {
+  font-size: 36px;
+  color: #f33;
+  text-shadow: 0 0 10px #f33, 0 0 20px #800;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+.go-score {
+  font-size: 22px;
+  color: #fa0;
+  margin-bottom: 25px;
+  font-weight: bold;
+}
+</style>
+</head>
+<body>
+
+<div id="menu">
+<h1>Meaning Order Invaders</h1>
+<p class="subtitle">意味順で撃ち落とせ！【中級編】</p>
+<div id="stamps-container">
+  <div class="stamps-title">🏆 意味順マスター・スタンプラリー 🏆</div>
+  <div class="stamp-grid">
+    <div class="stamp-card" id="stamp-0"><div class="stamp-icon">🚀</div>未来・助動詞</div>
+    <div class="stamp-card" id="stamp-1"><div class="stamp-icon">⚡</div>進行形</div>
+    <div class="stamp-card" id="stamp-2"><div class="stamp-icon">🔗</div>接続詞</div>
+    <div class="stamp-card" id="stamp-3"><div class="stamp-icon">📊</div>比較</div>
+    <div class="stamp-card" id="stamp-4"><div class="stamp-icon">🎯</div>不定詞・動名詞</div>
+    <div class="stamp-card" id="stamp-5"><div class="stamp-icon">🛡️</div>受動態</div>
+  </div>
+</div>
+<p id="best" style="color: #6cf; font-weight: bold; margin-bottom: 20px;"></p>
+<button onclick="start(event)">START GAME</button>
+</div>
+
+<div id="gameover">
+<div class="go-title">GAME OVER</div>
+<div class="go-score">FINAL SCORE: <span id="final-score">0</span></div>
+<button onclick="restartGame()">RETRY</button>
+</div>
+
+<div id="ui">
+<div id="hud">
+<div>Unit: <span id="unit-display">-</span></div>
+<div>Score: <span id="score">0</span></div>
+<div>Combo: <span id="combo">0</span></div>
+<div>Life: <span id="life">3</span></div>
+</div>
+<div id="rail">
+<span class="slot" id="s0">だれ</span>
+<span class="slot" id="s1">する</span>
+<span class="slot" id="s2">なに</span>
+<span class="slot" id="s3">どこ</span>
+<span class="slot" id="s4">いつ</span>
+</div>
+<canvas id="cv"></canvas>
+<div id="controls">
+<button id="btn-left">◀</button>
+<button id="btn-fire">FIRE</button>
+<button id="btn-right">▶</button>
+</div>
+</div>
+
+<script>
+// 中級編（中学2年生）用 英文データセット
+const UNIT_DATA = [
+  {
+    name: "未来・助動詞",
+    stamps: ["未来・助動詞マスター"],
+    data: [
+      {c:["I","will play","baseball","tomorrow"],r:["だれ","する","なに","いつ"]},
+      {c:["We","are going to visit","Kyoto"],r:["だれ","する","どこ"]},
+      {c:["He","will call","you","later"],r:["だれ","する","なに","いつ"]},
+      {c:["She","is going to buy","a new car"],r:["だれ","する","なに"]},
+      {c:["I","will help","you","with your homework"],r:["だれ","する","なに","どこ"]},
+      {c:["They","are going to play","soccer","after school"],r:["だれ","する","なに","いつ"]},
+      {c:["My brother","will stay","at home"],r:["だれ","する","どこ"]},
+      {c:["We","are going to watch","a movie","tonight"],r:["だれ","する","なに","いつ"]},
+      {c:["It","will be","sunny","tomorrow"],r:["だれ","する","なに","いつ"]},
+      {c:["I","am going to clean","my room","this Sunday"],r:["だれ","する","なに","いつ"]},
+      {c:["You","can speak","English","very well"],r:["だれ","する","なに","どこ"]},
+      {c:["He","could run","fast","in those days"],r:["だれ","する","どこ","いつ"]},
+      {c:["May I use","your pen"],r:["する","なに"]},
+      {c:["You","must finish","your homework","by 8:00"],r:["だれ","する","なに","いつ"]},
+      {c:["We","should study","harder","for the test"],r:["だれ","する","どこ","いつ"]},
+      {c:["Can you help","me","with this bag"],r:["する","なに","どこ"]},
+      {c:["I","must go","to the hospital","today"],r:["だれ","する","どこ","いつ"]},
+      {c:["You","should eat","breakfast","every morning"],r:["だれ","する","なに","いつ"]},
+      {c:["She","can play","the piano"],r:["だれ","する","なに"]},
+      {c:["Could you open","the window"],r:["する","なに"]}
+    ]
+  },
+  {
+    name: "進行形",
+    stamps: ["進行形マスター"],
+    data: [
+      {c:["I","am watching","TV","now"],r:["だれ","する","なに","いつ"]},
+      {c:["She","was reading","a book","in her room"],r:["だれ","する","なに","どこ"]},
+      {c:["They","are playing","tennis","in the park"],r:["だれ","する","なに","どこ"]},
+      {c:["He","was studying","math","at that time"],r:["だれ","する","なに","いつ"]},
+      {c:["We","are cooking","dinner","together"],r:["だれ","する","なに","いつ"]},
+      {c:["My sister","was listening to","music"],r:["だれ","する","なに"]},
+      {c:["The students","are cleaning","the classroom"],r:["だれ","する","なに"]},
+      {c:["I","was waiting for","the bus","at the stop"],r:["だれ","する","なに","どこ"]},
+      {c:["It","is raining","heavily","outside"],r:["だれ","する","どこ","どこ"]},
+      {c:["They","were walking","along the river"],r:["だれ","する","どこ"]},
+      {c:["Ken","is taking","photos","of flowers"],r:["だれ","する","なに","どこ"]},
+      {c:["She","was writing","a letter","to her friend"],r:["だれ","する","なに","どこ"]},
+      {c:["We","are practicing","soccer","on the field"],r:["だれ","する","なに","どこ"]},
+      {c:["He","was riding","his bicycle","then"],r:["だれ","する","なに","いつ"]},
+      {c:["I","am making","a cake","for my mom"],r:["だれ","する","なに","どこ"]},
+      {c:["My parents","were watching","the news"],r:["だれ","する","なに"]},
+      {c:["They","are talking about","the trip"],r:["だれ","する","なに"]},
+      {c:["She","was sleeping","on the sofa"],r:["だれ","する","どこ"]},
+      {c:["We","are looking for","our lost cat"],r:["だれ","する","なに"]},
+      {c:["He","was running","in the gym"],r:["だれ","する","どこ"]}
+    ]
+  },
+  {
+    name: "接続詞",
+    stamps: ["接続詞マスター"],
+    data: [
+      {c:["I","stayed","home","because it was raining"],r:["だれ","する","どこ","いつ"]},
+      {c:["If it is sunny","we","will play","soccer"],r:["いつ","だれ","する","なに"]},
+      {c:["When I arrived","he","was studying","in his room"],r:["いつ","だれ","する","どこ"]},
+      {c:["I","like","apples","and oranges"],r:["だれ","する","なに","なに"]},
+      {c:["He","studied","hard","but he failed the test"],r:["だれ","する","どこ","いつ"]},
+      {c:["I","call","my friend","when I am free"],r:["だれ","する","なに","いつ"]},
+      {c:["If you are tired","you","should sleep","early"],r:["いつ","だれ","する","いつ"]},
+      {c:["She","was happy","because she found her keys"],r:["だれ","する","なに","いつ"]},
+      {c:["We","went","to the beach","and enjoyed swimming"],r:["だれ","する","どこ","なに"]},
+      {c:["I","tried","my best","but I lost the game"],r:["だれ","する","なに","いつ"]},
+      {c:["When the bell rang","we","left","the room"],r:["いつ","だれ","する","なに"]},
+      {c:["If you have questions","please ask","me"],r:["いつ","する","なに"]},
+      {c:["He","woke up","late","because he played games"],r:["だれ","する","いつ","いつ"]},
+      {c:["I","washed","the dishes","and cleaned the kitchen"],r:["だれ","する","なに","どこ"]},
+      {c:["She","is young","but she","knows a lot"],r:["だれ","する","なに","なに"]},
+      {c:["When I came home","my mother","was cooking"],r:["いつ","だれ","する"]},
+      {c:["If it rains tomorrow","I","will read","books"],r:["いつ","だれ","する","なに"]},
+      {c:["He","didn't go","to school","because he had a fever"],r:["だれ","する","どこ","いつ"]},
+      {c:["We","sang","songs","and danced together"],r:["だれ","する","なに","いつ"]},
+      {c:["I","know","that she is kind"],r:["だれ","する","なに"]}
+    ]
+  },
+  {
+    name: "比較",
+    stamps: ["比較マスター"],
+    data: [
+      {c:["Mt. Fuji","is","higher","than Mt. Ibuki"],r:["だれ","する","なに","どこ"]},
+      {c:["This game","is","the most exciting","of all"],r:["だれ","する","なに","どこ"]},
+      {c:["I","am","as tall as","my brother"],r:["だれ","する","なに","どこ"]},
+      {c:["English","is","easier","than math"],r:["だれ","する","なに","どこ"]},
+      {c:["He","runs","faster","than me"],r:["だれ","する","どこ","どこ"]},
+      {c:["Tokyo","is","larger","than Gifu"],r:["だれ","する","なに","どこ"]},
+      {c:["She","is","the tallest student","in our class"],r:["だれ","する","なに","どこ"]},
+      {c:["Summer","is","hotter","than spring"],r:["だれ","する","なに","どこ"]},
+      {c:["This hat","is","more expensive","than that one"],r:["だれ","する","なに","どこ"]},
+      {c:["Soccer","is","the most popular sport","in Japan"],r:["だれ","する","なに","どこ"]},
+      {c:["My dog","is","as big as","yours"],r:["だれ","する","なに","どこ"]},
+      {c:["He","can swim","as fast as","a fish"],r:["だれ","する","どこ","どこ"]},
+      {c:["This book","is","more interesting","than that film"],r:["だれ","する","なに","どこ"]},
+      {c:["Yesterday","was","the coldest day","this winter"],r:["だれ","する","なに","いつ"]},
+      {c:["She","gets up","earlier","than her mother"],r:["だれ","する","いつ","どこ"]},
+      {c:["This lake","is","the deepest","in this area"],r:["だれ","する","なに","どこ"]},
+      {c:["He","studies","harder","than before"],r:["だれ","する","どこ","いつ"]},
+      {c:["This movie","is","as famous as","that one"],r:["だれ","する","なに","どこ"]},
+      {c:["She","sings","better","than anyone else"],r:["だれ","する","どこ","どこ"]},
+      {c:["Today","is","the busiest day","for me"],r:["だれ","する","なに","どこ"]}
+    ]
+  },
+  {
+    name: "不定詞・動名詞",
+    stamps: ["不定詞・動名詞マスター"],
+    data: [
+      {c:["I","want to be","a teacher","in the future"],r:["だれ","する","なに","いつ"]},
+      {c:["I","have","a lot of homework","to do"],r:["だれ","する","なに","なに"]},
+      {c:["Reading books","is","fun","for me"],r:["だれ","する","なに","どこ"]},
+      {c:["He","likes","playing video games"],r:["だれ","する","なに"]},
+      {c:["She","went","to the store","to buy bread"],r:["だれ","する","どこ","なに"]},
+      {c:["We","decided to visit","our grandmother"],r:["だれ","する","なに"]},
+      {c:["I","need","something cold","to drink"],r:["だれ","する","なに","なに"]},
+      {c:["Studying English","is","very important"],r:["だれ","する","なに"]},
+      {c:["They","enjoyed","swimming","in the river"],r:["だれ","する","なに","どこ"]},
+      {c:["He","came","to the park","to see his friends"],r:["だれ","する","どこ","なに"]},
+      {c:["I","hope to see","you","again"],r:["だれ","する","なに","いつ"]},
+      {c:["She","has","no time","to play"],r:["だれ","する","なに","なに"]},
+      {c:["Taking photos","is","my favorite hobby"],r:["だれ","する","なに"]},
+      {c:["Thank you for","inviting","me","to the party"],r:["する","なに","なに","どこ"]},
+      {c:["He","stopped","talking","with his friend"],r:["だれ","する","なに","どこ"]},
+      {c:["I","am glad to meet","you","today"],r:["だれ","する","なに","いつ"]},
+      {c:["We","have","many places","to visit in Kyoto"],r:["だれ","する","なに","どこ"]},
+      {c:["Cooking dinner","is","difficult","for him"],r:["だれ","する","なに","どこ"]},
+      {c:["She","finished","cleaning","her room"],r:["だれ","する","なに","どこ"]},
+      {c:["I","went","to the library","to study"],r:["だれ","する","どこ","なに"]}
+    ]
+  },
+  {
+    name: "受動態",
+    stamps: ["受動態マスター"],
+    data: [
+      {c:["English","is spoken","all over the world"],r:["だれ","する","どこ"]},
+      {c:["The window","was broken","yesterday"],r:["だれ","する","いつ"]},
+      {c:["This room","is cleaned","every morning"],r:["だれ","する","いつ"]},
+      {c:["The song","was written","by a famous singer"],r:["だれ","する","どこ"]},
+      {c:["These cars","are made","in Japan"],r:["だれ","する","どこ"]},
+      {c:["The cat","was loved","by everyone"],r:["だれ","する","どこ"]},
+      {c:["The letters","were sent","this morning"],r:["だれ","する","いつ"]},
+      {c:["This computer","is used","by many students"],r:["だれ","する","どこ"]},
+      {c:["The house","was built","fifty years ago"],r:["だれ","する","いつ"]},
+      {c:["Soccer","is played","in many countries"],r:["だれ","する","どこ"]},
+      {c:["The dog","was named","Pochi","by my father"],r:["だれ","する","なに","どこ"]},
+      {c:["The photo","was taken","in London"],r:["だれ","する","どこ"]},
+      {c:["This book","is read","by many young people"],r:["だれ","する","どこ"]},
+      {c:["The glass","was broken","by the ball"],r:["だれ","する","どこ"]},
+      {c:["These delicious cakes","were baked","by my sister"],r:["だれ","する","どこ"]},
+      {c:["The flower","is called","Sakura","in Japanese"],r:["だれ","する","なに","どこ"]},
+      {c:["The story","was told","by our teacher"],r:["だれ","する","どこ"]},
+      {c:["This store","is closed","on Sundays"],r:["だれ","する","いつ"]},
+      {c:["The keys","were found","under the desk"],r:["だれ","する","どこ"]},
+      {c:["The festival","is held","every summer"],r:["だれ","する","いつ"]}
+    ]
+  }
+];
+
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+let W,H,p,b=[],w=[],exp=0,idx=0,score=0,combo=0,life=3,run=false;
+let currentUnitIdx = 0;
+
+let comboText = { txt: "", timer: 0, scale: 1 };
+let systemText = { txt: "", timer: 0 };
+let particles = [];
+let isReading = false;
+
+// キー状態管理（スムーズかつレスポンシブな移動用）
+const keys = { left: false, right: false };
+
+const AudioSys = {
+  ctx: null,
+  init() {
+    if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  },
+  play(type) {
+    this.init();
+    if(!this.ctx) return;
+    const t = this.ctx.currentTime;
+    
+    if(type === 'correct') {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, t);
+      osc.frequency.exponentialRampToValueAtTime(900, t + 0.15);
+      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.linearRampToValueAtTime(0, t + 0.15);
+      osc.connect(gain); gain.connect(this.ctx.destination);
+      osc.start(t); osc.stop(t + 0.15);
+    } 
+    else if(type === 'combo') {
+      const osc1 = this.ctx.createOscillator();
+      const osc2 = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc1.type = 'triangle'; osc2.type = 'sine';
+      osc1.frequency.setValueAtTime(523.25, t); // C5
+      osc1.frequency.setValueAtTime(659.25, t + 0.08); // E5
+      osc2.frequency.setValueAtTime(783.99, t + 0.04); // G5
+      osc2.frequency.setValueAtTime(1046.50, t + 0.12); // C6
+      gain.gain.setValueAtTime(0.25, t);
+      gain.gain.linearRampToValueAtTime(0, t + 0.25);
+      osc1.connect(gain); osc2.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc1.start(t); osc1.stop(t + 0.25);
+      osc2.start(t); osc2.stop(t + 0.25);
+    } 
+    else if(type === 'clear') {
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(freq, t + idx * 0.08);
+        gain.gain.setValueAtTime(0.15, t + idx * 0.08);
+        gain.gain.linearRampToValueAtTime(0, t + idx * 0.08 + 0.3);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(t + idx * 0.08); osc.stop(t + idx * 0.08 + 0.3);
+      });
+    } 
+    else if(type === 'wrong') {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(150, t);
+      osc.frequency.linearRampToValueAtTime(80, t + 0.35);
+      gain.gain.setValueAtTime(0.3, t);
+      gain.gain.linearRampToValueAtTime(0, t + 0.35);
+      osc.connect(gain); gain.connect(this.ctx.destination);
+      osc.start(t); osc.stop(t + 0.35);
+    }
+    else if(type === 'gameover') {
+      const notes = [300, 260, 220, 150];
+      notes.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, t + idx * 0.12);
+        gain.gain.setValueAtTime(0.25, t + idx * 0.12);
+        gain.gain.linearRampToValueAtTime(0, t + idx * 0.12 + 0.25);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(t + idx * 0.12); osc.stop(t + idx * 0.12 + 0.25);
+      });
+    }
+  }
+};
+
+const StampSys = {
+  stamps: [false, false, false, false, false, false],
+  load() {
+    for(let i=0; i<6; i++) {
+      this.stamps[i] = localStorage.getItem('moi_stamp_mid_' + i) === 'true';
+      const el = document.getElementById('stamp-' + i);
+      if(el) {
+        if(this.stamps[i]) el.classList.add('active');
+        else el.classList.remove('active');
+      }
+    }
+  },
+  unlock(unitIdx) {
+    if(unitIdx >= 0 && unitIdx < 6) {
+      this.stamps[unitIdx] = true;
+      localStorage.setItem('moi_stamp_mid_' + unitIdx, 'true');
+      this.load();
+    }
+  }
+};
+
+function speakSentence(wordsArray, callback) {
+  if ('speechSynthesis' in window) {
+    isReading = true;
+    window.speechSynthesis.cancel();
+    
+    const sentence = wordsArray.join(" ");
+    const utterance = new SpeechSynthesisUtterance(sentence);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.9;
+    
+    let called = false;
+    const done = () => {
+      if(!called) {
+        called = true;
+        clearTimeout(safeTimeout);
+        isReading = false;
+        callback();
+      }
+    };
+    
+    const safeTimeout = setTimeout(() => {
+      done();
+    }, 1500);
+    
+    utterance.onend = done;
+    utterance.onerror = done;
+    
+    try {
+      window.speechSynthesis.speak(utterance);
+    } catch(e) {
+      done();
+    }
+  } else {
+    callback();
+  }
+}
+
+function resize(){
+  W=innerWidth; 
+  H=innerHeight-180;
+  cv.width=W; cv.height=H;
+  if(p)p.y=H-35;
+}
+addEventListener('resize',resize);
+
+function start(e){
+  AudioSys.init();
+  if('speechSynthesis' in window) {
+    const u = new SpeechSynthesisUtterance("");
+    window.speechSynthesis.speak(u);
+  }
+  
+  document.getElementById('menu').style.display='none';
+  document.getElementById('gameover').style.display='none';
+  document.getElementById('ui').style.display='block';
+  resize();
+  score=0; combo=0; life=3; idx=0; currentUnitIdx=0; isReading = false;
+  p={x:W/2,y:H-35}; run=true;
+  comboText.timer = 0;
+  systemText.timer = 0;
+  particles = [];
+  load();
+}
+
+function restartGame() {
+  document.getElementById('gameover').style.display='none';
+  document.getElementById('ui').style.display='block';
+  resize();
+  score=0; combo=0; life=3; idx=0; currentUnitIdx=0; isReading = false;
+  p={x:W/2,y:H-35}; run=true;
+  comboText.timer = 0;
+  systemText.timer = 0;
+  particles = [];
+  load();
+}
+
+function load(){
+  document.querySelectorAll('.slot').forEach(x=>x.classList.remove('done'));
+  exp=0; w=[]; b=[];
+  
+  let unit = UNIT_DATA[currentUnitIdx];
+  let s = unit.data[idx % unit.data.length];
+  
+  let pos=[...Array(s.c.length).keys()].sort(()=>Math.random()-0.5);
+  let segmentWidth = W / (s.c.length + 0.2);
+  
+  s.c.forEach((t,i)=>{
+    w.push({
+      t, 
+      r:s.r[i], 
+      o:i, 
+      x: 10 + pos[i] * segmentWidth + (Math.random()*10 - 5), 
+      y:40, 
+      sd: 0.35 + Math.random() * 0.25, 
+      h:false,
+      ww: 90
+    });
+  });
+}
+
+function rolei(r){return ["だれ","する","なに","どこ","いつ"].indexOf(r)}
+
+// 1タップごとの即時移動（ステップ移動）
+function stepMove(d) {
+  if (p) p.x = Math.max(18, Math.min(W - 18, p.x + d));
+}
+
+function shoot(e){
+  if (e && e.preventDefault) e.preventDefault();
+  AudioSys.init();
+  if(run && p && !isReading) {
+    b.push({x:p.x,y:p.y});
+  }
+}
+
+// タップ・キーイベントの設定（長押し移動 & 連打・連続タップ対応）
+const btnLeft = document.getElementById('btn-left');
+const btnRight = document.getElementById('btn-right');
+const btnFire = document.getElementById('btn-fire');
+
+function setupButton(btn, onAction, onHoldStart, onHoldEnd) {
+  btn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    AudioSys.init();
+    onAction();
+    if(onHoldStart) onHoldStart();
+  });
+  btn.addEventListener('pointerup', (e) => {
+    e.preventDefault();
+    if(onHoldEnd) onHoldEnd();
+  });
+  btn.addEventListener('pointerleave', (e) => {
+    e.preventDefault();
+    if(onHoldEnd) onHoldEnd();
+  });
+  btn.addEventListener('pointercancel', (e) => {
+    e.preventDefault();
+    if(onHoldEnd) onHoldEnd();
+  });
+}
+
+setupButton(btnLeft, () => stepMove(-25), () => { keys.left = true; }, () => { keys.left = false; });
+setupButton(btnRight, () => stepMove(25), () => { keys.right = true; }, () => { keys.right = false; });
+setupButton(btnFire, () => shoot(), null, null);
+
+document.addEventListener('keydown', e => {
+  if (e.key === "ArrowLeft") {
+    if (!keys.left) stepMove(-25);
+    keys.left = true;
+  }
+  if (e.key === "ArrowRight") {
+    if (!keys.right) stepMove(25);
+    keys.right = true;
+  }
+  if (e.key === " ") {
+    if (!e.repeat) shoot();
+  }
+});
+
+document.addEventListener('keyup', e => {
+  if (e.key === "ArrowLeft") keys.left = false;
+  if (e.key === "ArrowRight") keys.right = false;
+});
+
+function addParticles(x, y, color) {
+  for(let i=0; i<12; i++) {
+    particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 6,
+      vy: (Math.random() - 0.5) * 6,
+      r: Math.random() * 4 + 2,
+      alpha: 1,
+      color: color
+    });
+  }
+}
+
+function triggerComboText(comboCount) {
+  AudioSys.play('combo');
+  if (comboCount % 5 === 0) {
+    let msg = comboCount + " COMBO!";
+    if (comboCount === 5) msg = "NICE! 5 COMBO!";
+    if (comboCount === 10) msg = "GREAT! 10 COMBO!";
+    if (comboCount === 15) msg = "EXCELLENT! 15 COMBO!";
+    if (comboCount >= 20) msg = "AMAZING! " + comboCount + " COMBO!";
+    comboText = { txt: msg, timer: 60, scale: 1.8 };
+  } else {
+    comboText = { txt: comboCount + " COMBO!", timer: 45, scale: 1.3 };
+  }
+}
+
+function update(){
+  if(!run || !p) return; 
+
+  // スムーズな連続移動
+  const moveSpeed = 7;
+  if (keys.left) p.x = Math.max(18, p.x - moveSpeed);
+  if (keys.right) p.x = Math.min(W - 18, p.x + moveSpeed);
+  
+  if (!isReading) {
+    w.forEach(x=>{
+      if(!x.h) x.y += x.sd;
+      if(x.y > H - 45){
+        AudioSys.play('wrong');
+        life--; combo=0; load();
+      }
+    });
+    b.forEach(x => x.y -= 14);
+  }
+  
+  b.forEach((bb, bi)=>{
+    w.forEach(x=>{
+      if(x.h) return;
+      
+      ctx.font = (W < 500 ? "15px" : "20px") + " Arial";
+      let textW = ctx.measureText(x.t).width;
+      let cardW = Math.max(95, textW + 40);
+      let cardH = 46;
+      x.ww = cardW;
+      
+      if(bb.x > x.x && bb.x < x.x + cardW && bb.y > x.y && bb.y < x.y + cardH){
+        if(x.o === exp){
+          x.h = true; 
+          exp++; 
+          combo++; 
+          score += 20 + combo * 5;
+          addParticles(bb.x, bb.y, '#2d7');
+          
+          if (combo >= 2) {
+            triggerComboText(combo);
+          } else {
+            AudioSys.play('correct');
+          }
+          
+          let ri = rolei(x.r); 
+          if(ri >= 0) document.getElementById('s' + ri).classList.add('done');
+          
+          if(exp === w.length){
+            score += 100;
+            
+            let unit = UNIT_DATA[currentUnitIdx];
+            let currentSentenceData = unit.data[idx % unit.data.length].c;
+            
+            speakSentence(currentSentenceData, () => {
+              idx++;
+              let currentUnit = UNIT_DATA[currentUnitIdx];
+              if(idx >= currentUnit.data.length) {
+                StampSys.unlock(currentUnitIdx);
+                AudioSys.play('clear');
+                
+                let stampName = currentUnit.stamps[0] || "マスター";
+                systemText = { txt: stampName + " 獲得！", timer: 120 };
+                
+                if(currentUnitIdx < UNIT_DATA.length - 1) {
+                  currentUnitIdx++;
+                  idx = 0;
+                } else {
+                  currentUnitIdx = 0;
+                  idx = 0;
+                }
+              }
+              load();
+            });
+          }
+        } else {
+          AudioSys.play('wrong');
+          addParticles(bb.x, bb.y, '#f33');
+          life--; 
+          combo = 0;
+        }
+        b.splice(bi, 1);
+      }
+    });
+  });
+  
+  b = b.filter(x => x.y > 0);
+  
+  particles.forEach(pt => {
+    pt.x += pt.vx;
+    pt.y += pt.vy;
+    pt.alpha -= 0.02;
+  });
+  particles = particles.filter(pt => pt.alpha > 0);
+  
+  if(comboText.timer > 0) comboText.timer--;
+  if(systemText.timer > 0) systemText.timer--;
+  
+  if(life <= 0){
+    run = false;
+    AudioSys.play('gameover');
+    let best = Math.max(score, +(localStorage.getItem('moi_best_mid')||0));
+    localStorage.setItem('moi_best_mid', best);
+    document.getElementById('best').textContent = "Best Score: " + best;
+    
+    document.getElementById('final-score').textContent = score;
+    document.getElementById('ui').style.display = 'none';
+    document.getElementById('gameover').style.display = 'flex';
+  }
+  
+  document.getElementById('unit-display').textContent = (currentUnitIdx + 1) + " (" + UNIT_DATA[currentUnitIdx].name + ")";
+  document.getElementById('score').textContent = score;
+  document.getElementById('combo').textContent = combo;
+  document.getElementById('life').textContent = life;
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  if(!run || !p) return;
+  
+  ctx.strokeStyle = "rgba(22, 35, 58, 0.4)";
+  ctx.lineWidth = 1;
+  for(let x = 0; x < W; x += 50) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  
+  ctx.font = (W < 500 ? "15px" : "20px") + " Arial";
+  w.forEach(x=>{
+    if(x.h)return;
+    
+    let textW = ctx.measureText(x.t).width;
+    let cardW = Math.max(95, textW + 40);
+    let cardH = 46;
+    x.ww = cardW;
+    
+    ctx.fillStyle = "#12223c";
+    ctx.fillRect(x.x, x.y, cardW, cardH);
+    
+    ctx.strokeStyle = "#47a";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(x.x, x.y, cardW, cardH);
+    
+    ctx.fillStyle = "#fff";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(x.t, x.x + (cardW / 2), x.y + (cardH / 2) + 1);
+  });
+  
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  
+  b.forEach(x => {
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(x.x - 2, x.y, 4, 12);
+    ctx.shadowBlur = 8; ctx.shadowColor = "yellow";
+    ctx.fillStyle = "yellow";
+    ctx.fillRect(x.x - 1, x.y, 2, 12);
+    ctx.shadowBlur = 0;
+  });
+  
+  ctx.fillStyle = "#6cf";
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+  ctx.lineTo(p.x - 18, p.y + 22);
+  ctx.lineTo(p.x + 18, p.y + 22);
+  ctx.fill();
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(p.x - 2, p.y + 4, 4, 4);
+  
+  particles.forEach(pt => {
+    ctx.fillStyle = pt.color;
+    ctx.globalAlpha = pt.alpha;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1.0;
+  
+  if(comboText.timer > 0) {
+    ctx.save();
+    ctx.translate(W / 2, H / 2 - 30);
+    let progress = (60 - comboText.timer) / 60;
+    let currentScale = comboText.scale * (1 + Math.sin(progress * Math.PI) * 0.15);
+    ctx.scale(currentScale, currentScale);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 26px Arial";
+    
+    ctx.fillStyle = "#000";
+    ctx.fillText(comboText.txt, 2, 2);
+    ctx.fillStyle = "#fa0";
+    ctx.shadowBlur = 10; ctx.shadowColor = "#fa0";
+    ctx.fillText(comboText.txt, 0, 0);
+    ctx.restore();
+  }
+  
+  if(systemText.timer > 0) {
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 26px 'Courier New', Arial, sans-serif";
+    
+    ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+    ctx.fillRect(0, H/2 - 50, W, 100);
+    
+    ctx.fillStyle = "#2d7";
+    ctx.shadowBlur = 15; ctx.shadowColor = "#2d7";
+    ctx.fillText(systemText.txt, W / 2, H / 2);
+    ctx.restore();
+  }
+}
+
+(function loop(){update();draw();requestAnimationFrame(loop)})();
+resize();
+
+StampSys.load();
+document.getElementById('best').textContent = "Best Score: " + (localStorage.getItem('moi_best_mid') || 0);
+
+document.addEventListener('touchstart', (e) => {
+  if (e.touches.length > 1) {
+    e.preventDefault();
+  }
+}, { passive: false });
+
+let lastTouchTime = 0;
+document.addEventListener('touchend', (e) => {
+  const now = (new Date()).getTime();
+  if (now - lastTouchTime <= 300) {
+    e.preventDefault();
+  }
+  lastTouchTime = now;
+}, { passive: false });
+</script>
+</body>
+</html>
