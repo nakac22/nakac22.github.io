@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>違和感シラバス - Requests（お願い編）</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --text-color: #1e293b;
+            --primary-color: #1e3a8a;
+            --accent-color: #2563eb;
+            --border-color: #cbd5e1;
+            --card-bg: #ffffff;
+            --success-bg: #f0fdf4;
+            --success-border: #16a34a;
+            --error-bg: #fef2f2;
+            --error-border: #dc2626;
+            --stage1-color: #2563eb;
+            --stage2-color: #0d9488;
+            --stage3-color: #d97706;
+            --stage4-color: #7c3aed;
+            --stage5-color: #db2777;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.7;
+            padding: 15px 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            padding: 25px 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            position: relative;
+        }
+
+        .header-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .app-badge {
+            display: inline-block;
+            background: #e0e7ff;
+            color: #3730a3;
+            font-size: 0.8rem;
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 8px;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+            font-weight: 800;
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            color: #64748b;
+            margin-bottom: 15px;
+        }
+
+        .intro-box {
+            background: #f1f5f9;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border-left: 5px solid var(--accent-color);
+            font-size: 0.9rem;
+        }
+
+        .cycle-flow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 1px solid #e2e8f0;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #475569;
+            flex-wrap: wrap;
+            gap: 2px;
+        }
+
+        .cycle-step { color: var(--accent-color); }
+
+        .stage-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        .stage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .stage-title-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stage-badge {
+            color: white;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .stage-1 .stage-badge { background: var(--stage1-color); }
+        .stage-2 .stage-badge { background: var(--stage2-color); }
+        .stage-3 .stage-badge { background: var(--stage3-color); }
+        .stage-4 .stage-badge { background: var(--stage4-color); }
+
+        .stage-title {
+            color: #0f172a;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .stage-desc {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 12px;
+        }
+
+        .level-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .level-card-btn {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 80px;
+        }
+
+        .level-card-btn:hover:not(:disabled) {
+            background: #f1f5f9;
+            border-color: var(--accent-color);
+        }
+
+        .level-card-btn.cleared {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+
+        .level-card-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .level-num {
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #64748b;
+        }
+
+        .level-card-btn.cleared .level-num { color: #16a34a; }
+
+        .level-name {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 2px;
+        }
+
+        .nav-menu {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+        }
+
+        .btn-nav {
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            background: white;
+            color: #475569;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .screen { display: none; }
+        .screen.active { display: block !important; }
+
+        /* Quest Screen Styles */
+        .scene-card {
+            background: #fff;
+            border: 2px dashed #cbd5e1;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .scene-tag {
+            display: inline-block;
+            background: #e2e8f0;
+            color: #334155;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+        }
+
+        .scene-dialogue {
+            font-size: 0.95rem;
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-top: 6px;
+            border-left: 3px solid #94a3b8;
+        }
+
+        .wiakan-box {
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+            color: #92400e;
+        }
+
+        .wiakan-title {
+            font-weight: bold;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .academic-badge-zone {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .academic-badge {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .academic-badge.social { background: #fef3c7; color: #92400e; }
+        .academic-badge.grammar { background: #dcfce7; color: #166534; }
+
+        .question-zone {
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-bottom: 15px;
+            color: #0f172a;
+        }
+
+        .choices-zone {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .choice-item-btn {
+            background: #fff;
+            color: var(--text-color);
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            text-align: left;
+            padding: 14px 16px;
+            font-size: 0.95rem;
+            width: 100%;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .choice-item-btn:hover:not(:disabled) {
+            background: #f8fafc;
+            border-color: var(--accent-color);
+        }
+
+        .choice-item-btn.correct {
+            background-color: #edfdf2 !important;
+            border-color: var(--success-border) !important;
+            color: #16a34a;
+        }
+
+        .choice-item-btn.wrong {
+            background-color: #fdf2f2 !important;
+            border-color: var(--error-border) !important;
+            color: #dc2626;
+            opacity: 0.8;
+        }
+
+        .feedback-zone {
+            padding: 20px;
+            border-radius: 12px;
+            display: none;
+            margin-top: 20px;
+        }
+
+        .feedback-zone.correct-zone {
+            background: var(--success-bg);
+            border: 2px solid var(--success-border);
+        }
+
+        .feedback-zone.wrong-zone {
+            background: var(--error-bg);
+            border: 2px solid var(--error-border);
+        }
+
+        .feedback-status {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .cycle-expl-card {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 18px;
+            margin-top: 15px;
+            border: 1px solid #cbd5e1;
+        }
+
+        .expl-step {
+            margin-bottom: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+
+        .expl-step:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .expl-tag {
+            display: inline-block;
+            font-weight: bold;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 6px;
+            margin-bottom: 6px;
+            color: white;
+        }
+
+        .tag-expression { background: #7c3aed; }
+        .tag-academic { background: #1e3a8a; }
+        .tag-more { background: #0d9488; }
+
+        .expr-list {
+            list-style: none;
+            margin-top: 8px;
+        }
+
+        .expr-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .expr-category {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #2563eb;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .academic-box {
+            background: #f0f4fe;
+            border-left: 4px solid #1e3a8a;
+            padding: 14px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.88rem;
+            line-height: 1.7;
+            color: #1e293b;
+            margin-top: 8px;
+        }
+
+        .academic-more-box {
+            background: #f0fdf4;
+            border-left: 4px solid #0d9488;
+            padding: 12px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.85rem;
+            color: #1e293b;
+            margin-top: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            font-size: 0.95rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-color);
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 5px; }
+            #app { padding: 16px 12px; }
+            h1 { font-size: 1.4rem; }
+            .level-grid { grid-template-columns: 1fr; }
+            .cycle-flow { font-size: 0.68rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div id="global-nav" class="nav-menu" style="display: none;">
+        <button class="btn-nav" onclick="saveAndExit()">🗺️ モジュール一覧に戻る</button>
+    </div>
+
+    <!-- MAIN DASHBOARD -->
+    <div id="screen-main" class="screen active">
+        <div class="header-container">
+            <span class="app-badge">関係性構築のためのEnglish 1</span>
+            <h1>Requests（お願い編）</h1>
+            <div class="subtitle">〜たった1つの困りごとから広がる、ポライトネスとモダリティの世界〜</div>
+        </div>
+
+        <div class="intro-box">
+            <h3 style="color:var(--primary-color); margin-bottom:6px;">💡 「お願い」は相手の領域への侵入である</h3>
+            <p>単なる「丁寧なフレーズの暗記」ではありません。英語話者がなぜ過去形を使い、なぜ疑問形にし、断られたときにどう振る舞うのか。言語学（ポライトネス理論・モダリティ）の視点から紐解きます。</p>
+            <div class="cycle-flow">
+                <span>😳 違和感</span> ➔ 
+                <span class="cycle-step">🧠 認知</span> ➔ 
+                <span class="cycle-step">👥 社会</span> ➔ 
+                <span class="cycle-step">📐 文法</span> ➔ 
+                <span class="cycle-step">💬 表現</span> ➔ 
+                <span>🎓 Academic</span>
+            </div>
+        </div>
+
+        <div id="stages-container"></div>
+
+        <div style="text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+            <button onclick="resetSaveData()" style="background:transparent; color:#ef4444; border:1px solid #fca5a5; font-size:0.75rem; padding:4px 10px; border-radius:6px; cursor:pointer;">
+                🔄 学習進捗をリセット
+            </button>
+        </div>
+    </div>
+
+    <!-- QUEST SCREEN -->
+    <div id="screen-quest" class="screen">
+        <div class="academic-badge-zone" id="badge-container"></div>
+        <h2 id="quest-header-title" style="font-size: 1.3rem; color: var(--primary-color); margin-bottom: 15px;"></h2>
+
+        <div class="scene-card">
+            <span class="scene-tag">🎬 シーン設定</span>
+            <div id="scene-container" class="scene-dialogue"></div>
+        </div>
+
+        <div class="wiakan-box">
+            <div class="wiakan-title">😳 え、なんで？（違和感）</div>
+            <div id="wiakan-container"></div>
+        </div>
+
+        <div class="question-zone" id="question-container"></div>
+        <div class="choices-zone" id="choices-container"></div>
+
+        <div class="feedback-zone" id="feedback-container">
+            <div class="feedback-status" id="feedback-status"></div>
+            <div id="feedback-text"></div>
+            
+            <div class="cycle-expl-card" id="cycle-expl-box"></div>
+
+            <div style="text-align: right; margin-top: 20px;">
+                <button id="next-action-btn" class="btn-primary" onclick="advanceQuest()">一覧に戻る ➔</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const syllabusData = [
+        {
+            stageId: "mod_1",
+            stageNum: "Module 1",
+            theme: "「距離感」のメカニズム",
+            purpose: "PleaseとCan/Could/Wouldの決定的な認知ギャップを紐解く。",
+            colorClass: "stage-1",
+            levels: [
+                {
+                    id: "m1_l1",
+                    title: "Please なのに失礼？",
+                    cognitive: "選択権の剥奪 vs 付与",
+                    social: "Negative Face（領域侵犯）",
+                    grammar: "命令形 + Please vs 疑問文",
+                    scene: "オフィスで同僚に急ぎの確認を頼みたい時。<br>あなた: 「Please check this report now.」<br>同僚: 一瞬引きつった顔をして「...OK.」",
+                    wiakan: "学校で「Pleaseをつければ丁寧になる」と習ったのに、なぜ相手は嫌そうな顔をしたの？",
+                    question: "【選択問題】「Please + 命令形」が相手に心理的負担を与える本当の理由は？",
+                    choices: [
+                        {
+                            text: "A: 「Please」は丁寧語ではなく、相手の拒否権を奪う「指示の強制」だから",
+                            correct: true,
+                            feedback: "大正解！命令形にPleaseを添えても命令であることには変わりません。相手に「断る余地」を与えていないことが違和感の原因です。"
+                        },
+                        {
+                            text: "B: 発音が固くて怒っているように聞こえたから",
+                            correct: false,
+                            feedback: "発音ではなく、言語的な構造（選択権を奪っていること）が原因です。"
+                        }
+                    ],
+                    cycle: {
+                        cognitive: "<strong>🧠 【認知：選択権の有無と心理的領域】</strong><br>「お願い」とは相手の領域（時間・労力）に足を踏み入れる行為です。直接的な指示（命令形）は相手の自由を奪いますが、疑問形にすることで「断る権利（選択権）」を相手に手渡すことができます。",
+                        social: "<strong>👥 【社会：Negative Face（自由の尊重）】</strong><br>英語圏社会では、「他人の行動を制限しないこと」が最大の配慮（Politeness）とされます。Pleaseだけでは相手の時間を奪う強制力を弱められません。",
+                        grammar: "<strong>📐 【文法：助動詞による命題の疑問化】</strong><br>Could you...? や Would you mind...? のように助動詞を用いた疑問文にすることで、行動を命題化して相手の判断を仰ぐ構文になります。",
+                        expressions: [
+                            { cat: "日常会話でのお願い", text: "<strong>Can you give me a hand?</strong> （ちょっと手を貸してくれる？）" },
+                            { cat: "友人へのお願い", text: "<strong>Could you pass me the salt?</strong> （お塩取ってもらえる？）" },
+                            { cat: "先生・目上へのお願い", text: "<strong>Could you please review my essay when you have time?</strong> （お時間のある際に論文を見ていただけますでしょうか？）" },
+                            { cat: "メールでのお願い", text: "<strong>I would appreciate it if you could send the details.</strong> （詳細をお送りいただけますと幸いです）" },
+                            { cat: "頼みにくい重いお願い", text: "<strong>I know you're super busy, but would there be any chance you could cover my shift?</strong> （大変お忙しいのは承知の上ですが、シフトを代わっていただくことは可能でしょうか…？）" },
+                            { cat: "断られたときのスマートな返し", text: "<strong>No worries at all! Thanks anyway.</strong> （全然気にしないで！聞いてくれてありがとう）" }
+                        ],
+                        academic: `<strong>🎓 Academic Corner: Politeness Theory</strong><br>
+今日はお願い表現を勉強しました。実は、この背景にはBrown & Levinson（1987）の<strong>Politeness Theory（ポライトネス理論）</strong>があります。<br><br>
+本理論では、人間には「他者に受け入れられたい欲求（Positive Face）」と「他者から自由を侵害されたくない欲求（Negative Face）」の2つの「顔（メンツ）」があると定義します。お願い（Request）という行為は、本質的に相手の時間を拘束する「Face Threatening Act（FTA：顔を脅かす行為）」です。そのため、聞き手のNegative Faceを傷つけないよう、「選択の自由を与える」「非直接的な表現を使う」といった修辞戦略が言語構造として発達しました。`,
+                        moreAcademic: `<strong>📚 さらに深く知りたい人へ（学問への入口）</strong><br>
+* <strong>Geoffrey Leech（1983）:</strong> 丁寧さの原理（Politeness Principle）。「負担最小化の規律」「益最大化の規律」など、対話の語用論的メカニズムを定式化。<br>
+* <strong>Robin Lakoff（1973）:</strong> 「押し付けるな（Don't impose）」「選択肢を与えよ（Give options）」というポライトネスの基本原則を提唱したパイオニア。`
+                    }
+                }
+            ]
+        },
+        {
+            stageId: "mod_2",
+            stageNum: "Module 2",
+            theme: "仮定法とモダリティの魔法",
+            purpose: "なぜ「過去形」にすると丁寧になるのか？心理的距離の認知メカニズム。",
+            colorClass: "stage-2",
+            levels: [
+                {
+                    id: "m2_l1",
+                    title: "なぜ過去形「Could」を使うと丁寧になる？",
+                    cognitive: "現実からの離脱（心理的距離）",
+                    social: "衝撃の緩衝（クッション）",
+                    grammar: "仮定法過去（Hypothetical distance）",
+                    scene: "教授のオフィスを訪ねた時。<br>あなた: 「Can I ask a question?」<br>教授: 「Sure, but...（少し慌てて書類を伏せる）」",
+                    wiakan: "現在形 Can ではなく Could を使うと「丁寧になる」と暗記しているけれど、昔の過去形がなんで丁寧になるの？タイムスリップしてるの？",
+                    question: "【選択問題】英語において「過去形（Could / Would）」が丁寧さを生む理由は？",
+                    choices: [
+                        {
+                            text: "A: 時間的な過去ではなく、「現実からの心理的な距離（もし可能であれば…という仮定）」を作り出すから",
+                            correct: true,
+                            feedback: "見事！ 英語の過去形の本質は「距離（Distance）」です。時間的距離だけでなく「現実世界からの距離（仮定）」を作ることで、命令の生々しさを消しています。"
+                        },
+                        {
+                            text: "B: 過去の出来事として頼むことで、「もう過ぎたこと」と錯覚させるため",
+                            correct: false,
+                            feedback: "過去の出来事にするわけではありません。「現実世界からの距離」を作る認知メカニズムです。"
+                        }
+                    ],
+                    cycle: {
+                        cognitive: "<strong>🧠 【認知：空間・時間・現実の「距離」の一元化】</strong><br>認知言語学において、過去形（-ed）の核心的意味は「今・ココ・現実からの遠離」です。Can（できるか？）は生々しい現実を直視させますが、Could（もし可能なら…できるでしょうか）は「非現実のクッション」を挟みます。",
+                        social: "<strong>👥 【社会：クッションによる社会的配慮】</strong><br>頼みごとが「断られた場合」の衝撃をお互いに和らげるため、あらかじめ仮定の世界（もし〜なら）の枠組みで会話をスタートさせます。",
+                        grammar: "<strong>📐 【文法：モダリティ（Modality）と仮定法】</strong><br>話し手の態度や確信度を表す助動詞（Modality）。過去形にすることで「非現実度（Hypotheticity）」が高まり、結果として最も丁寧な依頼構文（I was wondering if you could...）へと発展します。",
+                        expressions: [
+                            { cat: "日常会話でのお願い", text: "<strong>Could you hold this for a sec?</strong> （これちょっと持っててくれる？）" },
+                            { cat: "友人へのお願い", text: "<strong>Would it be OK if I borrowed your bike?</strong> （自転車借りても大丈夫かな？）" },
+                            { cat: "先生・目上へのお願い", text: "<strong>I was wondering if I could ask you a few questions about the lecture.</strong> （講義について少しご質問させていただくことは可能でしょうか）" },
+                            { cat: "メールでのお願い", text: "<strong>Would you mind checking the attached file when you have a chance?</strong> （お時間のある際に添付ファイルをご確認いただけますと幸いです）" },
+                            { cat: "頼みにくい重いお願い", text: "<strong>I know this is a huge favor, but would there be any way you could read over my draft?</strong> （大変不躾なお願いと承知しておりますが、草稿に目を通していただける可能性はございますでしょうか…？）" },
+                            { cat: "断られたときのスマートな返し", text: "<strong>That's totally fine, I completely understand! Thanks anyway.</strong> （全然大丈夫です、理解できます！お時間割いていただきありがとうございました）" }
+                        ],
+                        academic: `<strong>🎓 Academic Corner: Modality and Mental Spaces</strong><br>
+今日はお願い表現と助動詞の関係を勉強しました。実は、この背景にはGilles Fauconnier（1985）の<strong>Mental Spaces（メンタル・スペース理論）</strong>や語用論的モダリティの研究があります。<br><br>
+文法における「過去形」は、単なる時間の経過（Past time）だけでなく、「現実空間（Real World）」から離れた「仮定・可能世界（Hypothetical Space）」を脳内に構築する発話マーカーとして機能します。依頼において「Could」や「I was wondering」などの過去系表現を用いることで、話し手は「お願いが叶わなかったとしても、現実の人間関係にはダメージがない」という安全な防波堤（メンタルスペース）をあらかじめ構築しているのです。`,
+                        moreAcademic: `<strong>📚 さらに深く知りたい人へ（学問への入口）</strong><br>
+* <strong>F.R. Palmer（2001）:</strong> <em>Mood and Modality</em>。助動詞が表す認識的モダリティ（Epistemic）と義務的モダリティ（Deontic）の体系的構造。<br>
+* <strong>Eve Sweetser（1990）:</strong> 認知意味論の立場から、物理的世界の力が心理的・会話的配慮の世界へ拡張されるプロセス（Metaphorical Mapping）を証明。`
+                    }
+                }
+            ]
+        },
+        {
+            stageId: "mod_3",
+            stageNum: "Module 3",
+            theme: "状況・コンテキスト別の極意",
+            purpose: "メール・頼みにくい状況・断られた後のアフターケアまで網羅。",
+            colorClass: "stage-3",
+            levels: [
+                {
+                    id: "m3_l1",
+                    title: "断られた時の返し方で関係が決まる？",
+                    cognitive: "ネガティブ評価の打消し",
+                    social: "Positive Face の修復",
+                    grammar: "感謝 + 状況承認の発話し",
+                    scene: "同僚に手伝いを頼んだが「ごめん、今締め切りで無理！」と断られた。<br>あなた: 「...Oh, OK. Bye.」（無言で去る）<br>同僚: （気まずそうな顔で固まる）",
+                    wiakan: "断られたんだから「わかった」と言って立ち去るのは普通じゃないの？なんで気まずくなるの？",
+                    question: "【選択問題】お願いを断られた直後のフォローが決定的に重要な理由は？",
+                    choices: [
+                        {
+                            text: "A: 「断らせてしまった申し訳なさ」を解放し、「関係性は壊れていない」と相手を安心させるため",
+                            correct: true,
+                            feedback: "完璧です！ 断る側も罪悪感（Faceのダメージ）を感じています。「気にしないで！」と即座にケアすることで関係性が強固になります。"
+                        },
+                        {
+                            text: "B: 次に同じ頼みごとをした時に、強制的にYesと言わせるため",
+                            correct: false,
+                            feedback: "見返りを求めるためではなく、相手の罪悪感を解除し人間関係を維持するための戦略です。"
+                        }
+                    ],
+                    cycle: {
+                        cognitive: "<strong>🧠 【認知：罪悪感の相殺と関係性の再確認】</strong><br>断った相手の頭の中には「申し訳ない」「嫌な奴だと思われたかも」という不安（Faceダメージ）が発生しています。これに対して「あなたの状況を尊重する」という発話を与えることで安心感を生み出します。",
+                        social: "<strong>👥 【社会：Reparation（関係修復のポライトネス）】</strong><br>頼む時だけでなく、「断られた瞬間」の振る舞いこそが社会的信頼を構築します。相手のNoを快く受け止める姿勢が、次の協力関係を可能にします。",
+                        grammar: "<strong>📐 【文法：無条件の受容フレーズと感謝の短文】</strong><br>That's totally fine! / No worries at all! などの評価・感情の解放構文と、Thanks anyway.（いずれにしても感謝）を組み合わせます。",
+                        expressions: [
+                            { cat: "日常会話でのお願い", text: "<strong>No problem at all! Don't worry about it.</strong> （全然気にしないで！大丈夫だよ）" },
+                            { cat: "友人へのお願い", text: "<strong>All good! I'll ask someone else, thanks though!</strong> （了解！他のみんなにも聞いてみるね、声かけてくれてありがと！）" },
+                            { cat: "先生・目上へのお願い", text: "<strong>I completely understand. Thank you so much for your time anyway!</strong> （承知いたしました。お忙しい中お時間を作っていただき感謝いたします）" },
+                            { cat: "メールでのお願い", text: "<strong>Thank you for getting back to me so quickly. I completely understand your situation.</strong> （迅速なご返信ありがとうございます。事情、十分理解いたしました）" },
+                            { cat: "頼みにくい重いお願い", text: "<strong>Please don't feel bad at all! I know it was a big ask. Thanks for considering it.</strong> （どうかお気になさらないでください！無茶なお願いだと分かっていましたので。検討してくださり感謝します）" },
+                            { cat: "断られたときのスマートな返し", text: "<strong>No worries! Hope your project goes well!</strong> （気にしないで！プロジェクト応援してるね！）" }
+                        ],
+                        academic: `<strong>🎓 Academic Corner: Conversational Analysis & Repair</strong><br>
+今日はお願いを断られた後の対話技術を勉強しました。実は、この背景には会話分析（Conversational Analysis）における<strong>Preference Organization（優先性の組織化）</strong>という研究領域があります。<br><br>
+対話において、依頼に対する「承諾（Acceptance）」は優先応答（Preferred response）とされ、即座に行われます。一方、「拒絶（Refusal）」は非優先応答（Dispreferred response）とされ、言い淀みや躊躇を伴います。断る側は多大な心理的負荷（メンツの危機）を負うため、依頼側が「No worries」「Thanks anyway」といった修復トークン（Repair token）を即座に提示することが、社会的な調和を保つ高度な会話戦略となるのです。`,
+                        moreAcademic: `<strong>📚 さらに深く知りたい人へ（学問への入口）</strong><br>
+* <strong>Harvey Sacks & Emanuel Schegloff（1970s）:</strong> 会話分析の創始者。隣接ペア（Adjacency pairs）と応答の優先構造を定式化。<br>
+* <strong>Penelope Brown（1995）:</strong> ポライトネスと会話相互作用（Interactional linguistics）の接合に関する実証研究。`
+                    }
+                }
+            ]
+        }
+    ];
+
+    let playerProgress = { clearedLevelIds: [] };
+
+    function loadGame() {
+        const saved = localStorage.getItem('requests_syllabus_save');
+        if (saved) {
+            try { playerProgress = JSON.parse(saved); } catch(e) { console.error(e); }
+        }
+    }
+
+    function saveGame() {
+        localStorage.setItem('requests_syllabus_save', JSON.stringify(playerProgress));
+    }
+
+    function resetSaveData() {
+        if (confirm("これまでの進捗データをリセットします。よろしいですか？")) {
+            localStorage.removeItem('requests_syllabus_save');
+            playerProgress = { clearedLevelIds: [] };
+            alert("リセットしました。新たな探検を始めましょう！");
+            renderMainScreen();
+        }
+    }
+
+    function switchScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const targetScreen = document.getElementById(screenId);
+        if (targetScreen) {
+            targetScreen.classList.add('active');
+        }
+
+        const nav = document.getElementById('global-nav');
+        if (screenId === 'screen-main') {
+            nav.style.display = 'none';
+        } else {
+            nav.style.display = 'flex';
+        }
+    }
+
+    function saveAndExit() {
+        saveGame();
+        renderMainScreen();
+        switchScreen('screen-main');
+    }
+
+    function renderMainScreen() {
+        loadGame();
+        const container = document.getElementById('stages-container');
+        if (!container) return;
+        container.innerHTML = '';
+
+        syllabusData.forEach((stage, stageIdx) => {
+            const stageCard = document.createElement('div');
+            stageCard.className = `stage-card ${stage.colorClass}`;
+
+            const clearedInStage = stage.levels.filter(l => playerProgress.clearedLevelIds.includes(l.id)).length;
+
+            stageCard.innerHTML = `
+                <div class="stage-header">
+                    <div class="stage-title-group">
+                        <span class="stage-badge">${stage.stageNum}</span>
+                        <span class="stage-title">${stage.theme}</span>
+                    </div>
+                    <span style="font-size:0.8rem; font-weight:bold; color:#64748b;">
+                        CLEAR: ${clearedInStage} / ${stage.levels.length}
+                    </span>
+                </div>
+                <div class="stage-desc"><strong>テーマ:</strong> ${stage.purpose}</div>
+            `;
+
+            const levelGrid = document.createElement('div');
+            levelGrid.className = 'level-grid';
+
+            stage.levels.forEach((lvl, lvlIdx) => {
+                const isCleared = playerProgress.clearedLevelIds.includes(lvl.id);
+                
+                let isLocked = false;
+                if (stageIdx > 0 || lvlIdx > 0) {
+                    let prevLevelId = null;
+                    if (lvlIdx > 0) {
+                        prevLevelId = stage.levels[lvlIdx - 1].id;
+                    } else if (stageIdx > 0) {
+                        const prevStage = syllabusData[stageIdx - 1];
+                        prevLevelId = prevStage.levels[prevStage.levels.length - 1].id;
+                    }
+                    if (prevLevelId && !playerProgress.clearedLevelIds.includes(prevLevelId)) {
+                        isLocked = true;
+                    }
+                }
+
+                const btn = document.createElement('button');
+                btn.className = `level-card-btn ${isCleared ? 'cleared' : ''}`;
+                if (isLocked) {
+                    btn.disabled = true;
+                    btn.innerHTML = `
+                        <div class="level-num">🔒 LOCKED</div>
+                        <div class="level-name">${lvl.title}</div>
+                    `;
+                } else {
+                    btn.onclick = () => startQuest(stageIdx, lvlIdx);
+                    btn.innerHTML = `
+                        <div class="level-num">${isCleared ? '✅ CLEARED' : `LESSON ${lvlIdx + 1}`}</div>
+                        <div class="level-name">${lvl.title}</div>
+                    `;
+                }
+                levelGrid.appendChild(btn);
+            });
+
+            stageCard.appendChild(levelGrid);
+            container.appendChild(stageCard);
+        });
+    }
+
+    let currentStageIdx = 0;
+    let currentLevelIdx = 0;
+
+    function startQuest(sIdx, lIdx) {
+        currentStageIdx = sIdx;
+        currentLevelIdx = lIdx;
+        switchScreen('screen-quest');
+
+        const lvlData = syllabusData[sIdx].levels[lIdx];
+
+        document.getElementById('quest-header-title').innerText = `${syllabusData[sIdx].stageNum} : ${lvlData.title}`;
+
+        const badgeBox = document.getElementById('badge-container');
+        badgeBox.innerHTML = `
+            <span class="academic-badge">🧠 認知: ${lvlData.cognitive}</span>
+            <span class="academic-badge social">👥 社会: ${lvlData.social}</span>
+            <span class="academic-badge grammar">📐 文法: ${lvlData.grammar}</span>
+        `;
+
+        document.getElementById('scene-container').innerHTML = lvlData.scene;
+        document.getElementById('wiakan-container').innerHTML = lvlData.wiakan;
+        document.getElementById('question-container').innerHTML = lvlData.question;
+
+        const choicesBox = document.getElementById('choices-container');
+        choicesBox.innerHTML = '';
+        document.getElementById('feedback-container').style.display = 'none';
+
+        lvlData.choices.forEach((choice, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'choice-item-btn';
+            btn.innerText = choice.text;
+            btn.onclick = () => selectChoice(idx, btn);
+            choicesBox.appendChild(btn);
+        });
+    }
+
+    function selectChoice(choiceIdx, clickedBtn) {
+        const lvlData = syllabusData[currentStageIdx].levels[currentLevelIdx];
+        const choice = lvlData.choices[choiceIdx];
+
+        const buttons = document.querySelectorAll('.choice-item-btn');
+        buttons.forEach(b => b.disabled = true);
+
+        const feedbackContainer = document.getElementById('feedback-container');
+        const statusText = document.getElementById('feedback-status');
+        const fbText = document.getElementById('feedback-text');
+        const cycleBox = document.getElementById('cycle-expl-box');
+
+        feedbackContainer.style.display = 'block';
+
+        if (choice.correct) {
+            clickedBtn.classList.add('correct');
+            feedbackContainer.className = "feedback-zone correct-zone";
+            statusText.innerText = "💡 大正解！お願いのからくりが見えてきました。";
+            fbText.innerHTML = choice.feedback;
+
+            let exprHtml = '<div class="expr-list">';
+            lvlData.cycle.expressions.forEach(exp => {
+                exprHtml += `
+                    <div class="expr-item">
+                        <span class="expr-category">📌 ${exp.cat}</span>
+                        ${exp.text}
+                    </div>
+                `;
+            });
+            exprHtml += '</div>';
+
+            const c = lvlData.cycle;
+            cycleBox.innerHTML = `
+                <h4 style="color:var(--primary-color); margin-bottom:12px; font-size:1rem;">🔄 違和感から学びへの循環サイクル</h4>
+                <div class="expl-step">${c.cognitive}</div>
+                <div class="expl-step">${c.social}</div>
+                <div class="expl-step">${c.grammar}</div>
+                <div class="expl-step">
+                    <span class="expl-tag tag-expression">状況別・使える実戦フレーズ</span>
+                    ${exprHtml}
+                </div>
+                <div class="expl-step">
+                    <span class="expl-tag tag-academic">Academic Corner（学術への入口）</span>
+                    <div class="academic-box">${c.academic}</div>
+                </div>
+                <div class="expl-step">
+                    <span class="expl-tag tag-more">さらに知りたい人へ</span>
+                    <div class="academic-more-box">${c.moreAcademic}</div>
+                </div>
+            `;
+
+            if (!playerProgress.clearedLevelIds.includes(lvlData.id)) {
+                playerProgress.clearedLevelIds.push(lvlData.id);
+                saveGame();
+            }
+        } else {
+            clickedBtn.classList.add('wrong');
+            feedbackContainer.className = "feedback-zone wrong-zone";
+            statusText.innerText = "🔍 もう一度、英語話者の心理をイメージしてみよう";
+            fbText.innerHTML = choice.feedback;
+            cycleBox.innerHTML = '';
+
+            setTimeout(() => {
+                buttons.forEach(b => {
+                    if (!b.classList.contains('wrong')) b.disabled = false;
+                });
+            }, 1500);
+        }
+    }
+
+    function advanceQuest() {
+        saveAndExit();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderMainScreen();
+    });
+
+    window.onload = () => {
+        renderMainScreen();
+    };
+</script>
+
+</body>
+</html>
