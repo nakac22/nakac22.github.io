@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>たまごゼミ：英語パラグラフリーディング学習AI</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Vue.js 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .animate-pulse-slow {
+            animation: pulse-slow 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pop-in {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop-in {
+            animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body class="bg-amber-50/50 text-slate-800 min-h-screen flex flex-col font-sans">
+
+    <div id="app" class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
+        <!-- ヘッダー & スタンプラリー表示 -->
+        <header class="mb-8 text-center border-b-2 pb-6 border-amber-200">
+            <h1 class="text-3xl font-extrabold text-amber-700 tracking-tight mb-2 flex justify-center items-center gap-2">
+                🍳 たまごゼミ：英語パラグラフ学習AI
+            </h1>
+            <p class="text-slate-600 text-sm font-medium">
+                「事実」と「筆者の考え（意見）」を見抜くコツをつかもう！
+            </p>
+
+            <!-- レベルアップスタンプカード -->
+            <div class="mt-6 bg-white p-5 rounded-2xl border-2 border-amber-300 shadow-sm inline-block min-w-[320px]">
+                <div class="flex items-center justify-between gap-4 mb-2">
+                    <span class="text-xs font-extrabold text-amber-900 flex items-center gap-1">
+                        👑 プレイヤーランク: <span class="text-amber-600 text-sm">Lv.{{ userLevel }} {{ levelTitle }}</span>
+                    </span>
+                    <span class="text-xs font-bold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full">
+                        通算 {{ totalClearCount }} 問クリア！
+                    </span>
+                </div>
+
+                <!-- スタンプ5個の進行状況 -->
+                <div class="flex justify-center gap-3 my-2">
+                    <div v-for="n in 5" :key="n" class="w-10 h-10 rounded-full border-2 border-dashed flex items-center justify-center text-xl transition-all duration-300"
+                         :class="n <= currentStamps ? 'border-amber-500 bg-amber-100 scale-110 shadow-sm' : 'border-slate-200 bg-slate-50 opacity-40'">
+                        {{ n <= currentStamps ? getStampIcon(userLevel) : '〇' }}
+                    </div>
+                </div>
+                <p class="text-[11px] font-bold text-slate-500 mt-2">あと {{ 5 - currentStamps }} 問クリアで次のレベルへ昇格！</p>
+            </div>
+        </header>
+
+        <!-- レベルアップお祝いモーダル -->
+        <div v-if="showLevelUpModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border-4 border-amber-400 animate-pop-in">
+                <div class="text-6xl mb-3">🎊</div>
+                <h3 class="text-2xl font-black text-amber-800 mb-1">LEVEL UP!</h3>
+                <p class="text-sm font-bold text-slate-600 mb-4">スタンプが5個たまりました！</p>
+                
+                <div class="p-4 bg-amber-50 rounded-2xl border border-amber-200 mb-6">
+                    <span class="text-xs text-amber-700 font-bold">新しい称号を獲得！</span>
+                    <div class="text-xl font-extrabold text-amber-900 mt-1">
+                        Lv.{{ userLevel }} {{ levelTitle }}
+                    </div>
+                </div>
+
+                <button @click="showLevelUpModal = false" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold shadow-md transition-all">
+                    次のレベルに挑戦する！
+                </button>
+            </div>
+        </div>
+
+        <!-- ガイド -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-sky-200 mb-8">
+            <div class="flex justify-between items-center cursor-pointer" @click="showGuide = !showGuide">
+                <h2 class="text-md font-bold text-sky-800 flex items-center gap-2 select-none">
+                    🔰 初めて使う方へ：APIキーの取得方法（完全無料）
+                </h2>
+                <span class="text-xs font-bold text-sky-600 bg-sky-50 px-3 py-1 rounded-full border border-sky-200 select-none shadow-sm">
+                    {{ showGuide ? '▲ 閉じる' : '▼ 開く' }}
+                </span>
+            </div>
+            
+            <div v-show="showGuide" class="mt-4 pt-4 border-t border-sky-100 text-slate-700 text-sm leading-relaxed">
+                <p class="text-xs text-slate-600 mb-3">本アプリの機能を利用するには、Googleが無料で提供している「Gemini APIキー」が必要です（料金は発生しません）。</p>
+                <ol class="list-decimal pl-5 space-y-2 text-sm text-slate-700 font-medium">
+                    <li>Googleアカウントにログインした状態で <a href="https://aistudio.google.com/" target="_blank" class="text-blue-600 font-bold underline hover:text-blue-800">Google AI Studio</a> にアクセスします。</li>
+                    <li>画面左メニューの <strong>「🔑 Get API key」</strong> を開きます。</li>
+                    <li>右上の <strong>「Create API key」</strong> ボタンを押してキーを発行します。</li>
+                    <li>発行された文字列（APIキー）をコピーし、下の「APIキー設定」欄に貼り付けてください。</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- 設定セクション -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-amber-200 mb-8">
+            <h2 class="text-lg font-bold text-amber-800 mb-4 flex items-center gap-2">
+                ⚙️ 学習設定
+            </h2>
+            <div class="mb-5">
+                <label class="block text-sm font-bold text-slate-700 mb-1">🔑 GEMINI API KEY</label>
+                <input type="password" v-model="apiKey" @input="saveApiKey" placeholder="APIキーを入力（例: AIzaSy...）" class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none transition-all">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">🎯 英語レベルを選択</label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <label class="flex items-start p-4 border-2 rounded-xl cursor-pointer transition-all" :class="config.level === 'beginner' ? 'bg-emerald-50/60 border-emerald-500' : 'bg-white border-slate-200 hover:bg-slate-50'">
+                        <input type="radio" v-model="config.level" value="beginner" class="mt-1 mr-3 w-4 h-4 text-emerald-600">
+                        <div>
+                            <div class="font-bold text-emerald-900">🌱 初級コース（リーディング基礎）</div>
+                            <div class="text-xs text-slate-600 mt-1">【対象目安】英検5級・4級レベル（中学1〜2年）</div>
+                            <div class="text-xs text-emerald-700 mt-0.5">「事実」と「筆者の意見（I think / shouldなど）」を区別する練習をします。</div>
+                        </div>
+                    </label>
+                    <label class="flex items-start p-4 border-2 rounded-xl cursor-pointer transition-all" :class="config.level === 'intermediate' ? 'bg-indigo-50/60 border-indigo-500' : 'bg-white border-slate-200 hover:bg-slate-50'">
+                        <input type="radio" v-model="config.level" value="intermediate" class="mt-1 mr-3 w-4 h-4 text-indigo-600">
+                        <div>
+                            <div class="font-bold text-indigo-900">🌿 中級コース（リーディング＋要約）</div>
+                            <div class="text-xs text-slate-600 mt-1">【対象目安】英検3級・準2級レベル（中学3年〜高1）</div>
+                            <div class="text-xs text-indigo-700 mt-0.5">複文や多様な主張マーカー（seem to, In my opinion等）を読み解きます。</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            <div class="mt-6 text-center">
+                <button @click="generateText" :disabled="loading || !apiKey" class="w-full md:w-auto px-10 py-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-base shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                    🎯 新しい英文問題をスタート！
+                </button>
+            </div>
+        </div>
+
+        <!-- 英文生成中のローディング表示 -->
+        <div v-if="loading" class="bg-white p-8 rounded-2xl border border-amber-200 text-center shadow-sm my-6">
+            <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-amber-500 border-t-transparent mb-3"></div>
+            <p class="text-lg font-bold text-amber-800 animate-pulse-slow">📝 先生が問題を作成中...</p>
+        </div>
+
+        <!-- 学習コンテンツエリア -->
+        <div v-if="content.english && !loading" class="space-y-6" id="problem-area">
+            
+            <!-- 英文表示（問題文） -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        📖 Reading Passage（問題本文）
+                    </h3>
+                    <span class="text-xs font-semibold px-2.5 py-1 bg-amber-100 text-amber-800 rounded-md">
+                        トピック：{{ content.topic }}
+                    </span>
+                </div>
+                <div class="p-5 bg-slate-900 text-slate-100 rounded-xl text-lg leading-relaxed font-serif whitespace-pre-wrap select-all">
+                    {{ content.english }}
+                </div>
+            </div>
+
+            <!-- ステップ1：3択クイズ問題 -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-2 border-amber-400">
+                <h3 class="text-lg font-extrabold text-amber-900 mb-2 flex items-center gap-2">
+                    ❓ チャレンジ問題：この英文で筆者が「一番伝えたいこと（主張）」はどれ？
+                </h3>
+                <p class="text-xs text-slate-600 mb-4">ただの事実（説明）ではなく、筆者の「考え・意見」を選んでね！</p>
+
+                <div class="space-y-3">
+                    <button v-for="(choice, idx) in content.quiz.options" :key="idx" 
+                            @click="selectAnswer(idx)"
+                            :disabled="quizAnswered"
+                            class="w-full p-4 rounded-xl text-left border-2 font-bold text-sm transition-all flex items-start gap-3"
+                            :class="getChoiceStyle(idx)">
+                        <span class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs shrink-0 mt-0.5">
+                            {{ idx + 1 }}
+                        </span>
+                        <span class="leading-relaxed">{{ choice }}</span>
+                    </button>
+                </div>
+
+                <!-- クイズ回答後の判定フィードバック -->
+                <div v-if="quizAnswered" class="mt-5 p-4 rounded-xl text-center border-2 animate-pulse-slow"
+                     :class="selectedChoice === content.quiz.correctIndex ? 'bg-emerald-50 border-emerald-400 text-emerald-900' : 'bg-rose-50 border-rose-400 text-rose-900'">
+                    <p class="text-xl font-black mb-1">
+                        {{ selectedChoice === content.quiz.correctIndex ? '🎉 正解！すばらしい！' : '😮 おしい！解説をチェックしてみよう！' }}
+                    </p>
+                    <p class="text-xs font-bold">下の解説で「事実」と「意見（主張）」の見分け方を確認しよう！</p>
+                </div>
+            </div>
+
+            <!-- 中級コースのライティング入力欄 -->
+            <div v-if="config.level === 'intermediate' && quizAnswered" class="bg-indigo-50/50 p-6 rounded-2xl shadow-sm border border-indigo-200">
+                <h3 class="text-base font-bold text-indigo-950 mb-1 flex items-center gap-2">
+                    ✍️ ステップ2：要約ライティング（1〜2文の英語でまとめよう）
+                </h3>
+                <p class="text-xs text-indigo-800 mb-3">
+                    「筆者の主張（意見）」を中心に、自分の言葉で1〜2文の英文を作ってみよう！
+                </p>
+                
+                <textarea v-model="userSummary" :disabled="evaluating" placeholder="Write 1 or 2 English sentences here..." class="w-full min-h-[100px] p-4 border border-indigo-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-indigo-400 outline-none mb-3 resize-y bg-white"></textarea>
+                
+                <!-- 採点中の表示 -->
+                <div v-if="evaluating" class="p-4 bg-white rounded-xl border border-indigo-100 text-center my-3">
+                    <div class="inline-block animate-spin rounded-full h-6 w-6 border-2 border-indigo-600 border-t-transparent mb-1"></div>
+                    <p class="text-sm font-bold text-indigo-900 animate-pulse-slow">🔍 先生が要約アドバイスを書いています...</p>
+                </div>
+
+                <div v-else class="text-right">
+                    <button @click="evaluateSummary" :disabled="!userSummary || !apiKey" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all disabled:opacity-50">
+                        🔍 アドバイスをもらう
+                    </button>
+                </div>
+            </div>
+
+            <!-- ライティングのフィードバック（中級のみ） -->
+            <div v-if="feedback && config.level === 'intermediate'" class="bg-white p-6 rounded-2xl shadow-sm border border-indigo-200">
+                <h3 class="text-lg font-bold text-indigo-950 mb-4 flex items-center gap-2 border-b pb-3 border-indigo-50">
+                    📊 先生からの要約アドバイス
+                </h3>
+                <div class="space-y-4 text-slate-700 text-sm leading-relaxed">
+                    <div class="p-4 rounded-xl bg-emerald-50/50 border border-emerald-200">
+                        <h4 class="font-bold text-emerald-900 mb-1">👏 良かったところ</h4>
+                        <p class="text-slate-700">{{ feedback.praise }}</p>
+                    </div>
+                    <div class="p-4 rounded-xl bg-amber-50/50 border border-amber-200">
+                        <h4 class="font-bold text-amber-900 mb-1">💡 さらにパワーアップするヒント</h4>
+                        <p class="text-slate-700">{{ feedback.advice }}</p>
+                    </div>
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                        <h4 class="font-bold text-slate-900 mb-1">✨ お手本（Model Answer）</h4>
+                        <p class="font-mono text-base text-indigo-900 mb-1 select-all">{{ feedback.model }}</p>
+                        <p class="text-xs text-slate-600">{{ feedback.model_ja }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 開閉可能な解説・翻訳エリア -->
+            <div v-if="quizAnswered" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <button @click="showExplanation = !showExplanation" class="w-full p-5 text-left font-bold text-base text-slate-800 bg-slate-50 hover:bg-slate-100 transition-colors flex justify-between items-center select-none border-b border-slate-200">
+                    <span class="flex items-center gap-2">
+                        💡 やさしい解説・スラッシュリーディング・日本語訳を見る
+                    </span>
+                    <span class="text-xs bg-amber-500 text-white font-bold px-3 py-1 rounded-full shadow-sm">
+                        {{ showExplanation ? '▲ 解説を閉じる' : '▼ 解説を開く（クリック）' }}
+                    </span>
+                </button>
+
+                <div v-show="showExplanation" class="p-6 space-y-6 bg-white">
+                    
+                    <!-- 1. 見分け方解説 -->
+                    <div class="p-5 rounded-xl bg-amber-50/60 border border-amber-200">
+                        <h4 class="font-bold text-amber-900 text-base mb-2 flex items-center gap-2">
+                            🧠 1. 「事実」と「筆者の意見（主張）」の見分け方
+                        </h4>
+                        <div class="text-sm text-slate-700 leading-relaxed space-y-2 whitespace-pre-wrap">{{ content.logic_explanation }}</div>
+                    </div>
+
+                    <!-- 2. スラッシュリーディング解説 -->
+                    <div class="p-5 rounded-xl bg-sky-50/60 border border-sky-200">
+                        <h4 class="font-bold text-sky-900 text-base mb-2 flex items-center gap-2">
+                            ✂️ 2. スラッシュリーディング（英語の順番で読むよ！）
+                        </h4>
+                        <p class="text-xs text-sky-800 mb-3">後ろから訳さずに、スラッシュ（ / ）の区切りごとに頭から順番に意味を理解してみよう。</p>
+                        
+                        <div class="space-y-3 font-mono text-sm">
+                            <div v-for="(slash, idx) in content.slash_reading" :key="idx" class="bg-white p-3.5 rounded-lg border border-sky-100">
+                                <div class="text-slate-900 font-bold mb-1 font-serif text-base">{{ slash.en }}</div>
+                                <div class="text-slate-600 text-xs leading-normal">{{ slash.ja }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. 覚えておきたい重要単語 -->
+                    <div class="p-5 rounded-xl bg-emerald-50/60 border border-emerald-200">
+                        <h4 class="font-bold text-emerald-900 text-base mb-3 flex items-center gap-2">
+                            📝 3. 覚えておきたい重要単語
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                            <div v-for="(item, idx) in content.vocabulary" :key="idx" class="bg-white p-2.5 rounded-lg border border-emerald-100 flex justify-between items-center">
+                                <span class="font-bold font-mono text-emerald-950">{{ item.word }}</span>
+                                <span class="text-slate-600 text-xs">{{ item.meaning }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. 日本語訳 -->
+                    <div class="p-5 rounded-xl bg-slate-50 border border-slate-200">
+                        <h4 class="font-bold text-slate-800 text-base mb-2 flex items-center gap-2">
+                            🇯🇵 4. 全体の日本語訳
+                        </h4>
+                        <p class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{{ content.japanese }}</p>
+                    </div>
+
+                    <!-- 完成！なるほどボタン（スタンプ獲得） -->
+                    <div class="pt-4 border-t text-center">
+                        <button @click="completeProblem" :disabled="hasCompletedCurrent"
+                                class="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg rounded-2xl shadow-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100">
+                            {{ hasCompletedCurrent ? '🎉 この問題はクリア済みです！' : '✨ なるほど！読み方が分かった（スタンプGET！）' }}
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                const apiKey = ref('');
+                const loading = ref(false);
+                const evaluating = ref(false);
+                const showGuide = ref(true);
+                const showExplanation = ref(false);
+                const quizAnswered = ref(false);
+                const selectedChoice = ref(null);
+                const totalClearCount = ref(0);
+                const hasCompletedCurrent = ref(false);
+                const showLevelUpModal = ref(false);
+
+                const config = ref({ level: 'beginner' });
+
+                const content = ref({
+                    topic: '',
+                    english: '',
+                    japanese: '',
+                    quiz: { options: [], correctIndex: 0 },
+                    logic_explanation: '',
+                    slash_reading: [],
+                    vocabulary: []
+                });
+
+                const userSummary = ref('');
+                const feedback = ref(null);
+
+                const topics = ['スポーツ', '動物・自然', '宇宙・科学', '学校生活', '食べ物・料理', 'テクノロジー', '友達・家族', '趣味・音楽'];
+
+                const userLevel = computed(() => Math.floor(totalClearCount.value / 5) + 1);
+                const currentStamps = computed(() => totalClearCount.value % 5);
+
+                const levelTitles = ['ひよこ見習い', 'パラグラフ初心者', '論理リーダー', '英語マスター', '伝説の読解王'];
+                const levelTitle = computed(() => {
+                    const idx = Math.min(userLevel.value - 1, levelTitles.length - 1);
+                    return levelTitles[idx];
+                });
+
+                function getStampIcon(level) {
+                    const icons = ['🍳', '🐣', '🐥', '🐔', '👑', '🌟'];
+                    return icons[Math.min(level - 1, icons.length - 1)];
+                }
+
+                function saveApiKey() {
+                    if (apiKey.value) {
+                        localStorage.setItem('tamago_gemini_key_v9', apiKey.value.trim());
+                    }
+                }
+
+                onMounted(() => {
+                    const savedKey = localStorage.getItem('tamago_gemini_key_v9');
+                    if (savedKey) {
+                        apiKey.value = savedKey.trim();
+                        showGuide.value = false;
+                    }
+                    const savedCount = localStorage.getItem('tamago_total_clear_count');
+                    if (savedCount) {
+                        totalClearCount.value = parseInt(savedCount, 10);
+                    }
+                });
+
+                async function callGemini(prompt) {
+                    const currentKey = apiKey.value ? apiKey.value.trim() : '';
+                    if (!currentKey) throw new Error('APIキーが入力されていません。');
+
+                    const models = ['gemini-2.5-flash', 'gemini-1.5-flash'];
+                    let lastError = null;
+
+                    for (const model of models) {
+                        try {
+                            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${currentKey}`;
+                            const response = await fetch(url, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    contents: [{ parts: [{ text: prompt }] }],
+                                    generationConfig: { responseMimeType: "application/json" }
+                                })
+                            });
+
+                            const data = await response.json();
+                            if (response.ok && data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+                                return data.candidates[0].content.parts[0].text;
+                            } else {
+                                lastError = data.error?.message || '通信エラーが発生しました。';
+                            }
+                        } catch (e) {
+                            lastError = e.message;
+                        }
+                    }
+                    throw new Error(lastError);
+                }
+
+                async function generateText() {
+                    loading.value = true;
+                    showExplanation.value = false;
+                    quizAnswered.value = false;
+                    selectedChoice.value = null;
+                    hasCompletedCurrent.value = false;
+                    content.value = { topic: '', english: '', japanese: '', quiz: { options: [], correctIndex: 0 }, logic_explanation: '', slash_reading: [], vocabulary: [] };
+                    userSummary.value = '';
+                    feedback.value = null;
+
+                    const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+                    
+                    let levelRule = '';
+                    if (config.value.level === 'beginner') {
+                        levelRule = `
+【初級（英検5級・4級）】
+- 語数: 35〜50語（3文程度）
+- テーマ: 「${randomTopic}」
+- 構成: 前半で一般的な「事実・説明」を書き、最後（後半）に「筆者の考え・意見（I think / should / It is important for us to... 等）」を1文入れる。
+- 単語: 基礎的な単語のみ。
+`;
+                    } else {
+                        levelRule = `
+【中級（英検3級・準2級）】
+- 語数: 60〜80語（4〜5文程度）
+- テーマ: 「${randomTopic}」
+- 構成: 前半の「事実」から、Howeverや筆者の考え（seem to / In my opinion / should 等）を使って主張へつなげる。
+`;
+                    }
+
+                    const prompt = `
+小中学生向けの英語読解問題を作成してください。
+
+${levelRule}
+
+【絶対ルール】
+1. 3択クイズ（quiz.options）の選択肢は、すべて「わかりやすい日本語」で作成してください。英語の選択肢は絶対に禁止です。
+2. 選択肢の内容:
+   - 1つは文章中の単なる「事実・説明」
+   - 1つは「筆者の主張（考え・意見）」★これが正解
+   - 1つは間違い（書いていないこと）
+3. 解説（logic_explanation）は、難解な専門用語を使わず、小中学生向けにやさしい言葉で書いてください。「この文の〇〇という言葉（I think や should 等）が『筆者の考え』を表す目印だよ」とシンプルに教えてあげてください。
+
+【出力フォーマット】
+以下のJSONフォーマットのみを出力してください。
+{
+  "topic": "${randomTopic}",
+  "english": "英語文章",
+  "japanese": "日本語訳",
+  "quiz": {
+    "options": [
+      "日本語の選択肢1（事実）",
+      "日本語の選択肢2（筆者の主張・考え）",
+      "日本語の選択肢3（間違い）"
+    ],
+    "correctIndex": 1
+  },
+  "logic_explanation": "やさしい言葉での見分け方解説（日本語）",
+  "slash_reading": [
+    {
+      "en": "Many students study with music / in their rooms. /",
+      "ja": "たくさんの生徒が音楽を聞きながら勉強します / 自分の部屋で /"
+    }
+  ],
+  "vocabulary": [
+    {"word": "単語1", "meaning": "意味1"}
+  ]
+}
+`;
+
+                    try {
+                        const jsonRaw = await callGemini(prompt);
+                        const cleanJson = jsonRaw.replace(/```json|```/g, '').trim();
+                        content.value = JSON.parse(cleanJson);
+
+                        setTimeout(() => {
+                            const area = document.getElementById('problem-area');
+                            if (area) area.scrollIntoView({ behavior: 'smooth' });
+                        }, 100);
+
+                    } catch (e) {
+                        alert('英文の生成中にエラーが発生しました。もう一度お試しください。\n' + e.message);
+                    } finally {
+                        loading.value = false;
+                    }
+                }
+
+                function selectAnswer(index) {
+                    if (quizAnswered.value) return;
+                    selectedChoice.value = index;
+                    quizAnswered.value = true;
+                    showExplanation.value = true;
+                }
+
+                function getChoiceStyle(index) {
+                    if (!quizAnswered.value) {
+                        return 'bg-white border-slate-200 hover:bg-amber-50 hover:border-amber-300 cursor-pointer';
+                    }
+                    if (index === content.value.quiz.correctIndex) {
+                        return 'bg-emerald-100 border-emerald-500 text-emerald-950 font-black';
+                    }
+                    if (index === selectedChoice.value) {
+                        return 'bg-rose-100 border-rose-400 text-rose-950';
+                    }
+                    return 'bg-slate-50 border-slate-200 opacity-50';
+                }
+
+                function completeProblem() {
+                    if (hasCompletedCurrent.value) return;
+                    
+                    const oldLevel = userLevel.value;
+                    totalClearCount.value += 1;
+                    localStorage.setItem('tamago_total_clear_count', totalClearCount.value);
+                    hasCompletedCurrent.value = true;
+
+                    if (userLevel.value > oldLevel) {
+                        showLevelUpModal.value = true;
+                    } else {
+                        alert('🎉 スタンプGET！この調子でどんどん進めよう！');
+                    }
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+
+                async function evaluateSummary() {
+                    evaluating.value = true;
+                    
+                    const prompt = `
+あなたは小中学生にやさしく教える英語の先生です。
+以下の「課題英文」に対して学習者が作成した「要約文」にやさしくアドバイスをしてください。
+
+【課題英文】
+${content.value.english}
+
+【学習者の要約文】
+${userSummary.value}
+
+以下のJSONフォーマットのみを出力してください。
+{
+  "praise": "学習者の要約文の良かったところ（やさしい日本語）",
+  "advice": "さらに良くなるためのヒント（やさしい日本語）",
+  "model": "お手本となる簡単な1文の英語要約",
+  "model_ja": "お手本英文の日本語訳"
+}
+`;
+
+                    try {
+                        const jsonRaw = await callGemini(prompt);
+                        const cleanJson = jsonRaw.replace(/```json|```/g, '').trim();
+                        feedback.value = JSON.parse(cleanJson);
+                    } catch (e) {
+                        alert('採点中にエラーが発生しました。もう一度お試しください。\n' + e.message);
+                    } finally {
+                        evaluating.value = false;
+                    }
+                }
+
+                return {
+                    apiKey,
+                    loading,
+                    evaluating,
+                    showGuide,
+                    showExplanation,
+                    quizAnswered,
+                    selectedChoice,
+                    totalClearCount,
+                    userLevel,
+                    currentStamps,
+                    levelTitle,
+                    showLevelUpModal,
+                    hasCompletedCurrent,
+                    config,
+                    content,
+                    userSummary,
+                    feedback,
+                    getStampIcon,
+                    saveApiKey,
+                    generateText,
+                    selectAnswer,
+                    getChoiceStyle,
+                    completeProblem,
+                    evaluateSummary
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
