@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英語授業設計支援システム</title>
+<style>
+  :root {
+    --primary-color: #2b6cb0;
+    --primary-hover: #2c5282;
+    --bg-color: #f7fafc;
+    --card-bg: #ffffff;
+    --border-color: #e2e8f0;
+    --text-color: #2d3748;
+    --text-muted: #718096;
+    --accent-color: #319795;
+  }
+  
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.5;
+    padding: 20px 10px;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+    color: var(--primary-color);
+    margin-bottom: 8px;
+  }
+
+  p.subtitle {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+  }
+
+  /* モード切り替えバー */
+  .mode-switch-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #edf2f7;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .mode-tabs {
+    display: flex;
+    gap: 8px;
+  }
+
+  .mode-tab {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-muted);
+    transition: all 0.2s;
+  }
+
+  .mode-tab.active {
+    background: var(--primary-color);
+    color: white;
+  }
+
+  .storage-btns {
+    display: flex;
+    gap: 6px;
+  }
+
+  .btn-sm {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    border: 1px solid #cbd5e0;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-sm:hover {
+    background: #e2e8f0;
+  }
+
+  /* カード型セクション */
+  section.card {
+    background: var(--card-bg);
+    padding: 20px;
+    margin-bottom: 16px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border: 1px solid var(--border-color);
+  }
+
+  section.card h2 {
+    font-size: 1.15rem;
+    color: var(--primary-color);
+    border-bottom: 2px solid #ebf8ff;
+    padding-bottom: 6px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .badge-advanced {
+    font-size: 0.75rem;
+    background: #e6fffa;
+    color: var(--accent-color);
+    padding: 2px 8px;
+    border-radius: 12px;
+    border: 1px solid #b2f5ea;
+  }
+
+  /* フォーム要素 */
+  .form-group {
+    margin-bottom: 14px;
+  }
+
+  .form-group:last-child {
+    margin-bottom: 0;
+  }
+
+  label.form-label {
+    display: block;
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+  }
+
+  .label-hint {
+    font-weight: normal;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-left: 6px;
+  }
+
+  input[type="text"], select, textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    background-color: #fff;
+    transition: border-color 0.2s;
+  }
+
+  input[type="text"]:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+  }
+
+  /* グリッドレイアウト */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .grid-checkboxes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px;
+  }
+
+  /* チェックボックス & ラジオボタン装飾 */
+  .checkbox-label, .radio-label {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    background: #f8fafc;
+    user-select: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  .checkbox-label:hover, .radio-label:hover {
+    background: #edf2f7;
+  }
+
+  .checkbox-label input, .radio-label input {
+    margin-right: 8px;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-color);
+  }
+
+  /* 詳細モード要素の制御 */
+  .advanced-only {
+    display: none;
+  }
+
+  body.advanced-mode .advanced-only {
+    display: block;
+  }
+
+  /* アクションエリア */
+  .action-area {
+    text-align: center;
+    margin: 24px 0;
+  }
+
+  .btn-primary {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background: #4a5568;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    font-size: 0.95rem;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+
+  .btn-secondary:hover {
+    background: #2d3748;
+  }
+
+  .output-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  #output {
+    min-height: 250px;
+    font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.85rem;
+    background: #1a202c;
+    color: #f7fafc;
+    border-radius: 6px;
+    padding: 12px;
+  }
+
+  .quick-select-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  /* スマホ対応レスポンシブデザイン */
+  @media (max-width: 640px) {
+    body {
+      padding: 10px 6px;
+    }
+
+    .grid-2, .grid-3 {
+      grid-template-columns: 1fr;
+    }
+
+    .grid-checkboxes {
+      grid-template-columns: 1fr;
+    }
+
+    .mode-switch-container {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .mode-tabs {
+      width: 100%;
+    }
+
+    .mode-tab {
+      flex: 1;
+      text-align: center;
+    }
+
+    .storage-btns {
+      justify-content: space-between;
+    }
+
+    .btn-primary {
+      width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>英語授業設計支援システム</h1>
+    <p class="subtitle">簡単な入力で指導案・授業プロンプトを高品質に自動生成</p>
+  </header>
+
+  <!-- モード切り替え & データ制御 -->
+  <div class="mode-switch-container">
+    <div class="mode-tabs">
+      <button type="button" class="mode-tab active" id="btn-simple" onclick="setMode('simple')">かんたんモード</button>
+      <button type="button" class="mode-tab" id="btn-advanced" onclick="setMode('advanced')">詳細モード</button>
+    </div>
+    <div class="storage-btns">
+      <button type="button" class="btn-sm" onclick="saveToLocalStorage(true)">設定を保存</button>
+      <button type="button" class="btn-sm" onclick="loadFromLocalStorage()">前回の設定を復元</button>
+      <button type="button" class="btn-sm" onclick="resetForm()">リセット</button>
+    </div>
+  </div>
+
+  <form id="designerForm">
+    <!-- 1. 基本情報 -->
+    <section class="card">
+      <h2>基本情報</h2>
+      
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">校種</label>
+          <select id="schoolType" onchange="updateGradeOptions()">
+            <option value="中学校">中学校</option>
+            <option value="小学校">小学校</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">学年</label>
+          <select id="grade">
+            <!-- JSで動的に設定 -->
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">英語レベル<span class="label-hint">（複数選択可）</span></label>
+        <div class="grid-checkboxes">
+          <label class="checkbox-label"><input type="checkbox" name="level" value="学年相応（AIにおまかせ）" id="lvl-default" checked> 学年相応（AIにおまかせ）</label>
+          <label class="checkbox-label"><input type="checkbox" name="level" value="初級"> 初級</label>
+          <label class="checkbox-label"><input type="checkbox" name="level" value="初級～中級"> 初級～中級</label>
+          <label class="checkbox-label"><input type="checkbox" name="level" value="中級"> 中級</label>
+          <label class="checkbox-label"><input type="checkbox" name="level" value="CEFR A1"> CEFR A1</label>
+          <label class="checkbox-label"><input type="checkbox" name="level" value="CEFR A2"> CEFR A2</label>
+          <label class="checkbox-label"><input type="checkbox" name="level" value="CEFR B1"> CEFR B1</label>
+          <label class="checkbox-label"><input type="checkbox" name="level" value="英検5～4級程度"> 英検5～4級程度</label>
+          <label class="checkbox-label"><input type="checkbox" name="level" value="英検3級程度"> 英検3級程度</label>
+          <label class="checkbox-label"><input type="checkbox" name="level" value="英検準2級程度"> 英検準2級程度</label>
+          <label class="checkbox-label"><input type="checkbox" name="level" value="クラス内の英語力の差が大きい"> クラス内の英語力の差が大きい</label>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">文法・言語材料</label>
+          <select id="grammarSelect" onchange="toggleCustomGrammar()">
+            <option value="指定しない">指定しない</option>
+            <option value="be動詞">be動詞</option>
+            <option value="一般動詞">一般動詞</option>
+            <option value="can（許可・可能）">can（許可・可能）</option>
+            <option value="現在進行形">現在進行形</option>
+            <option value="過去形">過去形</option>
+            <option value="過去進行形">過去進行形</option>
+            <option value="未来表現（be going to / will）">未来表現（be going to / will）</option>
+            <option value="助動詞（must / should / may等）">助動詞（must / should / may等）</option>
+            <option value="比較（原級・比較級・最上級）">比較（原級・比較級・最上級）</option>
+            <option value="不定詞（名詞的・形容詞的・副詞的用法）">不定詞（3用法）</option>
+            <option value="動名詞">動名詞</option>
+            <option value="現在完了形">現在完了形</option>
+            <option value="受動態">受動態</option>
+            <option value="関係代名詞">関係代名詞</option>
+            <option value="その他">その他（自由入力）</option>
+          </select>
+          <input type="text" id="grammarCustom" placeholder="具体的な文法・表現を入力" style="display:none; margin-top:6px;">
+        </div>
+        <div class="form-group">
+          <label class="form-label">トピック・テーマ</label>
+          <input type="text" id="topic" placeholder="例：自己紹介、日常のルーティン、環境問題、おすすめの場所">
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">授業時間</label>
+          <select id="lessonTime">
+            <option value="50分">50分（標準）</option>
+            <option value="45分">45分（小学校標準）</option>
+            <option value="40分">40分</option>
+            <option value="90分">90分</option>
+          </select>
+        </div>
+        <div class="form-group advanced-only">
+          <label class="form-label">授業スタイル</label>
+          <select id="style">
+            <option value="教科書中心">教科書中心</option>
+            <option value="言語活動中心">言語活動中心</option>
+            <option value="バランス（ミックス）" selected>バランス（ミックス）</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">教科書本文 / 使用教材・単元テキスト<span class="label-hint">（任意）</span></label>
+        <textarea id="text" rows="4" placeholder="教科書の文章や、題材にしたい英文があれば貼り付けてください"></textarea>
+      </div>
+    </section>
+
+    <!-- 2. 授業のゴール（最重要） -->
+    <section class="card">
+      <h2>授業のゴール <span style="font-size:0.8rem; color:#e53e3e; font-weight:normal;">※最重要</span></h2>
+      <div class="form-group">
+        <label class="form-label">今回の授業で、生徒に何ができるようになってほしいですか？</label>
+        <textarea id="goal" rows="3" placeholder="例：canを使って、自分の得意なことや友達に手伝えることを伝え合えるようになる。&#10;例：本文の内容を理解し、自分の言葉で要約できるようにする。"></textarea>
+      </div>
+    </section>
+
+    <!-- 3. 詳細設定：授業の段階・条件（詳細モードのみ） -->
+    <section class="card advanced-only">
+      <h2>授業の段階・配置 <span class="badge-advanced">詳細設定</span></h2>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">今回の授業の段階<span class="label-hint">（複数選択可）</span></label>
+          <div class="grid-checkboxes">
+            <label class="checkbox-label"><input type="checkbox" name="stage" value="導入（ウォームアップ）"> 導入</label>
+            <label class="checkbox-label"><input type="checkbox" name="stage" value="本文理解（インプット）"> 本文理解</label>
+            <label class="checkbox-label"><input type="checkbox" name="stage" value="文法・表現の導入/整理"> 文法・表現</label>
+            <label class="checkbox-label"><input type="checkbox" name="stage" value="練習・定着（ドリル・パターンプラクティス）"> 練習</label>
+            <label class="checkbox-label"><input type="checkbox" name="stage" value="言語活動（アウトプット・活用）"> 言語活動</label>
+            <label class="checkbox-label"><input type="checkbox" name="stage" value="まとめ・振り返り"> まとめ・振り返り</label>
+            <label class="checkbox-label"><input type="checkbox" name="stage" value="単元のまとめ・表現活動"> 単元のまとめ</label>
+            <label class="checkbox-label"><input type="checkbox" name="stage" value="AIに判断してもらう" checked> AIに判断してもらう</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">活動の位置づけ</label>
+          <select id="position">
+            <option value="メイン活動（授業の中心）">メイン活動（授業の中心）</option>
+            <option value="導入・補助活動">導入・補助活動</option>
+            <option value="振り返り・まとめ活動">振り返り・まとめ活動</option>
+            <option value="AIに任せる" selected>AIに任せる</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 詳細設定：クラスの特徴（詳細モードのみ） -->
+    <section class="card advanced-only">
+      <h2>クラスの特徴 <span class="badge-advanced">詳細設定</span></h2>
+      <div class="form-group">
+        <label class="form-label">クラスの状況・傾向<span class="label-hint">（複数選択可）</span></label>
+        <div class="grid-checkboxes">
+          <label class="checkbox-label"><input type="checkbox" name="classFeature" value="英語が得意な生徒が多い"> 英語が得意</label>
+          <label class="checkbox-label"><input type="checkbox" name="classFeature" value="英語が苦手な生徒が多い"> 英語が苦手</label>
+          <label class="checkbox-label"><input type="checkbox" name="classFeature" value="英語力の差が大きい"> 英語力の差が大きい</label>
+          <label class="checkbox-label"><input type="checkbox" name="classFeature" value="発言する生徒が少ない・控えめ"> 発言する生徒が少ない</label>
+          <label class="checkbox-label"><input type="checkbox" name="classFeature" value="活発に発言する"> 活発に発言する</label>
+          <label class="checkbox-label"><input type="checkbox" name="classFeature" value="ペア活動に慣れている"> ペア活動に慣れている</label>
+          <label class="checkbox-label"><input type="checkbox" name="classFeature" value="グループ活動に慣れている"> グループ活動に慣れている</label>
+          <label class="checkbox-label"><input type="checkbox" name="classFeature" value="グループ活動に不慣れ"> グループ活動に不慣れ</label>
+          <label class="checkbox-label"><input type="checkbox" name="classFeature" value="特別な支援・配慮が必要な生徒がいる"> 支援が必要な生徒がいる</label>
+          <label class="checkbox-label"><input type="checkbox" name="classFeature" value="大人数クラス（35～40名程度）"> 大人数クラス</label>
+          <label class="checkbox-label"><input type="checkbox" name="classFeature" value="特になし" checked> 特になし</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">クラスについてAIに伝えておきたい配慮事項・特徴<span class="label-hint">（任意）</span></label>
+        <input type="text" id="classNote" placeholder="例：男子と女子のペアワークを嫌がる傾向がある、視覚的支援（イラスト）が有効な生徒が多い">
+      </div>
+    </section>
+
+    <!-- 5. 詳細設定：活動設計（詳細モードのみ） -->
+    <section class="card advanced-only">
+      <h2>活動設計・ペルソナ <span class="badge-advanced">詳細設定</span></h2>
+      
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">メイン活動の時間</label>
+          <select id="actTime">
+            <option value="AIに最適化してもらう" selected>AIに最適化してもらう</option>
+            <option value="5分程度（帯活動・ミニ活動）">5分程度</option>
+            <option value="10分程度">10分程度</option>
+            <option value="15分程度">15分程度</option>
+            <option value="20分以上（じっくり取り組む）">20分以上</option>
+            <option value="授業の中心（30分以上）">授業の中心（30分以上）</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">活動規模<span class="label-hint">（複数選択可）</span></label>
+          <div class="grid-checkboxes">
+            <label class="checkbox-label"><input type="checkbox" name="scale" value="個人ワーク"> 個人</label>
+            <label class="checkbox-label"><input type="checkbox" name="scale" value="ペアワーク" checked> ペア</label>
+            <label class="checkbox-label"><input type="checkbox" name="scale" value="グループワーク"> グループ</label>
+            <label class="checkbox-label"><input type="checkbox" name="scale" value="全体（クラス全体）"> クラス全体</label>
+            <label class="checkbox-label"><input type="checkbox" name="scale" value="AIに最適な形態を選ばせる" checked> AIに委ねる</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">活動の目的<span class="label-hint">（複数選択可）</span></label>
+        <div class="grid-checkboxes">
+          <label class="checkbox-label"><input type="checkbox" name="purpose" value="流暢さの向上（伝達重視）" checked> 流暢さ</label>
+          <label class="checkbox-label"><input type="checkbox" name="purpose" value="正確さの向上（文法・発音）"> 正確さ</label>
+          <label class="checkbox-label"><input type="checkbox" name="purpose" value="内容理解の深めて"> 内容理解</label>
+          <label class="checkbox-label"><input type="checkbox" name="purpose" value="既習表現の再利用・定着"> 表現の再利用</label>
+          <label class="checkbox-label"><input type="checkbox" name="purpose" value="自分の意見・意思を伝える"> 意見を伝える</label>
+          <label class="checkbox-label"><input type="checkbox" name="purpose" value="他者と協働して課題解決"> 他者と協働する</label>
+          <label class="checkbox-label"><input type="checkbox" name="purpose" value="批判的思考力の育成"> 批判的思考</label>
+          <label class="checkbox-label"><input type="checkbox" name="purpose" value="異文化理解・視点の獲得"> 異文化理解</label>
+          <label class="checkbox-label"><input type="checkbox" name="purpose" value="自分の考えや学びを振り返る"> 自分の考えを振り返る</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">活動の性格・タイプ<span class="label-hint">（複数選択可）</span></label>
+        <div class="grid-checkboxes">
+          <label class="checkbox-label"><input type="checkbox" name="nature" value="楽しく取り組める（ゲーム性・親しみ）" checked> 楽しく取り組める</label>
+          <label class="checkbox-label"><input type="checkbox" name="nature" value="考えながら取り組む（知的好奇心）"> 考えながら取り組む</label>
+          <label class="checkbox-label"><input type="checkbox" name="nature" value="現実の場面を想定する（実社会シミュレーション）"> 現実の場面を想定する</label>
+          <label class="checkbox-label"><input type="checkbox" name="nature" value="想像力・ロールプレイを使う（妄想・創造）"> 想像力を使う</label>
+          <label class="checkbox-label"><input type="checkbox" name="nature" value="問題を解決する（Problem-Solving）"> 問題を解決する</label>
+          <label class="checkbox-label"><input type="checkbox" name="nature" value="他者の立場を考える（共感・視点取得）"> 他者の立場を考える</label>
+          <label class="checkbox-label"><input type="checkbox" name="nature" value="異文化・多様性について考える"> 異文化について考える</label>
+          <label class="checkbox-label"><input type="checkbox" name="nature" value="自分の意見や価値観を表現する"> 自分の意見を表現する</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">授業づくりの考え方（SLA理論・指導アプローチ）<span class="label-hint">（複数選択可）</span></label>
+        <div class="grid-checkboxes">
+          <label class="checkbox-label"><input type="checkbox" name="sla" value="PPP（段階的な練習から活用へ）"> 文法を段階的に練習してから使う (PPP)</label>
+          <label class="checkbox-label"><input type="checkbox" name="sla" value="TBLT（タスク中心の言語指導）" checked> 実際に英語を使う活動を中心にする (TBLT)</label>
+          <label class="checkbox-label"><input type="checkbox" name="sla" value="Input Hypothesis（大量の意味あるインプット）"> 意味のあるインプットを重視する</label>
+          <label class="checkbox-label"><input type="checkbox" name="sla" value="Output Hypothesis（発話・アウトプット機会の確保）"> 生徒が英語を使う機会を重視する</label>
+          <label class="checkbox-label"><input type="checkbox" name="sla" value="Focus on Form（活動中の文法・形態への気付き）"> 活動中に必要に応じて文法を扱う</label>
+          <label class="checkbox-label"><input type="checkbox" name="sla" value="AIに適切な指導アプローチを選択させる" checked> AIに適切な方法を選ばせる</label>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. 出力内容 -->
+    <section class="card">
+      <h2>出力内容</h2>
+      <div class="quick-select-bar">
+        <button type="button" class="btn-sm" onclick="selectAllOutput(true)">すべて選択</button>
+        <button type="button" class="btn-sm" onclick="selectAllOutput(false)">選択解除</button>
+        <button type="button" class="btn-sm" onclick="selectStandardOutput()">標準セット</button>
+      </div>
+      
+      <div class="grid-checkboxes">
+        <!-- 基本項目 -->
+        <label class="checkbox-label"><input type="checkbox" name="output" value="授業案（時間配分・教師と生徒の動き）" checked> 授業案</label>
+        <label class="checkbox-label"><input type="checkbox" name="output" value="生徒用プリント・ワークシート案" checked> ワークシート（生徒用プリント）</label>
+        <label class="checkbox-label"><input type="checkbox" name="output" value="評価規準（観点別評価）" checked> 評価規準</label>
+        <label class="checkbox-label"><input type="checkbox" name="output" value="板書案"> 板書案</label>
+        <label class="checkbox-label"><input type="checkbox" name="output" value="スライド構成案"> スライド構成</label>
+        <label class="checkbox-label"><input type="checkbox" name="output" value="振り返りシート案"> 振り返りシート</label>
+        <label class="checkbox-label"><input type="checkbox" name="output" value="スラッシュリーディング（英文＋語順訳）"> スラッシュリーディング</label>
+        <label class="checkbox-label"><input type="checkbox" name="output" value="内容理解問題（問答・クイズ）"> 内容理解問題</label>
+        <label class="checkbox-label"><input type="checkbox" name="output" value="具体的な言語活動・タスクの手順"> 言語活動の詳細</label>
+        <label class="checkbox-label"><input type="checkbox" name="output" value="対立意見・ディスカッションテーマ"> 対立意見</label>
+        <label class="checkbox-label"><input type="checkbox" name="output" value="教師向け指導メモ・留意点" checked> 教師向けメモ</label>
+        <label class="checkbox-label"><input type="checkbox" name="output" value="学力差への対応（指名・フォロー等）"> 学力差への対応</label>
+        
+        <!-- 授業後・発展支援項目 -->
+        <label class="checkbox-label"><input type="checkbox" name="output" value="宿題・家庭学習課題"> 宿題・家庭学習</label>
+        <label class="checkbox-label"><input type="checkbox" name="output" value="早く終わった生徒向けの発展活動"> 発展活動（早期終了者向け）</label>
+        <label class="checkbox-label"><input type="checkbox" name="output" value="つまずいた生徒向けの補充活動"> 補充活動（未定着者向け）</label>
+        <label class="checkbox-label"><input type="checkbox" name="output" value="次時へのつなぎ・展開案"> 次時へのつなぎ</label>
+        <label class="checkbox-label"><input type="checkbox" name="output" value="授業がうまくいかなかった場合の改善案・リカバリー策"> 授業後の改善案</label>
+      </div>
+    </section>
+
+    <!-- 7. AIへの自由指示 -->
+    <section class="card">
+      <h2>AIへの自由指示・補足事項</h2>
+      <div class="form-group">
+        <textarea id="freeInput" rows="3" placeholder="例：ICT機器（タブレット）を使った活動を入れてください。&#10;例：ペアワークでの発話指示用英語フレーズ（Target Language）も含めてください。"></textarea>
+      </div>
+    </section>
+  </form>
+
+  <!-- 生成アクション -->
+  <div class="action-area">
+    <button type="button" class="btn-primary" onclick="generatePrompt()">授業設計プロンプトを生成する</button>
+  </div>
+
+  <!-- 出力エリア -->
+  <section class="card" id="outputSection" style="display:none;">
+    <div class="output-header">
+      <h2>生成されたプロンプト</h2>
+      <button type="button" class="btn-secondary" onclick="copyPrompt()">プロンプトをコピー</button>
+    </div>
+    <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:8px;">
+      ※以下のプロンプトをそのままコピーし、ChatGPT、Claude、Gemini等のAIに入力してください。
+    </p>
+    <textarea id="output" readonly></textarea>
+  </section>
+</div>
+
+<script>
+// 学年データの定義
+const gradeOptions = {
+  "中学校": ["中1", "中2", "中3"],
+  "小学校": ["小1", "小2", "小3", "小4", "小5", "小6"]
+};
+
+// モード切り替え ('simple' | 'advanced')
+let currentMode = 'simple';
+
+function setMode(mode) {
+  currentMode = mode;
+  const btnSimple = document.getElementById('btn-simple');
+  const btnAdvanced = document.getElementById('btn-advanced');
+  
+  if (mode === 'advanced') {
+    document.body.classList.add('advanced-mode');
+    btnAdvanced.classList.add('active');
+    btnSimple.classList.remove('active');
+  } else {
+    document.body.classList.remove('advanced-mode');
+    btnSimple.classList.add('active');
+    btnAdvanced.classList.remove('active');
+  }
+}
+
+// 校種変更に伴う学年選択肢の更新
+function updateGradeOptions(selectedGrade = null) {
+  const schoolType = document.getElementById('schoolType').value;
+  const gradeSelect = document.getElementById('grade');
+  gradeSelect.innerHTML = '';
+  
+  const grades = gradeOptions[schoolType] || [];
+  grades.forEach(g => {
+    const opt = document.createElement('option');
+    opt.value = g;
+    opt.textContent = g;
+    if (selectedGrade && selectedGrade === g) {
+      opt.selected = true;
+    }
+    gradeSelect.appendChild(opt);
+  });
+}
+
+// 文法「その他」の制御
+function toggleCustomGrammar() {
+  const select = document.getElementById('grammarSelect');
+  const customInput = document.getElementById('grammarCustom');
+  if (select.value === 'その他') {
+    customInput.style.display = 'block';
+  } else {
+    customInput.style.display = 'none';
+  }
+}
+
+// チェックボックスの値取得（安全処理）
+function getCheckedValues(name) {
+  const checkboxes = document.querySelectorAll(`input[name="${name}"]:checked`);
+  return Array.from(checkboxes).map(cb => cb.value);
+}
+
+// 出力項目の選択コントロール
+function selectAllOutput(selectAll) {
+  const checkboxes = document.querySelectorAll('input[name="output"]');
+  checkboxes.forEach(cb => cb.checked = selectAll);
+}
+
+function selectStandardOutput() {
+  const standardValues = [
+    "授業案（時間配分・教師と生徒の動き）", 
+    "生徒用プリント・ワークシート案", 
+    "評価規準（観点別評価）", 
+    "教師向け指導メモ・留意点"
+  ];
+  const checkboxes = document.querySelectorAll('input[name="output"]');
+  checkboxes.forEach(cb => {
+    cb.checked = standardValues.includes(cb.value);
+  });
+}
+
+// プロンプト生成ロジック
+function generatePrompt() {
+  // 入力値の取得
+  const schoolType = document.getElementById('schoolType').value;
+  const grade = document.getElementById('grade').value;
+  
+  // 英語レベル
+  const levels = getCheckedValues('level');
+  const levelText = levels.length > 0 ? levels.join(' / ') : '学年相応（AIにおまかせ）';
+
+  // 文法・言語材料
+  const grammarSel = document.getElementById('grammarSelect').value;
+  const grammarCustom = document.getElementById('grammarCustom').value.trim();
+  let grammarText = grammarSel;
+  if (grammarSel === 'その他') {
+    grammarText = grammarCustom ? `その他（${grammarCustom}）` : 'その他（指定）';
+  }
+
+  const topic = document.getElementById('topic').value.trim() || '指定なし（AIに最適提案を依頼）';
+  const lessonTime = document.getElementById('lessonTime').value;
+  const style = document.getElementById('style').value;
+  const text = document.getElementById('text').value.trim();
+  const goal = document.getElementById('goal').value.trim() || '学年および単元に応じた適切なコミュニケーション目標を設定してください';
+
+  // 詳細項目
+  const stages = getCheckedValues('stage');
+  const stageText = stages.length > 0 ? stages.join('、') : 'AIが最適な段階を設定';
+  const position = document.getElementById('position').value;
+
+  const classFeatures = getCheckedValues('classFeature');
+  const classFeatureText = classFeatures.length > 0 ? classFeatures.join('、') : '特になし';
+  const classNote = document.getElementById('classNote').value.trim();
+
+  const actTime = document.getElementById('actTime').value;
+  const scales = getCheckedValues('scale');
+  const scaleText = scales.length > 0 ? scales.join('、') : 'AIが最適な形態を選択';
+
+  const purposes = getCheckedValues('purpose');
+  const purposeText = purposes.length > 0 ? purposes.join('、') : 'バランスよく設定';
+
+  const natures = getCheckedValues('nature');
+  const natureText = natures.length > 0 ? natures.join('、') : '授業のゴールに最適な性質をAIが選択';
+
+  const slas = getCheckedValues('sla');
+  const slaText = slas.length > 0 ? slas.join('、') : 'AIが適切な指導法を選択';
+
+  const outputs = getCheckedValues('output');
+  const outputText = outputs.length > 0 ? outputs.map(o => `- ${o}`).join('\n') : '- 授業案（標準）';
+
+  const freeInput = document.getElementById('freeInput').value.trim();
+
+  // 高度なプロンプトの組み立て
+  const prompt = `# 英語授業設計プロンプト依頼
+
+あなたは日本の小・中学校英語教育および言語習得論（SLA）に精通した優秀な英語教育アドバイザー・授業デザイナーです。
+以下の【授業設計条件】に基づき、実際の学校現場でそのまま実施可能かつ質の高い英語授業設計案および関連資料を作成してください。
+
+---
+
+## 1. 授業基本情報
+- **校種・学年**: ${schoolType} ${grade}
+- **英語レベル**: ${levelText}
+- **文法・言語材料**: ${grammarText}
+- **トピック・テーマ**: ${topic}
+- **授業時間**: ${lessonTime}
+- **授業スタイル**: ${style}
+
+## 2. 授業のゴール（最重要目標）
+${goal}
+
+## 3. クラスの状況と配慮事項
+- **クラスの特徴**: ${classFeatureText}
+${classNote ? `- **追加配慮事項**: ${classNote}` : ''}
+
+## 4. 活動の設計方針
+- **授業の段階**: ${stageText}
+- **活動の位置づけ**: ${position}
+- **メイン活動時間**: ${actTime}
+- **活動規模・形態**: ${scaleText}
+- **活動の目的**: ${purposeText}
+- **活動の性格・タイプ**: ${natureText}
+- **授業づくりの考え方（理論・手法）**: ${slaText}
+
+## 5. 使用教材・本文
+${text ? text : '（指定なし：テーマや文法項目に沿った適切なダイアログまたは短い本文をAIで作成してください）'}
+
+## 6. AIへの追加自由指示
+${freeInput ? freeInput : '特になし'}
+
+---
+
+## 7. 出力要求項目
+以下の選択された項目をすべて漏れなく作成してください。
+
+${outputText}
+
+---
+
+## 8. 授業案作成における基本ルール・前提条件
+1. **指導要領の遵守**: 日本の学習指導要領（${schoolType}英語）に適した内容とし、単なる文法解説にならず「英語を使って何ができるか」を重視してください。
+2. **整合性の確保**: 「授業のゴール → 活動内容 → 生徒の実際の言語使用 → 評価規準」が一直線に整合するように設計してください。
+3. **現実的な時間配分**: 授業時間（${lessonTime}）を超過しないように各活動の分数を具体的に明示し、教師の説明（TTT）を抑え、生徒が実際に発話・使用する時間を十分に確保してください。
+4. **学力差への配慮**: クラス内の英語力の差や多様な生徒に対応できるよう、スキャフォールディング（指導の足場掛け）や個別フォローの工夫を入れてください。
+5. **事実に基づく生成**: 指定された教材が存在する場合はその本文を尊重し、存在しない情報を勝手に補完しないでください。
+
+---
+
+## 9. 最終確認（出力前の自己チェック）
+出力を作成する前に、以下の点を必ず確認し、満たしていることを確認してから回答を出力してください：
+- [ ] 授業時間の合計が ${lessonTime} 以内に収まっているか
+- [ ] 授業のゴールと設定された活動内容が完全に一致しているか
+- [ ] 生徒が実際に英語を話す・書く・使う時間が十分に確保されているか
+- [ ] ${schoolType} ${grade} の英語レベルに対して難易度が適切か（詰め込みすぎていないか）
+- [ ] 評価方法が授業のゴールと整合しているか
+- [ ] 実際の学校の教室現場で実施可能な現実的な手順になっているか
+
+Markdown形式で分かりやすく見やすいレイアウトで出力してください。`;
+
+  // 表示
+  const outputTextarea = document.getElementById('output');
+  outputTextarea.value = prompt;
+  document.getElementById('outputSection').style.display = 'block';
+
+  // 自動保存
+  saveToLocalStorage(false);
+
+  // 出力エリアへスムーズスクロール
+  document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+// クリップボードコピー機能
+function copyPrompt() {
+  const outputTextarea = document.getElementById('output');
+  if (!outputTextarea.value) return;
+
+  outputTextarea.select();
+  navigator.clipboard.writeText(outputTextarea.value).then(() => {
+    alert('プロンプトをクリップボードにコピーしました！AIチャットに貼り付けて使用してください。');
+  }).catch(err => {
+    alert('コピーに失敗しました。手動でテキストを選択してコピーしてください。');
+  });
+}
+
+// LocalStorage 保持・復元機能
+const STORAGE_KEY = 'lesson_designer_config';
+
+function saveToLocalStorage(showAlert = false) {
+  const data = {
+    mode: currentMode,
+    schoolType: document.getElementById('schoolType').value,
+    grade: document.getElementById('grade').value,
+    levels: getCheckedValues('level'),
+    grammarSelect: document.getElementById('grammarSelect').value,
+    grammarCustom: document.getElementById('grammarCustom').value,
+    topic: document.getElementById('topic').value,
+    lessonTime: document.getElementById('lessonTime').value,
+    style: document.getElementById('style').value,
+    text: document.getElementById('text').value,
+    goal: document.getElementById('goal').value,
+    stages: getCheckedValues('stage'),
+    position: document.getElementById('position').value,
+    classFeatures: getCheckedValues('classFeature'),
+    classNote: document.getElementById('classNote').value,
+    actTime: document.getElementById('actTime').value,
+    scales: getCheckedValues('scale'),
+    purposes: getCheckedValues('purpose'),
+    natures: getCheckedValues('nature'),
+    slas: getCheckedValues('sla'),
+    outputs: getCheckedValues('output'),
+    freeInput: document.getElementById('freeInput').value
+  };
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  if (showAlert) alert('現在の設定をブラウザに保存しました。');
+}
+
+function loadFromLocalStorage() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) {
+    alert('保存されたデータが見つかりません。');
+    return;
+  }
+
+  try {
+    const data = JSON.parse(saved);
+
+    if (data.mode) setMode(data.mode);
+    if (data.schoolType) document.getElementById('schoolType').value = data.schoolType;
+    updateGradeOptions(data.grade);
+
+    restoreCheckboxes('level', data.levels);
+    if (data.grammarSelect) {
+      document.getElementById('grammarSelect').value = data.grammarSelect;
+      toggleCustomGrammar();
+    }
+    if (data.grammarCustom) document.getElementById('grammarCustom').value = data.grammarCustom;
+    if (data.topic !== undefined) document.getElementById('topic').value = data.topic;
+    if (data.lessonTime) document.getElementById('lessonTime').value = data.lessonTime;
+    if (data.style) document.getElementById('style').value = data.style;
+    if (data.text !== undefined) document.getElementById('text').value = data.text;
+    if (data.goal !== undefined) document.getElementById('goal').value = data.goal;
+
+    restoreCheckboxes('stage', data.stages);
+    if (data.position) document.getElementById('position').value = data.position;
+    restoreCheckboxes('classFeature', data.classFeatures);
+    if (data.classNote !== undefined) document.getElementById('classNote').value = data.classNote;
+    if (data.actTime) document.getElementById('actTime').value = data.actTime;
+
+    restoreCheckboxes('scale', data.scales);
+    restoreCheckboxes('purpose', data.purposes);
+    restoreCheckboxes('nature', data.natures);
+    restoreCheckboxes('sla', data.slas);
+    restoreCheckboxes('output', data.outputs);
+
+    if (data.freeInput !== undefined) document.getElementById('freeInput').value = data.freeInput;
+
+    alert('前回の設定を復元しました。');
+  } catch (e) {
+    alert('データの復元に失敗しました。');
+  }
+}
+
+function restoreCheckboxes(name, values) {
+  if (!values) return;
+  const checkboxes = document.querySelectorAll(`input[name="${name}"]`);
+  checkboxes.forEach(cb => {
+    cb.checked = values.includes(cb.value);
+  });
+}
+
+function resetForm() {
+  if (confirm('フォームの入力内容を初期状態に戻しますか？')) {
+    document.getElementById('designerForm').reset();
+    updateGradeOptions();
+    toggleCustomGrammar();
+    setMode('simple');
+    document.getElementById('outputSection').style.display = 'none';
+  }
+}
+
+// 初期化処理
+window.addEventListener('DOMContentLoaded', () => {
+  updateGradeOptions('中2');
+});
+</script>
+</body>
+</html>
