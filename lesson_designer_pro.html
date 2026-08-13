@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI授業デザイナー Pro (Lesson Designer Pro)</title>
+<style>
+:root {
+  --primary: #2b6cb0;
+  --primary-hover: #1e4e80;
+  --bg: #f5f7fa;
+  --card-bg: #ffffff;
+  --border: #e2e8f0;
+  --accent: #319795;
+  --accent-hover: #236c6a;
+  --text: #2d3748;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  max-width: 1100px;
+  margin: auto;
+  padding: 15px;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+h1 { font-size: 1.6rem; color: var(--primary); margin-bottom: 5px; }
+h2 { font-size: 1.2rem; color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid #ebf8ff; padding-bottom: 4px; }
+h3 { font-size: 1.05rem; margin-top: 10px; margin-bottom: 6px; }
+
+/* パスワード保護 */
+#auth-overlay {
+  position: fixed; top:0; left:0; width:100%; height:100%;
+  background: rgba(45, 55, 72, 0.95); z-index: 9999;
+  display: flex; justify-content: center; align-items: center; padding: 20px;
+}
+.auth-box {
+  background: white; padding: 30px; border-radius: 12px; max-width: 420px; width: 100%;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center;
+}
+
+section { background: var(--card-bg); padding: 18px; margin: 14px 0; border-radius: 8px; border: 1px solid var(--border); }
+textarea, input[type="text"], input[type="password"], select {
+  width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #cbd5e0; border-radius: 6px; box-sizing: border-box; font-size: 0.95rem;
+}
+
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+button {
+  padding: 10px 16px; font-size: 0.95rem; font-weight: bold; border-radius: 6px; border: none; cursor: pointer;
+  background: var(--primary); color: white; transition: background 0.2s; margin-right: 6px; margin-bottom: 6px;
+}
+button:hover { background: var(--primary-hover); }
+button.btn-accent { background: var(--accent); }
+button.btn-accent:hover { background: var(--accent-hover); }
+button.btn-outline { background: transparent; color: var(--text); border: 1px solid #cbd5e0; }
+button.btn-outline:hover { background: #edf2f7; }
+
+label { display: block; margin: 6px 0; font-size: 0.9rem; cursor: pointer; line-height: 1.4; }
+.checkbox-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+
+/* AIステーション */
+.ai-station { background: #ebf8ff; border: 2px solid #3182ce; padding: 16px; border-radius: 8px; margin-top: 10px; }
+.step-indicator { font-size: 0.85rem; font-weight: bold; color: #2b6cb0; margin-bottom: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+.step-pill { padding: 3px 8px; background: #e2e8f0; border-radius: 12px; color: #4a5568; }
+.step-pill.active { background: #3182ce; color: white; }
+
+.option-card {
+  background: white; border: 1px solid #cbd5e0; padding: 12px; border-radius: 6px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;
+}
+.option-card:hover { border-color: var(--primary); transform: translateY(-1px); }
+
+/* ロードインジケータ */
+.loading-spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; vertical-align: middle; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* 成果物カード表示 */
+.output-card {
+  background: #ffffff;
+  border: 1px solid #cbd5e0;
+  border-left: 5px solid var(--primary);
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.output-card.student-sheet { border-left-color: #319795; background: #f0fff4; }
+.output-card.slide-deck { border-left-color: #805ad5; background: #faf5ff; }
+.output-card.evaluation { border-left-color: #dd6b20; background: #fffaf0; }
+
+.output-card h3 {
+  margin-top: 0;
+  font-size: 1.15rem;
+  color: #2d3748;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.linguistic-box {
+  background: #f7fafc; border: 1px solid #cbd5e0; border-left: 4px solid #805ad5; padding: 12px; border-radius: 6px; margin-top: 10px;
+}
+
+#outputPrompt { height: 200px; font-family: monospace; font-size: 0.85rem; background: #2d3748; color: #f7fafc; }
+
+@media print {
+  body * { visibility: hidden; }
+  #printable-area, #printable-area * { visibility: visible; }
+  #printable-area { position: absolute; left: 0; top: 0; width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- パスワード保護画面 -->
+<div id="auth-overlay">
+  <div class="auth-box">
+    <h2>アクセス制限</h2>
+    <p style="font-size:0.85rem; color:#718096; margin-bottom:15px;">受講生・関係者専用の限定公開版です。</p>
+    <input type="password" id="auth-password" placeholder="パスワードを入力">
+    <button onclick="checkPassword()" style="width:100%; margin-top:10px;">ログイン</button>
+    <p id="auth-error" style="color:red; font-size:0.8rem; margin-top:10px; display:none;">パスワードが正しくありません。</p>
+  </div>
+</div>
+
+<header style="margin-bottom: 15px;">
+  <h1>英語授業デザイナー Pro <span style="font-size:0.9rem; color:#718096;">Sociolinguistics & Cognitive Edition</span></h1>
+  <p style="font-size:0.85rem; color:#4a5568;">認知言語学・社会言語学のテキスト分析に基づき、学習者の特性に応じた実践的授業案・教材を構築します。</p>
+</header>
+
+<!-- API設定 -->
+<section style="padding:10px 15px; background:#edf2f7;">
+  <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleConfig()">
+    <strong>🔑 Gemini APIキー設定 <span id="api-status-badge" style="font-size:0.8rem; color:#e53e3e;">(未設定)</span></strong>
+    <span>▼</span>
+  </div>
+  <div id="config-body" style="display:none; margin-top:12px;">
+    <input type="password" id="api-key-input" placeholder="AIzaSy..." style="width:70%;">
+    <button onclick="saveApiKey()">保存</button>
+    <button onclick="clearApiKey()" class="btn-outline">削除</button>
+  </div>
+</section>
+
+<form id="designerForm" onsubmit="return false;">
+
+  <!-- 1. 基本情報 -->
+  <section>
+    <h2>1. 授業基本情報</h2>
+    <div class="grid">
+      <div>
+        <label>校種</label>
+        <select id="schoolType" onchange="onSchoolTypeChange()">
+          <option value="小学校">小学校</option>
+          <option value="中学校" selected>中学校</option>
+          <option value="高等学校">高等学校</option>
+        </select>
+      </div>
+      <div>
+        <label>学年</label>
+        <select id="grade"></select>
+      </div>
+    </div>
+    <div class="grid">
+      <div>
+        <label>英語レベル</label>
+        <select id="level">
+          <option value="標準" selected>学年標準</option>
+          <option value="初級（基礎・定着重視）">初級（基礎・定着重視）</option>
+          <option value="中級（概ね理解可能）">中級（概ね理解可能）</option>
+          <option value="発展（CEFR A2-B1レベル）">発展（CEFR A2-B1レベル）</option>
+          <option value="学力差・習熟度差が大きい">学力差・習熟度差が大きい</option>
+        </select>
+      </div>
+      <div>
+        <label>文法・言語材料</label>
+        <input id="grammar" placeholder="例: 比較級, 受け身, 現在完了, 助動詞" value="">
+      </div>
+    </div>
+    <div class="grid">
+      <div>
+        <label>トピック・テーマ</label>
+        <input id="topic" placeholder="例: 環境問題, 地域紹介, 学校生活" value="">
+      </div>
+      <div>
+        <label>授業時間</label>
+        <select id="lessonTime">
+          <option value="50分" selected>50分</option>
+          <option value="45分">45分</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 教材本文 ＆ 社会言語学・認知言語学分析（★主要復元機能） -->
+  <section>
+    <h2>2. 使用教材本文 ＆ 認知・社会言語学的分析</h2>
+    <label style="font-size:0.85rem;">教科書の本文や英文テキストを入力してください:</label>
+    <textarea id="text" rows="4" placeholder="例: Environmental problems are getting worse. We must do something for our planet..."></textarea>
+    
+    <div style="display:flex; gap:10px; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+      <button type="button" class="btn-accent" onclick="startLinguisticAnalysis()">🧠 社会言語学・認知言語学の視点で分析する</button>
+      <label style="font-weight:bold; color:#2b6cb0; margin:0;">
+        <input type="checkbox" id="useAnalysisInPlan" checked> 💡 この分析結果を授業案・教材作成に反映する
+      </label>
+    </div>
+
+    <!-- 分析結果出力枠 -->
+    <div id="analysis-container" style="display:none;" class="linguistic-box">
+      <h3 style="margin-top:0; color:#5a32a3;">🔍 社会言語学・認知言語学による教科書分析</h3>
+      <div id="analysis-summary" style="font-size:0.9rem;"></div>
+    </div>
+  </section>
+
+  <!-- 3. 授業のゴール -->
+  <section>
+    <h2>3. 授業のゴール</h2>
+    <div style="display:flex; gap:10px; margin-bottom:10px;">
+      <button type="button" class="btn-accent" onclick="startAiCoDesign()">🤖 AIと一緒にゴールを設定する</button>
+      <button type="button" class="btn-outline" onclick="document.getElementById('goal').focus()">✏️ 手入力</button>
+    </div>
+    <textarea id="goal" rows="2" placeholder="生徒が〜できるようになる。"></textarea>
+
+    <!-- AI共作対話ステーション -->
+    <div id="ai-station" class="ai-station" style="display:none;">
+      <div class="step-indicator">
+        <span id="pill-step1" class="step-pill active">1. 使用場面</span> ➔ 
+        <span id="pill-step2" class="step-pill">2. ゴール決定</span>
+      </div>
+      <div id="ai-station-content"></div>
+      <div id="ai-loading" style="display:none; font-size:0.85rem; color:#2b6cb0; margin-top:6px;">
+        <span class="loading-spinner"></span>AIが思考中...
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. クラスの状況と学習者タイプ -->
+  <section>
+    <h2>4. クラスの状況と学習者への配慮</h2>
+    <h3>👥 学習者の特徴・学び方（複数選択可）</h3>
+    <div class="checkbox-group">
+      <label><input type="checkbox" class="learnerFeature" value="認知言語学的な視覚イメージやモデル提示で理解が深まる（イメージ重視）"> 視覚イメージやモデル提示で理解が深まる</label>
+      <label><input type="checkbox" class="learnerFeature" value="まず一人でじっくり考える時間があると取り組みやすい（個人思考優先）"> まず一人で考える時間があると取り組みやすい</label>
+      <label><input type="checkbox" class="learnerFeature" value="他者との対話やコラボレーションを通して考えが深まる（対話型）"> 他者との対話を通して考えが深まりやすい</label>
+      <label><input type="checkbox" class="learnerFeature" value="身近な実生活の経験や社会的文脈と結びつけると発言しやすい（文脈重視）"> 身近な経験・社会的文脈と結びつけると話しやすい</label>
+      <label><input type="checkbox" class="learnerFeature" value="自由度が高い活動より手順や構造が明確な活動を好む（構造化重視）"> 手順や選択肢が明確な活動を好む</label>
+      <label><input type="checkbox" class="learnerFeature" value="英語での即興的な発話に不安を感じやすい（足場掛けが必要）"> 即興的な発話を恐れやすい（足場掛けが必要）</label>
+      <label><input type="checkbox" class="learnerFeature" value="クラス内の習熟度ギャップ・能力差が大きい（段階別タスクが必要）"> 習熟度ギャップ・能力差が大きい</label>
+    </div>
+    <div style="margin-top:10px;">
+      <input type="text" id="learnerFeatureOther" placeholder="その他の特徴（例：書くことに抵抗がある生徒が多い等）">
+    </div>
+  </section>
+
+  <!-- 5. 生成・出力設定 -->
+  <section style="background:#edf2f7; border:2px solid #cbd5e0;">
+    <h2>5. 授業設計案・教材の出力</h2>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+      <div style="background:white; padding:14px; border-radius:6px; border:1px solid #cbd5e0;">
+        <strong style="color:var(--accent);">① Gemini APIで直接完成（カード表示）</strong>
+        <p style="font-size:0.8rem; color:#718096; margin:4px 0 10px 0;">見やすいカード型で授業案・プリント・スライドを一括出力します。</p>
+        <button type="button" onclick="generateDirectLessonPlan()" class="btn-accent" style="width:100%; margin:0;">✨ 授業案・教材を直接生成する</button>
+      </div>
+      <div style="background:white; padding:14px; border-radius:6px; border:1px solid #cbd5e0;">
+        <strong style="color:var(--primary);">② プロンプトテキストを出力</strong>
+        <p style="font-size:0.8rem; color:#718096; margin:4px 0 10px 0;">ChatGPTやClaudeなどの外部AIに貼り付けて生成する場合。</p>
+        <button type="button" onclick="generateFinalLessonPlan()" class="btn-outline" style="width:100%; margin:0;">🚀 プロンプトを出力</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 成果物表示エリア -->
+  <section id="result-section" style="display:none;">
+    <h2>🎉 完成した授業成果物</h2>
+    <div style="margin-bottom:15px;">
+      <button type="button" class="btn-accent" onclick="copyResultText()">📋 テキスト全文コピー</button>
+      <button type="button" class="btn-outline" onclick="window.print()">🖨️ PDF保存・印刷</button>
+    </div>
+    <div id="printable-area"><div id="directResultCards"></div></div>
+  </section>
+
+  <!-- プロンプト表示エリア -->
+  <section id="prompt-section" style="display:none;">
+    <h2>生成されたプロンプト</h2>
+    <button type="button" onclick="copyPrompt()" class="btn-outline" style="margin-bottom:8px;">📋 コピー</button>
+    <textarea id="outputPrompt" readonly></textarea>
+  </section>
+
+</form>
+
+<script>
+/* 認証 */
+const APP_PASSWORD = "Nakac#Gifu"; 
+function checkPassword() {
+  if (document.getElementById('auth-password').value === APP_PASSWORD) {
+    document.getElementById('auth-overlay').style.display = 'none';
+    sessionStorage.setItem('authenticated', 'true');
+  } else { document.getElementById('auth-error').style.display = 'block'; }
+}
+window.addEventListener('DOMContentLoaded', () => {
+  if (sessionStorage.getItem('authenticated') === 'true') {
+    document.getElementById('auth-overlay').style.display = 'none';
+  }
+  onSchoolTypeChange();
+  loadApiKey();
+});
+
+/* 学年動的制御 */
+const gradeData = { "小学校": ["小5", "小6"], "中学校": ["中1", "中2", "中3"], "高等学校": ["高1", "高2", "高3"] };
+function onSchoolTypeChange() {
+  const st = document.getElementById('schoolType').value;
+  const gs = document.getElementById('grade'); gs.innerHTML = "";
+  gradeData[st].forEach(g => {
+    const opt = document.createElement('option'); opt.value = g; opt.textContent = g;
+    if (g === "中2" || g === "小5" || g === "高1") opt.selected = true;
+    gs.appendChild(opt);
+  });
+}
+
+/* API管理 */
+function toggleConfig() {
+  const body = document.getElementById('config-body');
+  body.style.display = body.style.display === 'none' ? 'block' : 'none';
+}
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key) return alert('APIキーを入力してください。');
+  localStorage.setItem('gemini_api_key', key);
+  updateApiBadge(true); alert('保存しました。');
+}
+function loadApiKey() {
+  const key = localStorage.getItem('gemini_api_key') || "";
+  if (key) { document.getElementById('api-key-input').value = key; updateApiBadge(true); }
+}
+function clearApiKey() { localStorage.removeItem('gemini_api_key'); document.getElementById('api-key-input').value = ""; updateApiBadge(false); }
+function updateApiBadge(isSet) {
+  const badge = document.getElementById('api-status-badge');
+  badge.textContent = isSet ? "(設定済み)" : "(未設定)";
+  badge.style.color = isSet ? "#38a169" : "#e53e3e";
+}
+
+async function callGeminiApi(prompt, systemInstruction = "") {
+  const apiKey = localStorage.getItem('gemini_api_key') || document.getElementById('api-key-input').value.trim();
+  if (!apiKey) { alert('APIキーを設定してください。'); toggleConfig(); throw new Error('API Key Missing'); }
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const payload = { contents: [{ parts: [{ text: prompt }] }] };
+  if (systemInstruction) payload.systemInstruction = { parts: [{ text: systemInstruction }] };
+
+  const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  if (!res.ok) throw new Error(`API Error: ${res.status}`);
+  const data = await res.json();
+  return data.candidates[0].content.parts[0].text;
+}
+
+const SYSTEM_DESIGN_PRINCIPLE = `
+あなたは社会言語学および認知言語学（構文文法・事態把握）を専門とする英語教育アドバイザーです。
+【厳格フォーマットルール】
+1. ** などのMarkdown記号を出力に含めないでください。
+2. 成果物は [SECTION: 指導案], [SECTION: 生徒用ワークシート], [SECTION: スライド構成案], [SECTION: 観点別評価規準] タグで区切って出力してください。
+`;
+
+/* ★主要復元機能：社会言語学・認知言語学によるテキスト深掘り分析 */
+let lastLinguisticAnalysisResult = "";
+
+async function startLinguisticAnalysis() {
+  const text = document.getElementById('text').value.trim();
+  if (!text) return alert('英文テキストを入力してください。');
+
+  const container = document.getElementById('analysis-container');
+  const summary = document.getElementById('analysis-summary');
+  container.style.display = 'block';
+  summary.innerHTML = '<span class="loading-spinner"></span> 認知言語学・社会言語学の観点から教科書本文を分析中...';
+
+  const prompt = `
+以下の英文テキストを、認知言語学（事態把握・カメラの視点・イメージ・構文の意味）および社会言語学（発話文脈・レジスター・対人配慮・グローバル発想）の2つの視点から詳細に分析してください。
+
+【テキスト】
+${text}
+
+【出力内容】
+1. 認知言語学的ポイント（事態の捉え方、イメージ、視点、構文の持つ本来の意味）
+2. 社会言語学的ポイント（誰が誰にどのような文脈で使うか、丁寧さ・フォーマリティ、対人的効果）
+3. 授業（指導）への応用提案（どのような発問やワークシートの工夫に繋げられるか）
+
+※ アスタリスク(**)記号は絶対に使わずに整理して出力してください。
+`;
+
+  try {
+    const result = await callGeminiApi(prompt, SYSTEM_DESIGN_PRINCIPLE);
+    lastLinguisticAnalysisResult = result;
+    summary.innerHTML = parseFormattedHtml(result);
+  } catch(e) {
+    summary.innerHTML = "分析に失敗しました。APIキーを確認してください。";
+  }
+}
+
+/* AI対話ステーション */
+let aiState = { currentStep: 1, selectedScene: "" };
+async function startAiCoDesign() {
+  const grammar = document.getElementById('grammar').value.trim();
+  if (!grammar) return alert('文法・言語材料を入力してください。');
+  document.getElementById('ai-station').style.display = 'block';
+  document.getElementById('ai-loading').style.display = 'block';
+
+  const prompt = `文法: ${grammar}, コミュニケーション場面の候補を3つJSON形式 {"scenes":[{"title":"","desc":""}]} で出してください。`;
+  try {
+    const resText = await callGeminiApi(prompt, SYSTEM_DESIGN_PRINCIPLE);
+    const data = JSON.parse(resText.match(/\{[\s\S]*\}/)[0]);
+    let html = `<h4>📍 STEP 1: 使用場面の選択</h4>`;
+    data.scenes.forEach(sc => {
+      html += `<div class="option-card" onclick="selectScene('${sc.title}: ${sc.desc}')">
+        <strong>${sc.title}</strong><p style="font-size:0.85rem; margin:2px 0;">${sc.desc}</p>
+      </div>`;
+    });
+    document.getElementById('ai-station-content').innerHTML = html;
+  } catch(e) {
+    document.getElementById('ai-station-content').innerHTML = "エラーが発生しました。";
+  } finally {
+    document.getElementById('ai-loading').style.display = 'none';
+  }
+}
+
+function selectScene(sc) {
+  aiState.selectedScene = sc;
+  fetchGoalCandidates();
+}
+
+async function fetchGoalCandidates() {
+  document.getElementById('ai-loading').style.display = 'block';
+  const prompt = `場面: ${aiState.selectedScene}, 文法: ${document.getElementById('grammar').value}。達成目標（〜できる）を3つJSON {"goals":[{"text":""}]} で提示してください。`;
+  try {
+    const resText = await callGeminiApi(prompt, SYSTEM_DESIGN_PRINCIPLE);
+    const data = JSON.parse(resText.match(/\{[\s\S]*\}/)[0]);
+    let html = `<h4>🎯 STEP 2: ゴールの選択</h4>`;
+    data.goals.forEach(g => {
+      html += `<div class="option-card" onclick="selectGoal('${g.text}')">
+        <strong>${g.text}</strong>
+      </div>`;
+    });
+    document.getElementById('ai-station-content').innerHTML = html;
+  } catch(e) { document.getElementById('ai-station-content').innerHTML = "エラーが発生しました。"; }
+  finally { document.getElementById('ai-loading').style.display = 'none'; }
+}
+
+function selectGoal(g) {
+  document.getElementById('goal').value = g;
+  document.getElementById('ai-station').style.display = 'none';
+}
+
+/* 収集 */
+function getCheckedValues(cls) {
+  return [...document.querySelectorAll('.' + cls + ':checked')].map(x => x.value).join(' / ');
+}
+
+function collectAllConditions() {
+  const learnerFeatures = getCheckedValues('learnerFeature');
+  const learnerOther = document.getElementById('learnerFeatureOther').value.trim();
+  const combinedLearners = [learnerFeatures, learnerOther].filter(Boolean).join(' （その他: ') + (learnerOther ? '）' : '');
+
+  return {
+    school: document.getElementById('schoolType').value,
+    grade: document.getElementById('grade').value,
+    level: document.getElementById('level').value,
+    grammar: document.getElementById('grammar').value,
+    topic: document.getElementById('topic').value,
+    lessonTime: document.getElementById('lessonTime').value,
+    goal: document.getElementById('goal').value,
+    text: document.getElementById('text').value,
+    learnerFeatures: combinedLearners || "一般的な発達段階に応じる",
+    useLinguisticAnalysis: document.getElementById('useAnalysisInPlan').checked,
+    linguisticAnalysisText: lastLinguisticAnalysisResult
+  };
+}
+
+/* HTML整形 */
+function parseFormattedHtml(text) {
+  if (!text) return '';
+  let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
+  html = html.replace(/^- (.*$)/gim, '<li>$1</li>');
+  html = html.replace(/\n\n/g, '<br><br>');
+  return html;
+}
+
+function renderOutputCards(rawText) {
+  const container = document.getElementById('directResultCards');
+  container.innerHTML = '';
+
+  const sections = rawText.split(/\[SECTION:\s*(.*?)\]/i);
+  if (sections.length <= 1) {
+    const card = document.createElement('div');
+    card.className = 'output-card';
+    card.innerHTML = `<div>${parseFormattedHtml(rawText)}</div>`;
+    container.appendChild(card);
+    return;
+  }
+
+  for (let i = 1; i < sections.length; i += 2) {
+    const title = sections[i].trim();
+    const content = sections[i+1] ? sections[i+1].trim() : '';
+
+    let cardClass = 'output-card';
+    let icon = '📘';
+    if (title.includes('ワークシート') || title.includes('プリント')) { cardClass += ' student-sheet'; icon = '📄'; }
+    else if (title.includes('スライド')) { cardClass += ' slide-deck'; icon = '💻'; }
+    else if (title.includes('評価')) { cardClass += ' evaluation'; icon = '📊'; }
+
+    const card = document.createElement('div');
+    card.className = cardClass;
+    card.innerHTML = `<h3>${icon} ${title}</h3><div>${parseFormattedHtml(content)}</div>`;
+    container.appendChild(card);
+  }
+}
+
+/* 一括直接生成 */
+async function generateDirectLessonPlan() {
+  const c = collectAllConditions();
+  const resultSection = document.getElementById('result-section');
+  const container = document.getElementById('directResultCards');
+
+  document.getElementById('prompt-section').style.display = 'none';
+  resultSection.style.display = 'block';
+  container.innerHTML = '<div style="padding:20px; text-align:center;"><span class="loading-spinner"></span> 言語学分析・学習者タイプを反映した授業案と教材を作成中...</div>';
+  resultSection.scrollIntoView({ behavior: 'smooth' });
+
+  let linguisticInstruction = "";
+  if (c.useLinguisticAnalysis && c.linguisticAnalysisText) {
+    linguisticInstruction = `
+【重要：社会言語学・認知言語学の分析結果の反映指示】
+以下の分析結果（認知言語学的イメージ・捉え方、社会言語学的発話文脈）を、授業の展開・発問・プリントのヒント・スライド構成の中に積極的に取り入れて作成してください：
+${c.linguisticAnalysisText}
+`;
+  }
+
+  const prompt = `
+以下の決定条件に基づき、授業指導案および教材セットを作成してください。
+
+【基本条件】
+- 対象: ${c.school} ${c.grade} (${c.level})
+- 文法: ${c.grammar}
+- テーマ: ${c.topic}
+- 時間: ${c.lessonTime}
+- ゴール: ${c.goal}
+- 本文: ${c.text || "なし"}
+
+【学習者タイプ・配慮】
+${c.learnerFeatures}
+
+${linguisticInstruction}
+
+---
+【出力指定】
+アスタリスク(**)記号は一切使わず、必ず以下のタグでセクションを区切って出力してください。
+
+[SECTION: 1. 本時指導案]
+冒頭に「💡 学習者配慮および言語学的アプローチ」を明記した上で、導入・展開・まとめの指導手順を記述してください。
+
+[SECTION: 2. 生徒用ワークシート案]
+認知的な理解を促すモデル・イメージ提示や、場面に応じた対話作りが含まれるプリント内容を記述してください。
+
+[SECTION: 3. 授業用スライド構成案]
+1スライド1メッセージ形式で、授業で画面提示するスライド案を記述してください。
+
+[SECTION: 4. 観点別評価規準]
+思考・判断・表現および主体的に取り組む態度のルーブリックを記述してください。
+`;
+
+  try {
+    const rawResult = await callGeminiApi(prompt, SYSTEM_DESIGN_PRINCIPLE);
+    renderOutputCards(rawResult);
+  } catch(e) {
+    container.innerHTML = `<div style="color:red; padding:20px;">生成エラーが発生しました。</div>`;
+  }
+}
+
+/* プロンプトテキスト出力 */
+function generateFinalLessonPlan() {
+  const c = collectAllConditions();
+  document.getElementById('result-section').style.display = 'none';
+  document.getElementById('prompt-section').style.display = 'block';
+
+  let linguisticInstruction = "";
+  if (c.useLinguisticAnalysis && c.linguisticAnalysisText) {
+    linguisticInstruction = `\n【社会言語学・認知言語学分析結果の反映】\n${c.linguisticAnalysisText}`;
+  }
+
+  const prompt = `# 英語授業設計プロンプト
+対象: ${c.school}${c.grade} (${c.level})
+文法: ${c.grammar}
+ゴール: ${c.goal}
+学習者タイプ: ${c.learnerFeatures}
+${linguisticInstruction}
+
+上記条件に基づき、指導案・ワークシート案・スライド案・評価規準を作成してください。`;
+
+  document.getElementById('outputPrompt').value = prompt;
+  document.getElementById('prompt-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+function copyResultText() {
+  const container = document.getElementById('directResultCards');
+  if (!container.innerText) return;
+  navigator.clipboard.writeText(container.innerText);
+  alert('テキストをコピーしました。');
+}
+
+function copyPrompt() {
+  const out = document.getElementById('outputPrompt');
+  navigator.clipboard.writeText(out.value);
+  alert('プロンプトをコピーしました。');
+}
+</script>
+</body>
+</html>
