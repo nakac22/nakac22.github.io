@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>効果音ボタン</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #1a1a1a;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    h1 { margin-bottom: 25px; font-size: 24px; color: #eeeeee; }
+    .button-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 100%;
+      max-width: 360px;
+    }
+    .sound-btn {
+      width: 100%;
+      padding: 22px 15px;
+      font-size: 22px;
+      font-weight: bold;
+      color: #ffffff;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.4);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.05s, box-shadow 0.05s;
+    }
+    .sound-btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+    }
+    .btn-bus { background: linear-gradient(135deg, #e63946, #d62828); border-left: 6px solid #ff9999; }
+    .btn-result { background: linear-gradient(135deg, #f72585, #7209b7); border-left: 6px solid #ff99dd; }
+    .btn-mate { background: linear-gradient(135deg, #ff9f1c, #ffbf69); color: #111; border-left: 6px solid #fff200; }
+  </style>
+</head>
+<body>
+
+  <h1>🔊 サウンドボタン</h1>
+
+  <div class="button-container">
+    <button class="sound-btn btn-bus" onclick="playAudio('audio-bus')">次、止まります</button>
+    <button class="sound-btn btn-result" onclick="playAudio('audio-result')">結果発表</button>
+    <button class="sound-btn btn-mate" onclick="playAudio('audio-mate')">ちょっと待てぃ</button>
+  </div>
+
+  <!-- 同一階層の音声ファイルを読み込み -->
+  <audio id="audio-bus" src="./bus.mp3" preload="auto"></audio>
+  <audio id="audio-result" src="./result.mp3" preload="auto"></audio>
+  <audio id="audio-mate" src="./mate.mp3" preload="auto"></audio>
+
+  <script>
+    function playAudio(id) {
+      const audio = document.getElementById(id);
+      if (audio) {
+        audio.currentTime = 0; // 連続タップ対応
+        audio.play().catch(err => {
+          console.error("再生失敗:", err);
+          // ファイルの読み込み先フルURLを表示してデバッグ
+          alert("再生失敗: 音声ファイルが見つかりません。\nアクセス先: " + audio.src);
+        });
+      }
+    }
+  </script>
+
+</body>
+</html>
